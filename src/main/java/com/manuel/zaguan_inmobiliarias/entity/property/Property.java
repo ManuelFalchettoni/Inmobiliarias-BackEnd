@@ -1,13 +1,13 @@
 package com.manuel.zaguan_inmobiliarias.entity.property;
 
+import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -16,37 +16,57 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "properties")
 @Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class Property{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
     private String address;
 
+    @Column
     private Boolean active;
 
+    @Column
+    @Enumerated(EnumType.STRING)
     private PropertyType type;
 
+    @Column
     private String location;
 
+    @Column
     private Long idAgency;
 
+    @Column
     private LocalDate year;
 
+    @Column
     private LocalDateTime createdAt;
 
+    @Column
     private LocalDateTime updatedAt;
 
+    @Column
     private int rooms;
 
+    @Column
     private int size;
 
+    @Column
+    @Enumerated(EnumType.STRING)
     private PropertySituation situation;
 
+    @Column
+    @Enumerated(EnumType.STRING)
     private PropertyStatus status;
 
+    @Column
     private int floorNumber;
 
-    private List<ProductPhoto> photos = new ArrayList<>();
+    @Column
+    @OneToMany
+    private List<PropertyPhoto> photos = new ArrayList<>();
 }
