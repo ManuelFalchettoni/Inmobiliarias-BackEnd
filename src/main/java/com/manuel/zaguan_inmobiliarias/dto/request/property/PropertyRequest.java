@@ -1,7 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.dto.request.property;
 
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,10 +41,10 @@ public class PropertyRequest {
     private int size;
 
     @NotNull
-    private PropertySituation situation;
+    private PropertyCondition condition;
 
     @NotNull
-    private PropertyStatus status;
+    private PropertyOccupancy occupancy;
 
     @PositiveOrZero
     private int floorNumber;

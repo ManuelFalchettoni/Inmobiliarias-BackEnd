@@ -22,8 +22,8 @@ public class PropertyMapper {
         property.setYear(request.getYear());
         property.setRooms(request.getRooms());
         property.setSize(request.getSize());
-        property.setSituation(request.getSituation());
-        property.setStatus(request.getStatus());
+        property.setCondition(request.getCondition());
+        property.setOccupancy(request.getOccupancy());
         property.setFloorNumber(request.getFloorNumber());
 
         LocalDateTime now = LocalDateTime.now();
@@ -48,8 +48,8 @@ public class PropertyMapper {
         response.setUpdatedAt(property.getUpdatedAt());
         response.setRooms(property.getRooms());
         response.setSize(property.getSize());
-        response.setSituation(property.getSituation());
-        response.setStatus(property.getStatus());
+        response.setCondition(property.getCondition());
+        response.setOccupancy(property.getOccupancy());
         response.setFloorNumber(property.getFloorNumber());
 
         List<PropertyPhoto> photos = property.getPhotos();

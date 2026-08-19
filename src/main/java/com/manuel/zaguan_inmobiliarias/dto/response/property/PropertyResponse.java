@@ -1,7 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.property;
 
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,9 +39,9 @@ public class PropertyResponse {
 
     private int size;
 
-    private PropertySituation situation;
+    private PropertyCondition condition;
 
-    private PropertyStatus status;
+    private PropertyOccupancy occupancy;
 
     private int floorNumber;
 
