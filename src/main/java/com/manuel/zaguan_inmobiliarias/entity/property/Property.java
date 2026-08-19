@@ -1,8 +1,8 @@
 package com.manuel.zaguan_inmobiliarias.entity.property;
 
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,7 +30,7 @@ public class Property{
     @Column
     private Boolean active;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
@@ -55,13 +55,13 @@ public class Property{
     @Column
     private int size;
 
-    @Column
+    @Column(name = "property_condition", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PropertySituation situation;
+    private PropertyCondition condition;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private PropertyStatus status;
+    private PropertyOccupancy occupancy;
 
     @Column
     private int floorNumber;
