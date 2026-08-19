@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserFinderService {
     private final JpaUserRepository jpaUserRepository;
-    private final UserFinderService userFinderService;
     private final UserMapper userMapper;
 
 
