@@ -14,19 +14,15 @@ public class PropertyMapper {
     public Property toEntity(PropertyRequest request) {
         Property property = new Property();
 
-        property.setAddress(request.getAddress());
-        property.setType(request.getType());
-        property.setLocation(request.getLocation());
         property.setIdAgency(request.getIdAgency());
-        property.setYear(request.getYear());
-        property.setRooms(request.getRooms());
-        property.setSize(request.getSize());
-        property.setCondition(request.getCondition());
-        property.setOccupancy(request.getOccupancy());
-        property.setFloorNumber(request.getFloorNumber());
         property.setActive(true);
+        copyFields(request, property);
 
         return property;
+    }
+
+    public void updateEntity(PropertyRequest request, Property property) {
+        copyFields(request, property);
     }
 
     public PropertyResponse toResponse(Property property) {
@@ -53,5 +49,17 @@ public class PropertyMapper {
         }
 
         return response;
+    }
+
+    private void copyFields(PropertyRequest request, Property property) {
+        property.setAddress(request.getAddress());
+        property.setType(request.getType());
+        property.setLocation(request.getLocation());
+        property.setYear(request.getYear());
+        property.setRooms(request.getRooms());
+        property.setSize(request.getSize());
+        property.setCondition(request.getCondition());
+        property.setOccupancy(request.getOccupancy());
+        property.setFloorNumber(request.getFloorNumber());
     }
 }
