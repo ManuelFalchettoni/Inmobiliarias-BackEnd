@@ -6,7 +6,6 @@ import com.manuel.zaguan_inmobiliarias.entity.property.Property;
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -25,11 +24,7 @@ public class PropertyMapper {
         property.setCondition(request.getCondition());
         property.setOccupancy(request.getOccupancy());
         property.setFloorNumber(request.getFloorNumber());
-
-        LocalDateTime now = LocalDateTime.now();
         property.setActive(true);
-        property.setCreatedAt(now);
-        property.setUpdatedAt(now);
 
         return property;
     }

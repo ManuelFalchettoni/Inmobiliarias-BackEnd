@@ -26,7 +26,7 @@ public class PropertyGetController {
     @GetMapping
     public ResponseEntity<Page<PropertyResponse>> findAll(
             @RequestParam(required = false) Long idAgency,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable{
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
             Page<PropertyResponse> properties = (idAgency == null)
                     ? propertyFinderService.findAll(pageable)
                     : propertyFinderService.findByAgency(idAgency, pageable);

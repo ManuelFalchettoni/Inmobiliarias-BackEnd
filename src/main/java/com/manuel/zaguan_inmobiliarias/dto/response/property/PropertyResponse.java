@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,7 @@ public class PropertyResponse {
 
     private Long idAgency;
 
-    private LocalDate year;
+    private Integer year;
 
     private LocalDateTime createdAt;
 
