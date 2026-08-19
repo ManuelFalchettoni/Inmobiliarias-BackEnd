@@ -4,7 +4,6 @@ import com.manuel.zaguan_inmobiliarias.dto.request.property.PropertyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertyResponse;
 import com.manuel.zaguan_inmobiliarias.service.property.PropertyCreatorService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
