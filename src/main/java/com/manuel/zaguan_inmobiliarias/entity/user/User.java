@@ -50,7 +50,7 @@ public class User {
     private LocalDateTime createdAt;
 
     @Column
-    private LocalDateTime uploadAt;
+    private LocalDateTime updatedAt;
 
     @Column
     @Enumerated (EnumType.STRING)

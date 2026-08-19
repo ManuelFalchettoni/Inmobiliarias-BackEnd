@@ -21,7 +21,7 @@ public class UserMapper {
 
         LocalDateTime now = LocalDateTime.now();
         user.setCreatedAt(now);
-        user.setUploadAt(now);
+        user.setUpdatedAt(now);
         user.setActive(true);
 
         return user;
@@ -34,10 +34,11 @@ public class UserMapper {
         userResponse.setName(user.getName());
         userResponse.setSurname(user.getSurname());
         userResponse.setEmail(user.getEmail());
+        userResponse.setPhoneNumber(userResponse.getPhoneNumber());
         userResponse.setRol(user.getRol());
         userResponse.setActive(user.isActive());
         userResponse.setCreatedAt(user.getCreatedAt());
-        userResponse.setUpdatedAt(user.getUploadAt());
+        userResponse.setUpdatedAt(user.getUpdatedAt());
 
         return userResponse;
     }

@@ -23,9 +23,12 @@ public class UserResponse {
 
     private boolean active;
 
+    private int phoneNumber;
+
     private UserRol rol;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
 }
