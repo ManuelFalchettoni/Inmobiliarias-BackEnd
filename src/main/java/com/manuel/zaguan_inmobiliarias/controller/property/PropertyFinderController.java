@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/properties")
-public class PropertyGetController {
+public class PropertyFinderController {
     private final PropertyFinderService propertyFinderService;
 
-    public PropertyGetController (PropertyFinderService propertyFinderService){
+    public PropertyFinderController (PropertyFinderService propertyFinderService){
         this.propertyFinderService = propertyFinderService;
     }
 

@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/properties")
-public class PropertyPutController {
+public class PropertyUpdaterController {
     private final PropertyUpdaterService propertyUpdaterService;
 
-    public PropertyPutController(PropertyUpdaterService propertyUpdaterService){
+    public PropertyUpdaterController(PropertyUpdaterService propertyUpdaterService){
         this.propertyUpdaterService = propertyUpdaterService;
     }
 
