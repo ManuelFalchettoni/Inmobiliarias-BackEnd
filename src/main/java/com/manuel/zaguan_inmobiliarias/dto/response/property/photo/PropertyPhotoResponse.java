@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class PropertyPhotoResponse {
-    private long id;
+    private Long id;
 
     private String url;
 
