@@ -1,16 +1,17 @@
 package com.manuel.zaguan_inmobiliarias.entity.property;
 
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +28,10 @@ public class Property{
     @Column
     private String address;
 
-    @Column
+    @Column(nullable = false)
     private Boolean active;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
@@ -40,13 +41,15 @@ public class Property{
     @Column
     private Long idAgency;
 
-    @Column
-    private LocalDate year;
+    @Column(name = "construction_year")
+    private Integer year;
 
-    @Column
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Column
@@ -55,18 +58,17 @@ public class Property{
     @Column
     private int size;
 
-    @Column
+    @Column(name = "property_condition", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PropertySituation situation;
+    private PropertyCondition condition;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private PropertyStatus status;
+    private PropertyOccupancy occupancy;
 
     @Column
     private int floorNumber;
 
-    @Column
-    @OneToMany
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PropertyPhoto> photos = new ArrayList<>();
 }

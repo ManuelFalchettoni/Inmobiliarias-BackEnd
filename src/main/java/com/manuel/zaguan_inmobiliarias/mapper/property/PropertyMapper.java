@@ -6,7 +6,6 @@ import com.manuel.zaguan_inmobiliarias.entity.property.Property;
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -15,23 +14,15 @@ public class PropertyMapper {
     public Property toEntity(PropertyRequest request) {
         Property property = new Property();
 
-        property.setAddress(request.getAddress());
-        property.setType(request.getType());
-        property.setLocation(request.getLocation());
         property.setIdAgency(request.getIdAgency());
-        property.setYear(request.getYear());
-        property.setRooms(request.getRooms());
-        property.setSize(request.getSize());
-        property.setSituation(request.getSituation());
-        property.setStatus(request.getStatus());
-        property.setFloorNumber(request.getFloorNumber());
-
-        LocalDateTime now = LocalDateTime.now();
         property.setActive(true);
-        property.setCreatedAt(now);
-        property.setUpdatedAt(now);
+        copyFields(request, property);
 
         return property;
+    }
+
+    public void updateEntity(PropertyRequest request, Property property) {
+        copyFields(request, property);
     }
 
     public PropertyResponse toResponse(Property property) {
@@ -48,8 +39,8 @@ public class PropertyMapper {
         response.setUpdatedAt(property.getUpdatedAt());
         response.setRooms(property.getRooms());
         response.setSize(property.getSize());
-        response.setSituation(property.getSituation());
-        response.setStatus(property.getStatus());
+        response.setCondition(property.getCondition());
+        response.setOccupancy(property.getOccupancy());
         response.setFloorNumber(property.getFloorNumber());
 
         List<PropertyPhoto> photos = property.getPhotos();
@@ -58,5 +49,17 @@ public class PropertyMapper {
         }
 
         return response;
+    }
+
+    private void copyFields(PropertyRequest request, Property property) {
+        property.setAddress(request.getAddress());
+        property.setType(request.getType());
+        property.setLocation(request.getLocation());
+        property.setYear(request.getYear());
+        property.setRooms(request.getRooms());
+        property.setSize(request.getSize());
+        property.setCondition(request.getCondition());
+        property.setOccupancy(request.getOccupancy());
+        property.setFloorNumber(request.getFloorNumber());
     }
 }
