@@ -17,8 +17,6 @@ public class UserResponse {
 
     private String name;
 
-    private String surname;
-
     private String email;
 
     private boolean active;

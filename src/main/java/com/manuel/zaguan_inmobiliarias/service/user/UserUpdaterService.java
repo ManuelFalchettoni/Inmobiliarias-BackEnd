@@ -24,7 +24,6 @@ public class UserUpdaterService {
         User toUpdate = jpaUserRepository.findById(id)
                 .orElseThrow(()-> new UserNotFoundException("User with " + id + " not found"));
         toUpdate.setName(userRequest.getName());
-        toUpdate.setSurname(userRequest.getSurname());
         toUpdate.setEmail(userRequest.getEmail());
         toUpdate.setPassword(userRequest.getPassword());
         toUpdate.setPhoneNumber(userRequest.getPhoneNumber());

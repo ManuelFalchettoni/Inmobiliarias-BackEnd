@@ -13,7 +13,6 @@ public class UserMapper {
         User user = new User();
 
         user.setName(userRequest.getName());
-        user.setSurname(userRequest.getSurname());
         user.setEmail(userRequest.getEmail());
         user.setPassword(userRequest.getPassword());
         user.setPhoneNumber(userRequest.getPhoneNumber());
@@ -32,7 +31,6 @@ public class UserMapper {
 
         userResponse.setId(user.getId());
         userResponse.setName(user.getName());
-        userResponse.setSurname(user.getSurname());
         userResponse.setEmail(user.getEmail());
         userResponse.setPhoneNumber(userResponse.getPhoneNumber());
         userResponse.setRol(user.getRol());
