@@ -14,7 +14,7 @@ public class AgencyFinderService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
 
-    public AgencyResponse find(Long id){
+    public AgencyResponse findById(Long id){
         Agency agency = jpaAgencyRepository.findById(id)
                 .orElseThrow(()-> new AgencyNotFoundException("Agency with id " + id + " not found."));
         return agencyMapper.toResponse(agency);

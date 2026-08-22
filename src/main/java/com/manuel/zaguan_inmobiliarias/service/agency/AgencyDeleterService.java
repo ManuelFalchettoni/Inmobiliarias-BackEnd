@@ -11,7 +11,7 @@ public class AgencyDeleterService {
     private final AgencyFinderService agencyFinderService;
 
     public void delete (Long id){
-        agencyFinderService.find(id);
+        agencyFinderService.findById(id);
         jpaAgencyRepository.deleteById(id);
     }
 
