@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.entity.user;
 
+import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
 import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -22,20 +23,24 @@ public class User {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     @Size(min = 3, max = 20)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column
+    @Size(min = 3, max = 20)
+    private String Surname;
+
+    @Column
     @Email
     @Size(min = 3, max = 20)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     @Size(min = 8, max = 20)
     private String password;
 
-    @Column(nullable = false, unique = true)
+    @Column
     @Size(min = 8, max = 15)
     private int phoneNumber;
 
@@ -48,8 +53,17 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated (EnumType.STRING)
     private UserRol rol;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn (name = "agency_id")
+    private Agency agency;
+
+    @Column
+    @Size(min = 8, max = 30)
+    private String license;
+
 
 }
