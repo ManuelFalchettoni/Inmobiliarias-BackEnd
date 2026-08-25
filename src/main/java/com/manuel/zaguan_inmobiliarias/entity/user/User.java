@@ -22,24 +22,20 @@ public class User {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     @Size(min = 3, max = 20)
     private String name;
 
-    @Column
-    @Size(min = 3, max = 20)
-    private String Surname;
-
-    @Column
+    @Column(nullable = false, unique = true)
     @Email
     @Size(min = 3, max = 20)
     private String email;
 
-    @Column
+    @Column(nullable = false)
     @Size(min = 8, max = 20)
     private String password;
 
-    @Column
+    @Column(nullable = false, unique = true)
     @Size(min = 8, max = 15)
     private int phoneNumber;
 
@@ -50,11 +46,10 @@ public class User {
     private LocalDateTime createdAt;
 
     @Column
-    private LocalDateTime uploadAt;
+    private LocalDateTime updatedAt;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated (EnumType.STRING)
     private UserRol rol;
-
 
 }
