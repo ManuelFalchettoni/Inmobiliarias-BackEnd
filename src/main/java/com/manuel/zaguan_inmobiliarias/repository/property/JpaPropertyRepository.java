@@ -1,4 +1,21 @@
 package com.manuel.zaguan_inmobiliarias.repository.property;
 
-public interface JpaPropertyRepository {
+import com.manuel.zaguan_inmobiliarias.entity.property.Property;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
+
+    @EntityGraph(attributePaths = "photos") //problema N+1 preguntar
+    Optional<Property> findByIdAndActiveTrue(Long id);
+
+    Page<Property> findAllByActiveTrue(Pageable pageable);
+
+    Page<Property> findAllByIdAgencyAndActiveTrue(Long idAgency, Pageable pageable);
 }

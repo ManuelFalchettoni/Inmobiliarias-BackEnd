@@ -1,52 +1,74 @@
 package com.manuel.zaguan_inmobiliarias.entity.property;
 
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertySituation;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyStatus;
+import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "properties")
 @Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class Property{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
     private String address;
 
+    @Column(nullable = false)
     private Boolean active;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private PropertyType type;
 
+    @Column
     private String location;
 
+    @Column
     private Long idAgency;
 
-    private LocalDate year;
+    @Column(name = "construction_year")
+    private Integer year;
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column
     private int rooms;
 
+    @Column
     private int size;
 
-    private PropertySituation situation;
+    @Column(name = "property_condition", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PropertyCondition condition;
 
-    private PropertyStatus status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PropertyOccupancy occupancy;
 
+    @Column
     private int floorNumber;
 
-    private List<ProductPhoto> photos = new ArrayList<>();
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyPhoto> photos = new ArrayList<>();
 }
