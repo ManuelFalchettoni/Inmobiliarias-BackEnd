@@ -1,6 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.mapper.user;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.user.UserRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Component
 public class UserMapper {
-    public User toEntity(UserRequest userRequest){
+    public User toEntity(AuthUserRequest userRequest){
         User user = new User();
 
         user.setName(userRequest.getName());

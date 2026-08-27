@@ -1,6 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.mapper.agency;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.auth.agency.AuthAgencyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
 import org.springframework.stereotype.Component;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AgencyMapper {
-    public Agency toEntity(AgencyRequest agencyRequest){
+    public Agency toEntity(AuthAgencyRequest agencyRequest){
         Agency agency = new Agency();
         agency.setCuit(agencyRequest.getCuit());
         agency.setEmail(agencyRequest.getEmail());
