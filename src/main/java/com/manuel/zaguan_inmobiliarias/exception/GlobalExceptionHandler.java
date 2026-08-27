@@ -1,10 +1,12 @@
 package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
+import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +24,12 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    //----------------------Property-------------------------
     @ExceptionHandler(PropertyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePropertyNotFound(PropertyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
-
+    //---------------------PropertyPhoto----------------------------
     @ExceptionHandler(PropertyPhotoNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePhotoNotFound(PropertyPhotoNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
@@ -45,6 +48,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException e, HttpServletRequest request){
         return build(HttpStatus.CONTENT_TOO_LARGE, "The file is too large", request);
+    }
+
+    //-------------------------------User-------------------------------
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+    //------------------------------Agency------------------------------
+    @ExceptionHandler(AgencyNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleAgencyNotFound(AgencyNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
     //Los @Valid que fallan: junta los mensajes campo por campo en uno solo

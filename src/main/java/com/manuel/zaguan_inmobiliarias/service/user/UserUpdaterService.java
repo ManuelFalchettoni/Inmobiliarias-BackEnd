@@ -22,7 +22,7 @@ public class UserUpdaterService {
     @Transactional
     public UserResponse update(Long id, UserRequest userRequest){
         User toUpdate = jpaUserRepository.findById(id)
-                .orElseThrow(()-> new UserNotFoundException("User with " + id + " not found"));
+                .orElseThrow(()-> new UserNotFoundException(id));
         toUpdate.setName(userRequest.getName());
         toUpdate.setEmail(userRequest.getEmail());
         toUpdate.setPassword(userRequest.getPassword());

@@ -17,7 +17,7 @@ public class UserFinderService {
 
     public UserResponse findById(Long id){
          User user = jpaUserRepository.findById(id)
-                .orElseThrow(()-> new UserNotFoundException("User with " + id + " not found"));
+                .orElseThrow(()-> new UserNotFoundException(id));
          return userMapper.toResponse(user);
     }
 }

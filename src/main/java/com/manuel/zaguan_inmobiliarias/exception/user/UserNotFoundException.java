@@ -1,11 +1,18 @@
 package com.manuel.zaguan_inmobiliarias.exception.user;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import lombok.Getter;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
+
+@Getter
 public class UserNotFoundException extends RuntimeException {
+    private final Long userId;
+
+    public UserNotFoundException(Long userId){
+        super("User not found with id: " + userId);
+        this.userId = userId;
+    }
     public UserNotFoundException(String message) {
         super(message);
+        this.userId = null;
     }
 }
