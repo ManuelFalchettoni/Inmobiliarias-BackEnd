@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.auth.DuplicateResourceException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
@@ -60,6 +61,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleAgencyNotFound(AgencyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
+
+    //-----------------------------Auth--------------------------------
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateResource(DuplicateResourceException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
 
     //Los @Valid que fallan: junta los mensajes campo por campo en uno solo
     @ExceptionHandler(MethodArgumentNotValidException.class)
