@@ -1,4 +1,4 @@
-package com.manuel.zaguan_inmobiliarias.service.auth;
+package com.manuel.zaguan_inmobiliarias.service.auth.user;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
