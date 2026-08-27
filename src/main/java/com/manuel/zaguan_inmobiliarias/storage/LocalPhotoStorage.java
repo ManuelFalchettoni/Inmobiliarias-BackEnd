@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.storage;
 
+import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,13 +27,13 @@ public class LocalPhotoStorage implements PhotoStorage {
     public String store(MultipartFile file) {
         //1. El archivo tiene que venir con contenido
         if (file == null || file.isEmpty()) {
-            throw new PhotoStorageException("The file is empty");
+            throw new InvalidPhotoException("The file is empty");
         }
 
         //2 y 3. extension permitida
         String extension = extensionOf(file.getOriginalFilename());
         if (!ALLOWED.contains(extension)) {
-            throw new PhotoStorageException("Invalid format: " + extension);
+            throw new InvalidPhotoException("Invalid format: " + extension);
         }
 
         //4 Nombre nuevo, sin relacion con el original
