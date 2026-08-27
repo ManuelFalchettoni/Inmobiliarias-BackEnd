@@ -18,4 +18,6 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
     Page<Property> findAllByActiveTrue(Pageable pageable);
 
     Page<Property> findAllByIdAgencyAndActiveTrue(Long idAgency, Pageable pageable);
+
+    boolean existsByIdAndActiveTrue(Long id);
 }
