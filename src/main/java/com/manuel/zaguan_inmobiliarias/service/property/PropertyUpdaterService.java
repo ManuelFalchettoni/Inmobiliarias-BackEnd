@@ -26,6 +26,7 @@ public class PropertyUpdaterService {
 
         propertyMapper.updateEntity(request, property);
 
+        jpaPropertyRepository.saveAndFlush(property);
         return propertyMapper.toResponse(property);
     }
 }
