@@ -1,8 +1,8 @@
 package com.manuel.zaguan_inmobiliarias.controller.user;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.user.UserRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
-import com.manuel.zaguan_inmobiliarias.service.user.UserCreatorService;
+import com.manuel.zaguan_inmobiliarias.service.auth.AuthUserRegisterService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/users")
 @AllArgsConstructor
 public class UserPostController {
-    private final UserCreatorService userCreatorService;
+    private final AuthUserRegisterService authUserRegisterService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> create (@Valid @RequestBody UserRequest userRequest){
-        UserResponse userResponse = userCreatorService.creator(userRequest);
+    public ResponseEntity<UserResponse> create (@Valid @RequestBody AuthUserRequest userRequest){
+        UserResponse userResponse = authUserRegisterService.userRegister(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 

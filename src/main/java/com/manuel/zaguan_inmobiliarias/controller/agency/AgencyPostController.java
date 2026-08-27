@@ -1,8 +1,8 @@
 package com.manuel.zaguan_inmobiliarias.controller.agency;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.auth.agency.AuthAgencyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
-import com.manuel.zaguan_inmobiliarias.service.agency.AgencyCreatorService;
+import com.manuel.zaguan_inmobiliarias.service.auth.AuthAgencyRegisterService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RequestMapping("/api/agencies")
 public class AgencyPostController {
-    private final AgencyCreatorService agencyCreatorService;
+    private final AuthAgencyRegisterService authAgencyRegisterService;
 
     @PostMapping
-    public ResponseEntity<AgencyResponse> post(@Valid @RequestBody AgencyRequest agencyRequest){
+    public ResponseEntity<AgencyResponse> post(@Valid @RequestBody AuthAgencyRequest agencyRequest){
 
-        AgencyResponse agencyResponse = agencyCreatorService.create(agencyRequest);
+        AgencyResponse agencyResponse = authAgencyRegisterService.agencyRegister(agencyRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(agencyResponse);
     }
