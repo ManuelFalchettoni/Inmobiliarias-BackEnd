@@ -20,10 +20,6 @@ public class UserRequest {
     private String name;
 
     @NotBlank
-    @Size(min = 3, max = 20, message = "Surname must be between 3 and 20 characters.")
-    private String surname;
-
-    @NotBlank
     @Email(message = "Email should be valid.")
     private String email;
 
