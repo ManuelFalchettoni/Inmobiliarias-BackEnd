@@ -19,7 +19,7 @@ public class AgencyUpdaterService {
 
     public AgencyResponse update (Long id, AgencyRequest agencyRequest){
         Agency toUpdate = jpaAgencyRepository.findById(id)
-                .orElseThrow(() -> new AgencyNotFoundException("Agency with id " + id + " not found."));
+                .orElseThrow(() -> new AgencyNotFoundException(id));
         toUpdate.setCuit(agencyRequest.getCuit());
         toUpdate.setEmail(agencyRequest.getEmail());
         toUpdate.setCompanyName(agencyRequest.getCompanyName());
