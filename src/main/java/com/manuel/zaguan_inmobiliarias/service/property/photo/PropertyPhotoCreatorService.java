@@ -4,7 +4,8 @@ import com.manuel.zaguan_inmobiliarias.dto.response.property.photo.PropertyPhoto
 import com.manuel.zaguan_inmobiliarias.entity.property.Property;
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
-import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
+import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
+import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.photo.PropertyPhotoMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.repository.property.photo.JpaPropertyPhotoRepository;
@@ -35,25 +36,42 @@ public class PropertyPhotoCreatorService {
 
     @Transactional
     public List<PropertyPhotoResponse> upload(Long propertyId, List<MultipartFile> files){
+        if (files == null || files.isEmpty()){
+            throw new InvalidPhotoException("No files received");
+        }
+
         Property property = jpaPropertyRepository.findByIdAndActiveTrue(propertyId)
                 .orElseThrow(() -> new PropertyNotFoundException(propertyId));
 
         int countPhotos =jpaPropertyPhotoRepository.countByPropertyId(propertyId);
         if ((countPhotos + files.size()) > MAX_PHOTOS){
-            throw new PhotoStorageException("You reach the maximum number of photos");
+            throw new PhotoLimitExceededException(MAX_PHOTOS);
         }
-        List<PropertyPhotoResponse> responses = new ArrayList<>();
-        int position = countPhotos;
-        for (MultipartFile file : files ){
-            String url = photoStorage.store(file);
-            PropertyPhoto photo = new PropertyPhoto();
-            photo.setUrl(url);
-            photo.setPhotoName(file.getOriginalFilename());
-            photo.setPosition(position++);
-            photo.setProperty(property);
 
-            PropertyPhoto saved = jpaPropertyPhotoRepository.save(photo);
-            responses.add(propertyPhotoMapper.toResponse(saved));
+        List<PropertyPhotoResponse> responses = new ArrayList<>();
+        List<String> storedUrls = new ArrayList<>();
+        int position = countPhotos;
+
+        try {
+            for (MultipartFile file : files ){
+                String url = photoStorage.store(file);
+                storedUrls.add(url);
+
+                PropertyPhoto photo = new PropertyPhoto();
+                photo.setUrl(url);
+                photo.setPhotoName(file.getOriginalFilename());
+                photo.setPosition(position++);
+                photo.setProperty(property);
+
+                PropertyPhoto saved = jpaPropertyPhotoRepository.save(photo);
+                responses.add(propertyPhotoMapper.toResponse(saved));
+            }
+        } catch (RuntimeException e) {
+            //De la base se encarga el rollback, pero los archivos que ya se escribieron hay que borrarlos a mano
+            for (String url : storedUrls) {
+                photoStorage.delete(url);
+            }
+            throw e;
         }
 
         return responses;
