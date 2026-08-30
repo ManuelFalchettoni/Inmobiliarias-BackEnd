@@ -1,8 +1,8 @@
 package com.manuel.zaguan_inmobiliarias.entity.agency;
 
+import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,10 +23,6 @@ public class Agency {
     private Long id;
 
     @Column (nullable = false, unique = true)
-    @Size(min = 9, max = 13)
-    private String cuit;
-
-    @Column (nullable = false, unique = true)
     @Size(min = 3, max = 30)
     private String companyName;
 
@@ -34,18 +30,9 @@ public class Agency {
     @Size(min = 3, max = 30)
     private String publicName;
 
-    @Column(nullable = false, unique = true)
-    @Email
-    @Size(min = 3, max = 20)
-    private String email;
-
-    @Column(nullable = false)
-    @Size(min = 8, max = 20)
-    private String password;
-
-    @Column(nullable = false, unique = true)
-    @Size(min = 8, max = 15)
-    private int phoneNumber;
+    @OneToOne
+    @JoinColumn(name = "Owner_id")
+    private User user;
 
     @Column (nullable = false, unique = true)
     @Size(min = 6, max = 40)
