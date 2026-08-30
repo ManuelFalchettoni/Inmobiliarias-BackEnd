@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,5 +20,7 @@ public interface JpaUserRepository extends JpaRepository<User, Long>, JpaSpecifi
     boolean existsById(@NonNull Long id);
 
     boolean existsByEmail(@NonNull String email);
+
+    List<User> findByAgency_Id(@NonNull Long agency_Id);
 
 }
