@@ -2,7 +2,6 @@ package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
-import com.manuel.zaguan_inmobiliarias.exception.agency.NotValidUserRolException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.UserAlreadyHasAgencyException;
 import com.manuel.zaguan_inmobiliarias.exception.auth.DuplicateResourceException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
@@ -62,11 +61,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AgencyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleAgencyNotFound(AgencyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
-    }
-
-    @ExceptionHandler(NotValidUserRolException.class)
-    public ResponseEntity<ApiErrorResponse> handleNotValidUserRolException(NotValidUserRolException e, HttpServletRequest request){
-        return build(HttpStatus.FORBIDDEN, e.getMessage(), request);
     }
 
     @ExceptionHandler(UserAlreadyHasAgencyException.class)
