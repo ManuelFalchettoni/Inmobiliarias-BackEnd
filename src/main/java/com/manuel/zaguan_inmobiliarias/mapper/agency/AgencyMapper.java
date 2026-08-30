@@ -1,41 +1,42 @@
 package com.manuel.zaguan_inmobiliarias.mapper.agency;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.auth.agency.AuthAgencyRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyRequest;
+
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
+import com.manuel.zaguan_inmobiliarias.entity.user.User;
+import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 
 @Component
 public class AgencyMapper {
-    public Agency toEntity(AuthAgencyRequest agencyRequest){
+    public Agency toEntity(AgencyRequest agencyRequest, User user){
         Agency agency = new Agency();
-        agency.setCuit(agencyRequest.getCuit());
-        agency.setEmail(agencyRequest.getEmail());
         agency.setCompanyName(agencyRequest.getCompanyName());
         agency.setPublicName(agencyRequest.getPublicName());
-        agency.setEmail(agencyRequest.getEmail());
-        agency.setPassword(agencyRequest.getPassword());
         agency.setAddress(agencyRequest.getAddress());
         agency.setSocials(agencyRequest.getSocials());
-        agency.setPhoneNumber(agencyRequest.getPhoneNumber());
+        agency.setUser(user);
         agency.setWebURL(agencyRequest.getWebURL());
-        agency.setStatus(agencyRequest.getStatus());
+        agency.setStatus(AgencyStatus.PENDING);
+
+        LocalDateTime now = LocalDateTime.now();
+        agency.setCreatedAt(now);
+        agency.setUpdatedAt(now);
 
         return agency;
     }
 
     public AgencyResponse toResponse(Agency agency){
         AgencyResponse agencyResponse = new AgencyResponse();
-        agencyResponse.setCuit(agency.getCuit());
-        agencyResponse.setEmail(agency.getEmail());
         agencyResponse.setCompanyName(agency.getCompanyName());
         agencyResponse.setPublicName(agency.getPublicName());
-        agencyResponse.setEmail(agency.getEmail());
-        agencyResponse.setPassword(agency.getPassword());
         agencyResponse.setAddress(agency.getAddress());
         agencyResponse.setSocials(agency.getSocials());
-        agencyResponse.setPhoneNumber(agency.getPhoneNumber());
+        agencyResponse.setOwnerId(agency.getUser().getId());
         agencyResponse.setWebURL(agency.getWebURL());
         agencyResponse.setStatus(agency.getStatus());
         agencyResponse.setCreatedAt(agency.getCreatedAt());
