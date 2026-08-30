@@ -16,17 +16,11 @@ public class AgencyResponse {
 
     private Long id;
 
-    private String cuit;
-
     private String companyName;
 
     private String publicName;
 
-    private String email;
-
-    private String password;
-
-    private int phoneNumber;
+    private Long ownerId;
 
     private String address;
 
