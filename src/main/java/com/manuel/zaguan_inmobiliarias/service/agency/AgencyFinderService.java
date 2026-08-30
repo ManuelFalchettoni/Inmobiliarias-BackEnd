@@ -6,6 +6,8 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.agency.AgencyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,5 +20,18 @@ public class AgencyFinderService {
         Agency agency = jpaAgencyRepository.findById(id)
                 .orElseThrow(()-> new AgencyNotFoundException(id));
         return agencyMapper.toResponse(agency);
+    }
+
+    public Agency findAgency(Long id){
+        return jpaAgencyRepository.findById(id)
+                .orElseThrow(()-> new AgencyNotFoundException(id));
+    }
+
+    public Page<AgencyResponse> findAll (Pageable pageable){
+        Page<Agency> agencies = jpaAgencyRepository.findAll(pageable);
+
+        return agencies.map(
+                agencyMapper::toResponse
+        );
     }
 }
