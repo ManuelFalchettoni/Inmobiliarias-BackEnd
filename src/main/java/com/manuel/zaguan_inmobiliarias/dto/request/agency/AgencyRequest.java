@@ -35,9 +35,9 @@ public class AgencyRequest {
     @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters.")
     private String password;
 
-    @NotNull
+    @NotBlank
     @Size(min = 8, max = 15, message = "Phone number must be between 8 and 15 characters.")
-    private int phoneNumber;
+    private String phoneNumber;
 
     @NotBlank
     @Size(min = 6, max = 40, message = "Address must be between 6 and 40 characters.")

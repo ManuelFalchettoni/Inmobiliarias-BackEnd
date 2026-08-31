@@ -9,8 +9,6 @@ import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 @AllArgsConstructor
 public class AgencyUpdaterService {
@@ -32,9 +30,7 @@ public class AgencyUpdaterService {
         toUpdate.setWebURL(agencyRequest.getWebURL());
         toUpdate.setStatus(agencyRequest.getStatus());
 
-        LocalDateTime now = LocalDateTime.now();
-        toUpdate.setUpdatedAt(now);
-
-        return agencyMapper.toResponse(jpaAgencyRepository.save(toUpdate));
+        //updatedAt lo pone @UpdateTimestamp al flushear
+        return agencyMapper.toResponse(jpaAgencyRepository.saveAndFlush(toUpdate));
     }
 }
