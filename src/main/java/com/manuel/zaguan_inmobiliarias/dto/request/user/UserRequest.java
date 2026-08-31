@@ -29,7 +29,7 @@ public class UserRequest {
 
     @NotBlank
     @Size(min = 8, max = 15, message = "phoneNumber must be between 8 and 15 characters.")
-    private int phoneNumber;
+    private String phoneNumber;
 
     @NotNull
     private UserRol rol;
