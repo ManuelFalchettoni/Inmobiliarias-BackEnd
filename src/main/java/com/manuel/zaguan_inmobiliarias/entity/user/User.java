@@ -23,26 +23,21 @@ public class User {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
-    @Size(min = 3, max = 20)
+    @Column(nullable = false)
+    @Size(min = 3, max = 50)
     private String name;
 
-    @Column
-    @Size(min = 3, max = 20)
-    private String Surname;
-
-    @Column
+    @Column(nullable = false, unique = true)
     @Email
     @Size(min = 3, max = 20)
     private String email;
 
-    @Column
-    @Size(min = 8, max = 20)
+    @Column(nullable = false)
     private String password;
 
     @Column
     @Size(min = 8, max = 15)
-    private int phoneNumber;
+    private String phoneNumber;
 
     @Column
     private boolean active;
@@ -61,9 +56,11 @@ public class User {
     @JoinColumn (name = "agency_id")
     private Agency agency;
 
-    @Column
+    @Column(unique = true)
     @Size(min = 8, max = 30)
     private String license;
 
-
+    @Column(unique = true)
+    @Size(min = 8, max = 20)
+    private String cuit;
 }
