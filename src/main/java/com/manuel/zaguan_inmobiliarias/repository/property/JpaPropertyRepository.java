@@ -16,10 +16,12 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
     @EntityGraph(attributePaths = "photos") //problema N+1 preguntar
     Optional<Property> findByIdAndActiveTrue(Long id);
 
+    //Los listados reciben active por parametro: con true salen las vigentes,
+    //con false las dadas de baja, que es la unica forma de encontrarlas para restaurarlas
     @BatchSize(size = 20)
-    Page<Property> findAllByActiveTrue(Pageable pageable);
+    Page<Property> findAllByActive(Boolean active, Pageable pageable);
 
-    Page<Property> findAllByIdAgencyAndActiveTrue(Long idAgency, Pageable pageable);
+    Page<Property> findAllByIdAgencyAndActive(Long idAgency, Boolean active, Pageable pageable);
 
     boolean existsByIdAndActiveTrue(Long id);
 }
