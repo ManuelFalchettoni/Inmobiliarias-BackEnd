@@ -1,6 +1,8 @@
 package com.manuel.zaguan_inmobiliarias.config;
 
+import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.service.jwt.JwtService;
+import com.manuel.zaguan_inmobiliarias.service.user.UserFinderService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -8,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,6 +22,7 @@ import java.util.Arrays;
 @AllArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final UserFinderService userFinderService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -45,13 +50,21 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        Long userId = jwtService.getUserIdFromToken(token);
+        User user = userFinderService.find(userId);
         UserPrincipal userPrincipal = new UserPrincipal(
-                jwtService.getUserIdFromToken(token),
-                jwtService.getEmailFromToken(token),
-                jwtService.getUsernameFromToken(token),
-                jwtService.getRoleFromToken(token),
-                jwtService.getAgencyIdFromToken(token)
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRol(),
+                user.getAgency() != null ? user.getAgency().getId() : null
         );
+
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+
 
         filterChain.doFilter(request, response);
     }
