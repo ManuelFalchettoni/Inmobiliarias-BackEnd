@@ -32,4 +32,18 @@ public class UserUpdaterService {
 
         return userMapper.toResponse(jpaUserRepository.save(toUpdate));
     }
+
+    @Transactional
+    public User updateUserInAgency(Long id, User user){
+        User toUpdate = jpaUserRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException(id));
+        toUpdate.setName(user.getName());
+        toUpdate.setEmail(user.getEmail());
+        toUpdate.setPassword(user.getPassword());
+        toUpdate.setPhoneNumber(user.getPhoneNumber());
+        LocalDateTime now = LocalDateTime.now();
+        toUpdate.setUpdatedAt(now);
+
+        return jpaUserRepository.save(toUpdate);
+    }
 }
