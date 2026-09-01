@@ -25,17 +25,22 @@ public class Property{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    //El largo tiene que coincidir con el @Size de PropertyRequest, si no la validacion
+    //deja pasar textos que despues MySQL rechaza
+    @Column(length = 150)
     private String address;
 
     @Column(nullable = false)
     private Boolean active;
 
-    @Column(nullable = false)
+    //columnDefinition varchar y no el ENUM nativo que Hibernate genera por defecto en MySQL:
+    //con ddl-auto=update la columna ENUM no se modifica, asi que agregar una constante
+    //nueva al enum rompe los inserts
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
-    @Column
+    @Column(length = 100)
     private String location;
 
     @Column
@@ -58,11 +63,11 @@ public class Property{
     @Column
     private int size;
 
-    @Column(name = "property_condition", nullable = false)
+    @Column(name = "property_condition", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyCondition condition;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyOccupancy occupancy;
 
