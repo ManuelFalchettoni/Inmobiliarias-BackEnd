@@ -32,7 +32,7 @@ public class UserMapper {
         userResponse.setId(user.getId());
         userResponse.setName(user.getName());
         userResponse.setEmail(user.getEmail());
-        userResponse.setPhoneNumber(userResponse.getPhoneNumber());
+        userResponse.setPhoneNumber(user.getPhoneNumber());
         userResponse.setRol(user.getRol());
         userResponse.setActive(user.isActive());
         userResponse.setCreatedAt(user.getCreatedAt());

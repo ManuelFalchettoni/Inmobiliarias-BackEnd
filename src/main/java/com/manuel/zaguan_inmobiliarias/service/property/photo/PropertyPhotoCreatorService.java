@@ -50,7 +50,11 @@ public class PropertyPhotoCreatorService {
 
         List<PropertyPhotoResponse> responses = new ArrayList<>();
         List<String> storedUrls = new ArrayList<>();
-        int position = countPhotos;
+
+        //No se usa countPhotos: si se borro una foto del medio, el count repetiria una position ya ocupada
+        int position = jpaPropertyPhotoRepository.findFirstByPropertyIdOrderByPositionDesc(propertyId)
+                .map(photo -> photo.getPosition() + 1)
+                .orElse(0);
 
         try {
             for (MultipartFile file : files ){

@@ -27,12 +27,11 @@ public class AgencyMapper {
 
     public AgencyResponse toResponse(Agency agency){
         AgencyResponse agencyResponse = new AgencyResponse();
+        agencyResponse.setId(agency.getId());
         agencyResponse.setCuit(agency.getCuit());
         agencyResponse.setEmail(agency.getEmail());
         agencyResponse.setCompanyName(agency.getCompanyName());
         agencyResponse.setPublicName(agency.getPublicName());
-        agencyResponse.setEmail(agency.getEmail());
-        agencyResponse.setPassword(agency.getPassword());
         agencyResponse.setAddress(agency.getAddress());
         agencyResponse.setSocials(agency.getSocials());
         agencyResponse.setPhoneNumber(agency.getPhoneNumber());

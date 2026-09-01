@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -45,7 +47,7 @@ public class Agency {
 
     @Column(nullable = false, unique = true)
     @Size(min = 8, max = 15)
-    private int phoneNumber;
+    private String phoneNumber;
 
     @Column (nullable = false, unique = true)
     @Size(min = 6, max = 40)
@@ -58,12 +60,15 @@ public class Agency {
     private String socials;
 
     @Column (nullable = false)
+    @Enumerated(EnumType.STRING)
     private AgencyStatus status;
 
-    @Column
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
 }

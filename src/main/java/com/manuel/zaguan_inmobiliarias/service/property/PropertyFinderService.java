@@ -27,13 +27,13 @@ public class PropertyFinderService {
                 .orElseThrow(() -> new PropertyNotFoundException(id));
     }
 
-    public Page<PropertyResponse> findAll(Pageable pageable) {
-        return jpaPropertyRepository.findAllByActiveTrue(pageable)
+    public Page<PropertyResponse> findAll(Boolean active, Pageable pageable) {
+        return jpaPropertyRepository.findAllByActive(active, pageable)
                 .map(propertyMapper::toResponse);
     }
 
-    public Page<PropertyResponse> findByAgency(Long idAgency, Pageable pageable) {
-        return jpaPropertyRepository.findAllByIdAgencyAndActiveTrue(idAgency, pageable)
+    public Page<PropertyResponse> findByAgency(Long idAgency, Boolean active, Pageable pageable) {
+        return jpaPropertyRepository.findAllByIdAgencyAndActive(idAgency, active, pageable)
                 .map(propertyMapper::toResponse);
     }
 }

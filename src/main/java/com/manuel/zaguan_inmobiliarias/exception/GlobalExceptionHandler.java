@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
@@ -28,6 +29,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PropertyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePropertyNotFound(PropertyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyAgencyMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyAgencyMismatch(PropertyAgencyMismatchException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
     //---------------------PropertyPhoto----------------------------
     @ExceptionHandler(PropertyPhotoNotFoundException.class)

@@ -37,7 +37,7 @@ public class User {
 
     @Column(nullable = false, unique = true)
     @Size(min = 8, max = 15)
-    private int phoneNumber;
+    private String phoneNumber;
 
     @Column
     private boolean active;

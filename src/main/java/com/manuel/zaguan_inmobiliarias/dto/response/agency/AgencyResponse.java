@@ -24,9 +24,7 @@ public class AgencyResponse {
 
     private String email;
 
-    private String password;
-
-    private int phoneNumber;
+    private String phoneNumber;
 
     private String address;
 
