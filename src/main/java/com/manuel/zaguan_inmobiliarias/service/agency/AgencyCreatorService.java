@@ -36,7 +36,7 @@ public class AgencyCreatorService {
 
         user.setRol(UserRol.AGENCY_ADMIN);
         user.setAgency(saved);
-        userUpdaterService.update(userId, user);
+        userUpdaterService.updateUserInAgency(userId, user);
 
         return agencyMapper.toResponse(saved);
     }
