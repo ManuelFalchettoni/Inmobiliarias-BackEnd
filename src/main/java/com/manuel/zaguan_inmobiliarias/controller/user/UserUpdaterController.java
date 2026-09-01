@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/users")
 @AllArgsConstructor
-public class UserPutController {
+public class UserUpdaterController {
     private final UserUpdaterService userUpdaterService;
 
     @PutMapping("/{id}")
