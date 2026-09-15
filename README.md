@@ -80,8 +80,11 @@ de que MySQL rechace el insert.
 
 Los archivos se suben al bucket `photos` de MinIO, que el backend crea solo al arrancar si no
 existe y deja con lectura pública, así la URL (`http://localhost:9000/photos/<uuid>.jpg`) se
-abre directo desde el navegador. Subir y borrar solo lo hace el backend. En la base solo
-queda la URL. El nombre del archivo se reemplaza por un UUID,
+abre directo desde el navegador. Subir y borrar solo lo hace el backend. En la base no se
+guarda la URL sino el `objectKey` (`<uuid>.jpg`); la URL se arma al responder con
+`minio.url`, así no queda atada a `localhost` cuando cambie el servidor. El nombre original
+se guarda aparte, cortado en 255 caracteres. Si MinIO falla, la respuesta es un 500 con el
+formato de error de siempre. El nombre del archivo se reemplaza por un UUID,
 sin ninguna relación con el original, y se aceptan jpg, jpeg, png y webp. Máximo 5MB por
 archivo, 30MB por request y 20 fotos por propiedad.
 

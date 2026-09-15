@@ -20,10 +20,13 @@ public class PropertyPhoto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
-    private String url;
+    //Solo el nombre del archivo en MinIO (uuid.jpg), no la URL completa: la URL se arma al
+    //responder
+    @Column(nullable = false, length = 50)
+    private String objectKey;
 
-    @Column
+    //Nombre original del archivo.
+    @Column(length = 255)
     private String photoName;
 
     @Column(name = "photo_position", nullable = false)

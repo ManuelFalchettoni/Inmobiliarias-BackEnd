@@ -64,29 +64,30 @@ public class MinioPhotoStorage implements PhotoStorage {
             throw new PhotoStorageException("File could not be saved", e);
         }
 
-        //6 La URL que se guarda en la base
-        return publicUrl + "/" + fileName;
+        //6 El objectKey que se guarda en la base
+        return fileName;
     }
 
     @Override
-    public void delete(String url) {
-        //Si la URL no es la nuestra no se hace nada
-        if (url == null || !url.startsWith(publicUrl + "/")) {
+    public void delete(String objectKey) {
+        if (objectKey == null || objectKey.isBlank()) {
             return;
         }
-
-        //Nos quedamos con lo que viene despues de ".../photos/"
-        String fileName = url.substring(publicUrl.length() + 1);
 
         //Borrar. MinIO no da error si el archivo ya no esta
         try {
             minioClient.removeObject(RemoveObjectArgs.builder()
                     .bucket(bucket)
-                    .object(fileName)
+                    .object(objectKey)
                     .build());
         } catch (MinioException e) {
             throw new PhotoStorageException("File could not be deleted", e);
         }
+    }
+
+    @Override
+    public String urlOf(String objectKey) {
+        return publicUrl + "/" + objectKey;
     }
 
     private void createBucketIfNotExists() {

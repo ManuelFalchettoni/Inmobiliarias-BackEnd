@@ -34,13 +34,13 @@ public class PropertyPhotoDeleteService {
         PropertyPhoto photo = jpaPropertyPhotoRepository.findByIdAndPropertyId(photoId, propertyId)
                 .orElseThrow(() -> new PropertyPhotoNotFoundException(photoId));
 
-        String url = photo.getUrl();
+        String objectKey = photo.getObjectKey();
 
-        //Primero la fila y con flush, asi un error de base salta antes de tocar el disco
+        //Primero la fila y con flush, asi un error de base salta antes de tocar MinIO
         jpaPropertyPhotoRepository.delete(photo);
         jpaPropertyPhotoRepository.flush();
 
         //Si el archivo no se puede borrar, la excepcion hace rollback y la fila vuelve
-        photoStorage.delete(url);
+        photoStorage.delete(objectKey);
     }
 }

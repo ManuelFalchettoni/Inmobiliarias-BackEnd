@@ -6,6 +6,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatch
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
+import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,6 +50,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PhotoLimitExceededException.class)
     public ResponseEntity<ApiErrorResponse> handlePhotoLimit(PhotoLimitExceededException e, HttpServletRequest request){
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    //Falla de MinIO (caido, sin permisos, etc.).
+    @ExceptionHandler(PhotoStorageException.class)
+    public ResponseEntity<ApiErrorResponse> handlePhotoStorage(PhotoStorageException e, HttpServletRequest request){
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
