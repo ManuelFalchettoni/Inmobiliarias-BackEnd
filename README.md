@@ -116,6 +116,13 @@ razón social, email, teléfono, dirección, web y redes son únicos. Tiene un e
 
 Guarda fecha de creación y de última modificación solas.
 
+Antes de crear o editar se controla que CUIT, razón social, email y teléfono no estén usados
+por otra inmobiliaria; si lo están devuelve 409 con el campo repetido. Si se repite otro campo
+único (dirección, web, redes) también devuelve 409, con un mensaje general.
+
+La contraseña se guarda hasheada con BCrypt (`PasswordEncoder` en `SecurityConfig`), nunca
+como llega. Lo mismo en usuarios.
+
 ## Usuarios
 
 `/api/users`
@@ -129,7 +136,9 @@ Guarda fecha de creación y de última modificación solas.
 | `DELETE /api/users/{id}` | borrar |
 
 Campos: nombre, email, contraseña, teléfono y rol (`USER`, `AGENT`, `Agency`, `ADMIN`).
-Email y teléfono son únicos.
+Email y teléfono son únicos: si
+ya los tiene otro usuario, crear o editar devuelve 409. El email acepta hasta 100 caracteres y
+la contraseña se guarda hasheada con BCrypt.
 
 El listado va paginado, con el tamaño de página tapado en 50 para que nadie pida la tabla
 entera de una.

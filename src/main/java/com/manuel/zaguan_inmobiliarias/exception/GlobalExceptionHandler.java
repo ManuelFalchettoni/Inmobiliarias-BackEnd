@@ -1,6 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
+import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
@@ -8,8 +9,10 @@ import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoExce
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.user.UserAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -68,10 +71,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
     //------------------------------Agency------------------------------
     @ExceptionHandler(AgencyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleAgencyNotFound(AgencyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(AgencyAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleAgencyAlreadyExists(AgencyAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    //Red de seguridad para los unique que no se controlan antes (direccion, web, redes) o si dos
+    //requests guardan el mismo dato a la vez. No se muestra el mensaje de MySQL al cliente
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, "Some of the values are already registered", request);
     }
 
     //Los @Valid que fallan: junta los mensajes campo por campo en uno solo

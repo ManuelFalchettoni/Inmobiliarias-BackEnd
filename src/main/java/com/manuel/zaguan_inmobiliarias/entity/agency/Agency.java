@@ -36,13 +36,14 @@ public class Agency {
     @Size(min = 3, max = 30)
     private String publicName;
 
-    @Column(nullable = false, unique = true)
+    //El largo tiene que coincidir con el @Size de AgencyRequest
+    @Column(nullable = false, unique = true, length = 100)
     @Email
-    @Size(min = 3, max = 20)
     private String email;
 
+    //Sin @Size: aca se guarda el hash de BCrypt (60 caracteres), el largo de la contraseña
+    //se valida en AgencyRequest
     @Column(nullable = false)
-    @Size(min = 8, max = 20)
     private String password;
 
     @Column(nullable = false, unique = true)

@@ -28,7 +28,7 @@ public class AgencyRequest {
 
     @NotBlank
     @Email
-    @Size(min = 3, max = 20, message = "Email must be between 3 and 20 characters.")
+    @Size(min = 3, max = 100, message = "Email must be between 3 and 100 characters.")
     private String email;
 
     @NotBlank

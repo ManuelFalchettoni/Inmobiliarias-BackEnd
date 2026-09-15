@@ -26,13 +26,14 @@ public class User {
     @Size(min = 3, max = 20)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    //El largo tiene que coincidir con el @Size de UserRequest
+    @Column(nullable = false, unique = true, length = 100)
     @Email
-    @Size(min = 3, max = 20)
     private String email;
 
+    //Sin @Size: aca se guarda el hash de BCrypt (60 caracteres), el largo de la contraseña
+    //se valida en UserRequest
     @Column(nullable = false)
-    @Size(min = 8, max = 20)
     private String password;
 
     @Column(nullable = false, unique = true)

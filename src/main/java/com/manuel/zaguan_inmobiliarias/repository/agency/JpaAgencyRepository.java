@@ -20,5 +20,20 @@ public interface JpaAgencyRepository extends JpaRepository<Agency, Long>, JpaSpe
 
     boolean existsAgencyById(@NonNull Long id);
 
-    boolean existsAgencyByEmail(@NonNull String email);
+    boolean existsByCuit(@NonNull String cuit);
+
+    boolean existsByCompanyName(@NonNull String companyName);
+
+    boolean existsByEmail(@NonNull String email);
+
+    boolean existsByPhoneNumber(@NonNull String phoneNumber);
+
+    //Para editar: busca el valor en otras inmobiliarias, sin contar la que se esta editando
+    boolean existsByCuitAndIdNot(@NonNull String cuit, @NonNull Long id);
+
+    boolean existsByCompanyNameAndIdNot(@NonNull String companyName, @NonNull Long id);
+
+    boolean existsByEmailAndIdNot(@NonNull String email, @NonNull Long id);
+
+    boolean existsByPhoneNumberAndIdNot(@NonNull String phoneNumber, @NonNull Long id);
 }

@@ -14,7 +14,7 @@ public class UserMapper {
 
         user.setName(userRequest.getName());
         user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
+        //La contraseña no se copia aca: la hashea UserCreatorService
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
 

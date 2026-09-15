@@ -20,4 +20,11 @@ public interface JpaUserRepository extends JpaRepository<User, Long>, JpaSpecifi
 
     boolean existsByEmail(@NonNull String email);
 
+    boolean existsByPhoneNumber(@NonNull String phoneNumber);
+
+    //Para editar: busca el valor en otros usuarios, sin contar al que se esta editando
+    boolean existsByEmailAndIdNot(@NonNull String email, @NonNull Long id);
+
+    boolean existsByPhoneNumberAndIdNot(@NonNull String phoneNumber, @NonNull Long id);
+
 }
