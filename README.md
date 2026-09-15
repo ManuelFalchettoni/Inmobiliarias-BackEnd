@@ -6,7 +6,13 @@ Para correrlo hace falta MySQL levantado. Los datos de conexión salen de variab
 entorno (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`), con defaults para local.
 La base se crea sola la primera vez y el esquema lo arma Hibernate con `ddl-auto=update`.
 
+Las fotos se guardan en MinIO, que se levanta con Docker (API en el puerto 9000, consola web
+en http://localhost:9001 con `admin` / `admin12345`). Tiene que estar corriendo antes de
+arrancar el backend. La conexión sale de `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD` y
+`MINIO_BUCKET`, también con defaults para local.
+
 ```
+docker compose up -d
 ./mvnw spring-boot:run
 ```
 
@@ -72,15 +78,17 @@ de que MySQL rechace el insert.
 | `GET /{photoId}` | traer una |
 | `DELETE /{photoId}` | borrar |
 
-Los archivos se guardan en disco, en `uploads/photos`, y quedan servidos como estáticos bajo
-`/photos/**`. En la base solo queda la URL. El nombre del archivo se reemplaza por un UUID,
+Los archivos se suben al bucket `photos` de MinIO, que el backend crea solo al arrancar si no
+existe y deja con lectura pública, así la URL (`http://localhost:9000/photos/<uuid>.jpg`) se
+abre directo desde el navegador. Subir y borrar solo lo hace el backend. En la base solo
+queda la URL. El nombre del archivo se reemplaza por un UUID,
 sin ninguna relación con el original, y se aceptan jpg, jpeg, png y webp. Máximo 5MB por
 archivo, 30MB por request y 20 fotos por propiedad.
 
 Cada foto tiene una posición. La próxima se calcula a partir de la posición más alta que ya
 existe, no contando cuántas hay, para no repetir una que quedó libre por un borrado.
 
-La subida y el borrado cuidan que la base y el disco no queden desfasados: si algo falla en
+La subida y el borrado cuidan que la base y MinIO no queden desfasados: si algo falla en
 medio de una subida, se borran los archivos que ya se habían escrito; y al borrar, primero se
 saca la fila y recién después el archivo, para que un error haga rollback y la foto vuelva.
 
