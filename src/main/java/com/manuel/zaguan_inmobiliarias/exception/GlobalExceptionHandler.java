@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
-    //Red de seguridad para los unique que no se controlan antes (direccion, web, redes) o si dos
+    //Red de seguridad para los unique que no se controlan antes (direccion) o si dos
     //requests guardan el mismo dato a la vez. No se muestra el mensaje de MySQL al cliente
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException e, HttpServletRequest request){

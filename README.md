@@ -110,15 +110,19 @@ propiedad a la vez.
 | `PUT /api/agencies/{id}` | editar |
 | `DELETE /api/agencies/{id}` | borrar |
 
-Campos: CUIT, razón social, nombre público, email, teléfono, dirección, web y redes. CUIT,
-razón social, email, teléfono, dirección, web y redes son únicos. Tiene un estado
+Campos: CUIT, razón social, nombre público, email, teléfono, dirección, web y redes. Web y
+redes son opcionales y pueden repetirse; CUIT, razón social, email, teléfono y dirección son
+únicos. Tiene un estado
 (`PENDING`, `VERIFY`, `DENIED`) para el circuito de verificación.
 
 Guarda fecha de creación y de última modificación solas.
 
 Antes de crear o editar se controla que CUIT, razón social, email y teléfono no estén usados
-por otra inmobiliaria; si lo están devuelve 409 con el campo repetido. Si se repite otro campo
-único (dirección, web, redes) también devuelve 409, con un mensaje general.
+por otra inmobiliaria; si lo están devuelve 409 con el campo repetido. Si se repite la dirección
+también devuelve 409, con un mensaje general.
+
+Las validaciones están solo en el request; la entidad tiene el largo de cada columna, que
+coincide con el `@Size` del request. Lo mismo en usuarios.
 
 La contraseña se guarda hasheada con BCrypt (`PasswordEncoder` en `SecurityConfig`), nunca
 como llega. Lo mismo en usuarios.
@@ -135,7 +139,8 @@ como llega. Lo mismo en usuarios.
 | `PUT /api/users/{id}` | editar |
 | `DELETE /api/users/{id}` | borrar |
 
-Campos: nombre, email, contraseña, teléfono y rol (`USER`, `AGENT`, `Agency`, `ADMIN`).
+Campos: nombre, email, contraseña, teléfono y rol (`USER`, `AGENT`, `AGENCY`, `ADMIN`).
+Las fechas de creación y modificación se ponen solas.
 Email y teléfono son únicos: si
 ya los tiene otro usuario, crear o editar devuelve 409. El email acepta hasta 100 caracteres y
 la contraseña se guarda hasheada con BCrypt.

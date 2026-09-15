@@ -7,12 +7,10 @@ import com.manuel.zaguan_inmobiliarias.exception.user.UserAlreadyExistsException
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.user.UserMapper;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -40,9 +38,8 @@ public class UserUpdaterService {
         toUpdate.setEmail(userRequest.getEmail());
         toUpdate.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         toUpdate.setPhoneNumber(userRequest.getPhoneNumber());
-        LocalDateTime now = LocalDateTime.now();
-        toUpdate.setUpdatedAt(now);
 
-        return userMapper.toResponse(jpaUserRepository.save(toUpdate));
+        //updatedAt lo pone @UpdateTimestamp al flushear: sin el flush la respuesta saldria con la fecha vieja
+        return userMapper.toResponse(jpaUserRepository.saveAndFlush(toUpdate));
     }
 }

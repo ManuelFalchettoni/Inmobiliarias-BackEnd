@@ -43,10 +43,11 @@ public class AgencyRequest {
     @Size(min = 6, max = 40, message = "Address must be between 6 and 40 characters.")
     private String address;
 
-    @NotBlank
+    //Opcionales
+    @Size(max = 255, message = "Web URL must be at most 255 characters.")
     private String webURL;
 
-    @NotBlank
+    @Size(max = 255, message = "Socials must be at most 255 characters.")
     private String socials;
 
     @NotNull

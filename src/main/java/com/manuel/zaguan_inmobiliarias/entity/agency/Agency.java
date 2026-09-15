@@ -2,8 +2,6 @@ package com.manuel.zaguan_inmobiliarias.entity.agency;
 
 import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +11,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+//Las validaciones estan en AgencyRequest. Aca solo el largo de las columnas, que tiene que
+//coincidir con el @Size del request
 @Entity
 @Table(name = "agencies")
 @Getter @Setter
@@ -24,40 +24,33 @@ public class Agency {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column (nullable = false, unique = true)
-    @Size(min = 9, max = 13)
+    @Column (nullable = false, unique = true, length = 13)
     private String cuit;
 
-    @Column (nullable = false, unique = true)
-    @Size(min = 3, max = 30)
+    @Column (nullable = false, unique = true, length = 30)
     private String companyName;
 
-    @Column(nullable = false)
-    @Size(min = 3, max = 30)
+    @Column(nullable = false, length = 30)
     private String publicName;
 
-    //El largo tiene que coincidir con el @Size de AgencyRequest
     @Column(nullable = false, unique = true, length = 100)
-    @Email
     private String email;
 
-    //Sin @Size: aca se guarda el hash de BCrypt (60 caracteres), el largo de la contraseña
-    //se valida en AgencyRequest
+    //Se guarda el hash de BCrypt (60 caracteres), no la contraseña
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
-    @Size(min = 8, max = 15)
+    @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
-    @Column (nullable = false, unique = true)
-    @Size(min = 6, max = 40)
+    @Column (nullable = false, unique = true, length = 40)
     private String address;
 
-    @Column (unique = true)
+    //Opcionales y sin unique: varias sucursales pueden compartir la misma web o redes
+    @Column(length = 255)
     private String webURL;
 
-    @Column (unique = true)
+    @Column(length = 255)
     private String socials;
 
     @Column (nullable = false)

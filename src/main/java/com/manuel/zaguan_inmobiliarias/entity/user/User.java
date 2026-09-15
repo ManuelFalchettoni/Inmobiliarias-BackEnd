@@ -2,15 +2,17 @@ package com.manuel.zaguan_inmobiliarias.entity.user;
 
 import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+//Las validaciones estan en UserRequest. Aca solo el largo de las columnas, que tiene que
+//coincidir con el @Size del request
 @Entity
 @Getter
 @Setter
@@ -22,31 +24,28 @@ public class User {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    @Size(min = 3, max = 20)
+    @Column(nullable = false, length = 20)
     private String name;
 
-    //El largo tiene que coincidir con el @Size de UserRequest
     @Column(nullable = false, unique = true, length = 100)
-    @Email
     private String email;
 
-    //Sin @Size: aca se guarda el hash de BCrypt (60 caracteres), el largo de la contraseña
-    //se valida en UserRequest
+    //Se guarda el hash de BCrypt (60 caracteres), no la contraseña
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
-    @Size(min = 8, max = 15)
+    @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
     @Column
     private boolean active;
 
-    @Column
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)

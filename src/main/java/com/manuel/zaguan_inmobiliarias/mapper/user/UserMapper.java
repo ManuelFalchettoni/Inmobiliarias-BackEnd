@@ -5,8 +5,6 @@ import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
 @Component
 public class UserMapper {
     public User toEntity(UserRequest userRequest){
@@ -17,11 +15,8 @@ public class UserMapper {
         //La contraseña no se copia aca: la hashea UserCreatorService
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
-
-        LocalDateTime now = LocalDateTime.now();
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
         user.setActive(true);
+        //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
 
         return user;
     }
