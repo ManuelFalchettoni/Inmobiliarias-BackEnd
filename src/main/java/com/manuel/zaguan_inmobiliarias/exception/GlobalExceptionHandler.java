@@ -15,10 +15,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
@@ -103,6 +105,21 @@ public class GlobalExceptionHandler {
         }
 
         return build(HttpStatus.BAD_REQUEST, String.join(", ", messages), request);
+    }
+
+
+    //JSON roto, un campo que no existe (fail-on-unknown-properties=true) o un valor que no
+    //entra en el enum. Sin esto Spring devolvia su propio formato de error y el front tenia
+    //que saber leer dos formas distintas
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotReadable(HttpMessageNotReadableException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, "Malformed or invalid request body", request);
+    }
+
+    //El tipo del parametro no coincide: /api/properties/abc con id Long
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, "Invalid value for " + e.getName(), request);
     }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, HttpServletRequest request){
