@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -74,6 +75,9 @@ public class Property{
     @Column
     private int floorNumber;
 
+    //BatchSize va aca, sobre la coleccion: en un listado Hibernate trae las fotos de a 20
+    //propiedades por consulta, en vez de una consulta por propiedad (N+1)
+    @BatchSize(size = 20)
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PropertyPhoto> photos = new ArrayList<>();
 }
