@@ -26,6 +26,11 @@ public class MinioPhotoStorage implements PhotoStorage {
     private final String publicUrl;
     private static final Set<String> ALLOWED = Set.of("jpg", "jpeg", "png", "webp");
 
+    //El bucket se prepara en la primera subida, no en el constructor: si MinIO esta caido,
+    //el bean igual se crea y la API arranca. Antes fallaba el bean y no levantaba nada,
+    //ni siquiera los endpoints que no usan fotos
+    private volatile boolean bucketReady = false;
+
     public MinioPhotoStorage(MinioClient minioClient,
                              @Value("${minio.url}") String url,
                              @Value("${minio.bucket}") String bucket) {
@@ -33,7 +38,6 @@ public class MinioPhotoStorage implements PhotoStorage {
         this.bucket = bucket;
         //Asi queda la URL de cada foto: http://localhost:9000/photos/<uuid>.jpg
         this.publicUrl = url + "/" + bucket;
-        createBucketIfNotExists();
     }
 
     @Override
@@ -52,7 +56,10 @@ public class MinioPhotoStorage implements PhotoStorage {
         //4 Nombre nuevo, sin relacion con el original
         String fileName = UUID.randomUUID() + "." + extension;
 
-        //5 Subir a MinIO. El -1 es el tamaño de las partes: con el tamaño del archivo MinIO lo calcula solo
+        //5 Con MinIO caido esto tira PhotoStorageException y el endpoint responde 500
+        ensureBucket();
+
+        //6 Subir a MinIO. El -1 es el tamaño de las partes: con el tamaño del archivo MinIO lo calcula solo
         try (InputStream input = file.getInputStream()) {
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucket)
@@ -64,7 +71,7 @@ public class MinioPhotoStorage implements PhotoStorage {
             throw new PhotoStorageException("File could not be saved", e);
         }
 
-        //6 El objectKey que se guarda en la base
+        //7 El objectKey que se guarda en la base
         return fileName;
     }
 
@@ -88,6 +95,16 @@ public class MinioPhotoStorage implements PhotoStorage {
     @Override
     public String urlOf(String objectKey) {
         return publicUrl + "/" + objectKey;
+    }
+
+    //Se ejecuta una sola vez: despues de la primera subida bucketReady queda en true.
+    //volatile para que el valor se vea igual desde todos los hilos de Tomcat
+    private void ensureBucket() {
+        if (bucketReady) {
+            return;
+        }
+        createBucketIfNotExists();
+        bucketReady = true;
     }
 
     private void createBucketIfNotExists() {
