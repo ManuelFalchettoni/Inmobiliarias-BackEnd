@@ -1,25 +1,27 @@
 package com.manuel.zaguan_inmobiliarias.service.user;
 
+import com.manuel.zaguan_inmobiliarias.dto.request.user.UserPasswordRequest;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+//Cambiar la contraseña es lo unico que hace: el PUT de datos ya no la toca
 @Service
 @AllArgsConstructor
-public class UserDeleterService {
+public class UserPasswordUpdaterService {
     private final JpaUserRepository jpaUserRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    //Baja logica, como en Property: la fila no se borra, queda con active en false.
-    //El campo active ya existia en la entidad pero no lo usaba nadie
     @Transactional //Necesario porque no hay un metodo save para guardar el cambio
-    public void deleter(Long id){
+    public void updatePassword(Long id, UserPasswordRequest userPasswordRequest){
         User user = jpaUserRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setActive(false);
+        //La contraseña nunca se guarda como llega: se guarda el hash de BCrypt
+        user.setPassword(passwordEncoder.encode(userPasswordRequest.getPassword()));
     }
-
 }

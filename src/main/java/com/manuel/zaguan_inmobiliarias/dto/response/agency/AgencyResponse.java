@@ -32,6 +32,8 @@ public class AgencyResponse {
 
     private String socials;
 
+    private Boolean active;
+
     private AgencyStatus status;
 
     private LocalDateTime createdAt;

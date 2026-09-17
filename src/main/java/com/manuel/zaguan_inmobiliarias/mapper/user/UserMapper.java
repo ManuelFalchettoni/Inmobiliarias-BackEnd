@@ -1,6 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.mapper.user;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.user.UserRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.user.UserUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,13 @@ public class UserMapper {
         //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
 
         return user;
+    }
+
+    //La contraseña, el rol y active no se tocan al editar: cada uno tiene su endpoint
+    public void updateEntity(UserUpdateRequest userUpdateRequest, User user){
+        user.setName(userUpdateRequest.getName());
+        user.setEmail(userUpdateRequest.getEmail());
+        user.setPhoneNumber(userUpdateRequest.getPhoneNumber());
     }
 
     public UserResponse toResponse(User user) {

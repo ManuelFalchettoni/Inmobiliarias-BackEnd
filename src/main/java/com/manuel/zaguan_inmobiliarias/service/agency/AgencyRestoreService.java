@@ -10,17 +10,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 @AllArgsConstructor
-public class AgencyFinderService {
+public class AgencyRestoreService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
 
-    //Una inmobiliaria dada de baja responde 404. Para encontrarla hay que listar con
-    //active=false, igual que en Property
-    public AgencyResponse findById(Long id){
-        Agency agency = jpaAgencyRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(()-> new AgencyNotFoundException(id));
+    @Transactional
+    public AgencyResponse restore(Long id){
+        //findById pelado: si la inmobiliaria ya estaba activa no hace nada y devuelve 200 igual
+        Agency agency = jpaAgencyRepository.findById(id)
+                .orElseThrow(() -> new AgencyNotFoundException(id));
+
+        agency.setActive(true);
+
+        //Flush para que updatedAt salga actualizado en la respuesta
+        jpaAgencyRepository.saveAndFlush(agency);
         return agencyMapper.toResponse(agency);
     }
 }

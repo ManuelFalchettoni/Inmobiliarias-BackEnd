@@ -10,17 +10,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 @AllArgsConstructor
-public class UserFinderService {
+public class UserRestoreService {
     private final JpaUserRepository jpaUserRepository;
     private final UserMapper userMapper;
 
-    //Un usuario dado de baja responde 404. Para encontrarlo hay que listar con active=false,
-    //igual que en Property
-    public UserResponse findById(Long id){
-         User user = jpaUserRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(()-> new UserNotFoundException(id));
-         return userMapper.toResponse(user);
+    @Transactional
+    public UserResponse restore(Long id){
+        //findById pelado: si el usuario ya estaba activo no hace nada y devuelve 200 igual
+        User user = jpaUserRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.setActive(true);
+
+        //Flush para que updatedAt salga actualizado en la respuesta
+        jpaUserRepository.saveAndFlush(user);
+        return userMapper.toResponse(user);
     }
 }

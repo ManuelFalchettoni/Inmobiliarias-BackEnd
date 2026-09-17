@@ -53,7 +53,17 @@ public class Agency {
     @Column(length = 255)
     private String socials;
 
-    @Column (nullable = false)
+    //Baja logica: la inmobiliaria no se borra nunca de la base. Property.idAgency es un id
+    //suelto, sin FK, asi que un borrado fisico dejaria propiedades apuntando a la nada
+    @Column(nullable = false)
+    private Boolean active;
+
+    //status es el estado de verificacion, no el alta/baja: una inmobiliaria dada de baja
+    //conserva el status que tenia
+    //columnDefinition varchar y no el ENUM nativo que Hibernate genera por defecto en MySQL:
+    //con ddl-auto=update la columna ENUM no se modifica, asi que agregar una constante
+    //nueva al enum rompe los inserts
+    @Column (nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private AgencyStatus status;
 

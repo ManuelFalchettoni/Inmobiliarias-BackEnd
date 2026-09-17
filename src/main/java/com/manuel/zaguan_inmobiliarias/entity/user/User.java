@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 //Las validaciones estan en UserRequest. Aca solo el largo de las columnas, que tiene que
 //coincidir con el @Size del request
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,7 +38,8 @@ public class User {
     @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
-    @Column
+    //Baja logica: el delete lo pone en false, la fila no se borra
+    @Column(nullable = false)
     private boolean active;
 
     @CreationTimestamp
@@ -48,7 +50,10 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    //columnDefinition varchar y no el ENUM nativo que Hibernate genera por defecto en MySQL:
+    //con ddl-auto=update la columna ENUM no se modifica, asi que agregar una constante
+    //nueva al enum rompe los inserts
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     @Enumerated (EnumType.STRING)
     private UserRol rol;
 

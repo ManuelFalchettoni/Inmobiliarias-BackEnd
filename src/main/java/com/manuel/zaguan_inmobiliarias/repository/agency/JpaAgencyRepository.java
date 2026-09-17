@@ -2,6 +2,8 @@ package com.manuel.zaguan_inmobiliarias.repository.agency;
 
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -18,7 +20,15 @@ public interface JpaAgencyRepository extends JpaRepository<Agency, Long>, JpaSpe
 
     Optional<Agency> findByCompanyName(String companyName);
 
+    //Las vigentes. Una dada de baja se busca con findById pelado, para poder restaurarla
+    Optional<Agency> findByIdAndActiveTrue(@NonNull Long id);
+
+    //Con true salen las vigentes, con false las dadas de baja
+    Page<Agency> findAllByActive(Boolean active, Pageable pageable);
+
     boolean existsAgencyById(@NonNull Long id);
+
+    boolean existsByIdAndActiveTrue(@NonNull Long id);
 
     boolean existsByCuit(@NonNull String cuit);
 
