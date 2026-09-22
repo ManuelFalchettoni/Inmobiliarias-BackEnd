@@ -41,6 +41,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handlePropertyAgencyMismatch(PropertyAgencyMismatchException e, HttpServletRequest request){
         return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
+    //------------------Password (usuarios e inmobiliarias)-------------
+    //400 y no 401: no hay login ni sesion, es un dato del body que no coincide
+    @ExceptionHandler(InvalidCurrentPasswordException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCurrentPassword(InvalidCurrentPasswordException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
     //---------------------PropertyPhoto----------------------------
     @ExceptionHandler(PropertyPhotoNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePhotoNotFound(PropertyPhotoNotFoundException e, HttpServletRequest request){

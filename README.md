@@ -91,8 +91,8 @@ entre lo vigente y lo dado de baja (true por defecto).
 | Recurso | `size` default | Orden default | Filtros extra |
 |---|---|---|---|
 | `/api/properties` | 20 | `createdAt` desc | `idAgency` |
-| `/api/agencies` | 5 | `createdAt` desc | — |
-| `/api/users` | 5 | `createdAt` desc | — |
+| `/api/agencies` | 20 | `createdAt` desc | — |
+| `/api/users` | 20 | `createdAt` desc | — |
 
 El listado de fotos es la excepción: array común, sin paginar.
 
@@ -245,7 +245,7 @@ No hay que setear `Content-Type` a mano.
 
 | | |
 |---|---|
-| Formatos | `jpg`, `jpeg`, `png`, `webp` (por extensión del nombre, no por mime type) |
+| Formatos | `jpg`, `jpeg`, `png`, `webp`: tienen que coincidir la extensión del nombre y el `Content-Type` de la parte, que debe empezar con `image/` |
 | Tamaño | máx 5MB por archivo, 30MB por request |
 | Cantidad | máx 20 por propiedad, contando las que ya están |
 
@@ -339,11 +339,15 @@ resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llev
 | `socials` | string | no | sí | máx 255 |
 | `status` | enum `AgencyStatus` | sí | sí | `PENDING`, `VERIFY`, `DENIED` |
 
-`PATCH /{id}/password` lleva solo la contraseña nueva:
+`PATCH /{id}/password` lleva la contraseña actual y la nueva. Las dos son obligatorias: sin
+la actual no se cambia nada.
 
 ```json
-{ "password": "otraClave123" }
+{ "currentPassword": "unaClave123", "password": "otraClave123" }
 ```
+
+Si `currentPassword` no coincide con la guardada, da 400 con
+`"Current password does not match"`.
 
 ### Response
 
@@ -375,13 +379,12 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` · 404 · 409 igual que el `POST` |
-| `PATCH /{id}/password` | 204 sin body | 400 validación · 404 |
+| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 
-El 409 de CUIT, razón social, email y teléfono dice cuál es el repetido
-(`"Email already registered: contacto@zaguan.com"`). El de dirección lo tira la base y sale
-genérico.
+El 409 dice cuál es el campo repetido, dirección incluida
+(`"Email already registered: contacto@zaguan.com"`).
 
 ## Usuarios
 
@@ -429,11 +432,15 @@ llevan body.
 
 El campo es `rol`, no `role`.
 
-`PATCH /{id}/password` lleva solo la contraseña nueva:
+`PATCH /{id}/password` lleva la contraseña actual y la nueva. Las dos son obligatorias: sin
+la actual no se cambia nada.
 
 ```json
-{ "password": "otraClave123" }
+{ "currentPassword": "unaClave123", "password": "otraClave123" }
 ```
+
+Si `currentPassword` no coincide con la guardada, da 400 con
+`"Current password does not match"`.
 
 ### Response
 
@@ -460,7 +467,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` o `rol` · 404 · 409 email o teléfono de otro usuario |
-| `PATCH /{id}/password` | 204 sin body | 400 validación · 404 |
+| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 

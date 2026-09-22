@@ -12,6 +12,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgencyPasswordRequest {
+
+    //La actual, para confirmar que quien cambia la contraseña es el dueño de la cuenta.
+    //Sin @Size: la que esta guardada puede venir de reglas viejas, solo tiene que coincidir
+    @NotBlank
+    private String currentPassword;
+
     @NotBlank
     @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters.")
     private String password;

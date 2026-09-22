@@ -38,6 +38,10 @@ public class AgencyUpdaterService {
             throw new AgencyAlreadyExistsException("Phone number already registered: " + agencyUpdateRequest.getPhoneNumber());
         }
 
+        if (jpaAgencyRepository.existsByAddressAndIdNot(agencyUpdateRequest.getAddress(), id)) {
+            throw new AgencyAlreadyExistsException("Address already registered: " + agencyUpdateRequest.getAddress());
+        }
+
         agencyMapper.updateEntity(agencyUpdateRequest, toUpdate);
 
         //updatedAt lo pone @UpdateTimestamp al flushear

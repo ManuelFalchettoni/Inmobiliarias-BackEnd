@@ -25,7 +25,7 @@ public class AgenciesGetController {
     @GetMapping
     public ResponseEntity<Page<AgencyResponse>> getAll(
             @RequestParam(defaultValue = "true") Boolean active,
-            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
 
         Page<AgencyResponse> agencyResponses = agenciesSearcherService.findAll(active, pageable);
 

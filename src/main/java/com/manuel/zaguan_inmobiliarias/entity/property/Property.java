@@ -28,7 +28,7 @@ public class Property{
 
     //El largo tiene que coincidir con el @Size de PropertyRequest, si no la validacion
     //deja pasar textos que despues MySQL rechaza
-    @Column(length = 150)
+    @Column(nullable = false, length = 150)
     private String address;
 
     @Column(nullable = false)
@@ -41,7 +41,7 @@ public class Property{
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String location;
 
     @Column
@@ -58,10 +58,10 @@ public class Property{
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column
+    @Column(nullable = false)
     private int rooms;
 
-    @Column
+    @Column(nullable = false)
     private int size;
 
     @Column(name = "property_condition", nullable = false, columnDefinition = "varchar(30)")

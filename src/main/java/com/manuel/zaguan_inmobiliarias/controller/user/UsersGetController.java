@@ -26,7 +26,7 @@ public class UsersGetController {
     @GetMapping
     public ResponseEntity<Page<UserResponse>> getUsers(
             @RequestParam(defaultValue = "true") Boolean active,
-            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
 
         Page<UserResponse> usersResponse = usersSearcherService.findAll(active, pageable);
         return ResponseEntity.ok(usersResponse);

@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.service.user;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.user.UserPasswordRequest;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
+import com.manuel.zaguan_inmobiliarias.exception.InvalidCurrentPasswordException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,11 @@ public class UserPasswordUpdaterService {
     public void updatePassword(Long id, UserPasswordRequest userPasswordRequest){
         User user = jpaUserRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        //Se compara contra el hash guardado: la actual tiene que coincidir para poder cambiarla
+        if (!passwordEncoder.matches(userPasswordRequest.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidCurrentPasswordException();
+        }
 
         //La contraseña nunca se guarda como llega: se guarda el hash de BCrypt
         user.setPassword(passwordEncoder.encode(userPasswordRequest.getPassword()));

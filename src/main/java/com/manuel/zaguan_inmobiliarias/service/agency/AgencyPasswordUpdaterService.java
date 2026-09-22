@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.service.agency;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyPasswordRequest;
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
+import com.manuel.zaguan_inmobiliarias.exception.InvalidCurrentPasswordException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,11 @@ public class AgencyPasswordUpdaterService {
     public void updatePassword(Long id, AgencyPasswordRequest agencyPasswordRequest){
         Agency agency = jpaAgencyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new AgencyNotFoundException(id));
+
+        //Se compara contra el hash guardado: la actual tiene que coincidir para poder cambiarla
+        if (!passwordEncoder.matches(agencyPasswordRequest.getCurrentPassword(), agency.getPassword())) {
+            throw new InvalidCurrentPasswordException();
+        }
 
         //La contraseña nunca se guarda como llega: se guarda el hash de BCrypt
         agency.setPassword(passwordEncoder.encode(agencyPasswordRequest.getPassword()));

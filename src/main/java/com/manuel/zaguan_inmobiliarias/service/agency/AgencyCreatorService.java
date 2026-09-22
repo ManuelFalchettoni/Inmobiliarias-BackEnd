@@ -36,6 +36,10 @@ public class AgencyCreatorService {
             throw new AgencyAlreadyExistsException("Phone number already registered: " + agencyRequest.getPhoneNumber());
         }
 
+        if (jpaAgencyRepository.existsByAddress(agencyRequest.getAddress())) {
+            throw new AgencyAlreadyExistsException("Address already registered: " + agencyRequest.getAddress());
+        }
+
         Agency agency = agencyMapper.toEntity(agencyRequest);
         //La contraseña nunca se guarda como llega: se guarda el hash de BCrypt
         agency.setPassword(passwordEncoder.encode(agencyRequest.getPassword()));
