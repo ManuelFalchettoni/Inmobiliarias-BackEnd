@@ -2,6 +2,9 @@
 
 Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 
+Hace falta MySQL corriendo en el 3306: no está en el `docker-compose.yml`, que levanta solo
+MinIO. La base no hay que crearla, el servidor sí tiene que estar levantado.
+
 ```
 docker compose up -d
 ./mvnw spring-boot:run
@@ -13,19 +16,24 @@ Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NA
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
 `CORS_ORIGINS`.
 
+- MySQL: en el 3306, con `root` / `root`. La base la crea el driver con
+  `createDatabaseIfNotExist` y el esquema Hibernate con `ddl-auto=update`.
 - MinIO: API en el puerto 9000, consola en `http://localhost:9001` (`admin` / `admin12345`).
-- La base y el esquema los crea Hibernate con `ddl-auto=update`.
 - MinIO no hace falta para arrancar: el bucket se prepara en la primera subida. Sin MinIO
-  fallan solo los endpoints de fotos, con 500.
+  fallan solo el `POST` y el `DELETE` de fotos, con 500; los `GET` andan igual, porque la URL
+  se arma con `minio.url` sin consultar nada.
 
 ## Estructura
 
-Un paquete por entidad (`property`, `property.photo`, `agency`, `user`) y adentro las capas:
-controller, service, mapper, repository, dto, entity. Un controller y un service por operación.
+Un paquete por capa (`controller`, `service`, `mapper`, `repository`, `dto`, `entity`) y
+adentro uno por entidad: `controller/agency`, `service/agency`, `dto/request/agency`. Un
+controller y un service por operación.
 
 Las entidades no entran ni salen por la API: entra un `XRequest`, sale un `XResponse`, traduce
 el mapper. Los errores los unifica `GlobalExceptionHandler` con `@RestControllerAdvice`.
 `SecurityConfig` deja la API abierta, sin sesión, y define el `PasswordEncoder` (BCrypt).
+Las excepciones siguen el mismo corte por entidad; la única compartida por dos entidades,
+`InvalidCurrentPasswordException`, vive en la raíz de `exception`.
 
 ---
 
@@ -47,7 +55,7 @@ Las fotos salen de MinIO, no del backend. Con el `src` de un `<img>` no pasan po
 
 ## Errores
 
-Todos los errores tienen el mismo formato:
+Los errores que pasan por `GlobalExceptionHandler` tienen todos el mismo formato:
 
 ```json
 {
@@ -65,6 +73,10 @@ Todos los errores tienen el mismo formato:
 | JSON roto, enum inexistente o campo desconocido | 400 | `"Malformed or invalid request body"` |
 | Path variable del tipo equivocado | 400 | `"Invalid value for id"` |
 | Único repetido que no se controla antes | 409 | `"Some of the values are already registered"` |
+
+Lo que no llega al handler sale con el formato default de Spring: el mismo JSON pero **sin
+`message`**. Son tres casos: una ruta que no existe, un `multipart` con el nombre de parte
+equivocado y cualquier excepción no prevista.
 
 ## Listados
 
@@ -249,6 +261,10 @@ No hay que setear `Content-Type` a mano.
 | Tamaño | máx 5MB por archivo, 30MB por request |
 | Cantidad | máx 20 por propiedad, contando las que ya están |
 
+Los dos límites de tamaño se combinan: las 20 fotos no entran en un request de 30MB. Siete
+archivos de 5MB dan 413 aunque ninguno pase el máximo por archivo, así que conviene subir de
+a tandas de seis.
+
 `GET` y `DELETE` no llevan body.
 
 ### Response
@@ -274,7 +290,7 @@ original, solo para mostrar.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 sin archivos, archivo vacío o formato no permitido · 404 propiedad inexistente o dada de baja · 409 se pasa de 20 · 413 archivo > 5MB o request > 30MB · 500 MinIO caído |
+| `POST` | 201 | 400 sin archivos, archivo vacío, extensión no permitida o `Content-Type` que no empieza con `image/` · 404 propiedad inexistente o dada de baja · 409 se pasa de 20 · 413 archivo > 5MB o request > 30MB · 500 MinIO caído |
 | `GET` listado | 200 | 404 propiedad inexistente o dada de baja |
 | `GET /{photoId}` | 200 | 404 propiedad o foto inexistente · 404 la foto es de otra propiedad |
 | `DELETE /{photoId}` | 204 sin body | 404 igual que arriba · 500 MinIO caído |
