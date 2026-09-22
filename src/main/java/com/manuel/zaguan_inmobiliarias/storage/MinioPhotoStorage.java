@@ -47,10 +47,18 @@ public class MinioPhotoStorage implements PhotoStorage {
             throw new InvalidPhotoException("The file is empty");
         }
 
-        //2 y 3. extension permitida
+        //2. Extension permitida
         String extension = extensionOf(file.getOriginalFilename());
         if (!ALLOWED.contains(extension)) {
             throw new InvalidPhotoException("Invalid format: " + extension);
+        }
+
+        //3. El content-type tiene que ser de imagen: la extension la elige el cliente y se
+        //puede renombrar cualquier archivo a .jpg. El bucket es de lectura publica, asi que lo
+        //que entra se sirve tal cual
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidPhotoException("Invalid content type: " + contentType);
         }
 
         //4 Nombre nuevo, sin relacion con el original
