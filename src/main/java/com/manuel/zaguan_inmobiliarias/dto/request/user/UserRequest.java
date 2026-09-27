@@ -21,6 +21,7 @@ public class UserRequest {
 
     @NotBlank
     @Email(message = "Email should be valid.")
+    @Size(max = 100, message = "Email must be at most 100 characters.")
     private String email;
 
     @NotBlank
@@ -29,7 +30,7 @@ public class UserRequest {
 
     @NotBlank
     @Size(min = 8, max = 15, message = "phoneNumber must be between 8 and 15 characters.")
-    private int phoneNumber;
+    private String phoneNumber;
 
     @NotNull
     private UserRol rol;

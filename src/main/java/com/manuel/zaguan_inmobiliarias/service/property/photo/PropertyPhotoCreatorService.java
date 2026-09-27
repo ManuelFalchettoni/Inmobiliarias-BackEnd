@@ -49,17 +49,21 @@ public class PropertyPhotoCreatorService {
         }
 
         List<PropertyPhotoResponse> responses = new ArrayList<>();
-        List<String> storedUrls = new ArrayList<>();
-        int position = countPhotos;
+        List<String> storedKeys = new ArrayList<>();
+
+        //No se usa countPhotos: si se borro una foto del medio, el count repetiria una position ya ocupada
+        int position = jpaPropertyPhotoRepository.findFirstByPropertyIdOrderByPositionDesc(propertyId)
+                .map(photo -> photo.getPosition() + 1)
+                .orElse(0);
 
         try {
             for (MultipartFile file : files ){
-                String url = photoStorage.store(file);
-                storedUrls.add(url);
+                String objectKey = photoStorage.store(file);
+                storedKeys.add(objectKey);
 
                 PropertyPhoto photo = new PropertyPhoto();
-                photo.setUrl(url);
-                photo.setPhotoName(file.getOriginalFilename());
+                photo.setObjectKey(objectKey);
+                photo.setPhotoName(photoNameOf(file));
                 photo.setPosition(position++);
                 photo.setProperty(property);
 
@@ -68,12 +72,22 @@ public class PropertyPhotoCreatorService {
             }
         } catch (RuntimeException e) {
             //De la base se encarga el rollback, pero los archivos que ya se escribieron hay que borrarlos a mano
-            for (String url : storedUrls) {
-                photoStorage.delete(url);
+            for (String objectKey : storedKeys) {
+                photoStorage.delete(objectKey);
             }
             throw e;
         }
 
         return responses;
+    }
+
+    //El nombre original lo elige el cliente y puede ser de cualquier largo: se corta en 255,
+    //que es el largo de la columna photoName
+    private String photoNameOf(MultipartFile file) {
+        String name = file.getOriginalFilename();
+        if (name != null && name.length() > 255) {
+            return name.substring(0, 255);
+        }
+        return name;
     }
 }

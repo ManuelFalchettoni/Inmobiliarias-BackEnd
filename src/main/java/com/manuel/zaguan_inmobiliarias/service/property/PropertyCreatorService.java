@@ -24,7 +24,8 @@ public class PropertyCreatorService {
 
     @Transactional
     public PropertyResponse create(PropertyRequest request){
-        if (jpaAgencyRepository.existsAgencyById(request.getIdAgency())){
+        //existsByIdAndActiveTrue: no se cargan propiedades a una inmobiliaria dada de baja
+        if (jpaAgencyRepository.existsByIdAndActiveTrue(request.getIdAgency())){
             Property property = jpaPropertyRepository.save(propertyMapper.toEntity(request));
             return propertyMapper.toResponse(property);
         }
