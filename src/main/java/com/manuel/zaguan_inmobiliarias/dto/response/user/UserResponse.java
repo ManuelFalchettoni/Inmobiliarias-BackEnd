@@ -20,7 +20,7 @@ public class UserResponse {
 
     private boolean active;
 
-    private int phoneNumber;
+    private String phoneNumber;
 
     private String rol;
 

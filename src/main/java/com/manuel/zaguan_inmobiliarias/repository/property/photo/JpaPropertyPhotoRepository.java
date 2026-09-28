@@ -16,4 +16,8 @@ public interface JpaPropertyPhotoRepository extends JpaRepository<PropertyPhoto,
 
     int countByPropertyId(Long propertyId);
 
+    //La foto con la position mas alta. Sirve para saber en que position entra la proxima,
+    //sin reusar una que quedo libre por un borrado.
+    Optional<PropertyPhoto> findFirstByPropertyIdOrderByPositionDesc(Long propertyId);
+
 }

@@ -7,16 +7,19 @@ import com.manuel.zaguan_inmobiliarias.mapper.user.UserMapper;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 @AllArgsConstructor
 public class UserFinderService {
     private final JpaUserRepository jpaUserRepository;
     private final UserMapper userMapper;
 
-
+    //Un usuario dado de baja responde 404. Para encontrarlo hay que listar con active=false,
+    //igual que en Property
     public UserResponse findById(Long id){
-         User user = jpaUserRepository.findById(id)
+         User user = jpaUserRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
          return userMapper.toResponse(user);
     }

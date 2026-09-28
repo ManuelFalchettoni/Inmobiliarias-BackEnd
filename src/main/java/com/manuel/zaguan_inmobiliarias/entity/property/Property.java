@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -25,17 +26,22 @@ public class Property{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    //El largo tiene que coincidir con el @Size de PropertyRequest, si no la validacion
+    //deja pasar textos que despues MySQL rechaza
+    @Column(nullable = false, length = 150)
     private String address;
 
     @Column(nullable = false)
     private Boolean active;
 
-    @Column(nullable = false)
+    //columnDefinition varchar y no el ENUM nativo que Hibernate genera por defecto en MySQL:
+    //con ddl-auto=update la columna ENUM no se modifica, asi que agregar una constante
+    //nueva al enum rompe los inserts
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
-    @Column
+    @Column(nullable = false, length = 100)
     private String location;
 
     @Column
@@ -52,23 +58,26 @@ public class Property{
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column
+    @Column(nullable = false)
     private int rooms;
 
-    @Column
+    @Column(nullable = false)
     private int size;
 
-    @Column(name = "property_condition", nullable = false)
+    @Column(name = "property_condition", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyCondition condition;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PropertyOccupancy occupancy;
 
     @Column
     private int floorNumber;
 
+    //BatchSize va aca, sobre la coleccion: en un listado Hibernate trae las fotos de a 20
+    //propiedades por consulta, en vez de una consulta por propiedad (N+1)
+    @BatchSize(size = 20)
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PropertyPhoto> photos = new ArrayList<>();
 }
