@@ -3,12 +3,15 @@ package com.manuel.zaguan_inmobiliarias.dto.request.property;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,13 +23,30 @@ import lombok.Setter;
 public class PropertyRequest {
 
     @NotBlank
+    @Size(max = 150)
     private String address;
 
     @NotNull
     private PropertyType type;
 
     @NotBlank
-    private String location;
+    @Size(max = 50)
+    private String province;
+
+    @Size(max = 100)
+    private String county;
+
+    @NotBlank
+    @Size(max = 100)
+    private String city;
+
+    @DecimalMin("-90")
+    @DecimalMax("90")
+    private Double latitude;
+
+    @DecimalMin("-180")
+    @DecimalMax("180")
+    private Double longitude;
 
     @NotNull
     private Long idAgency;

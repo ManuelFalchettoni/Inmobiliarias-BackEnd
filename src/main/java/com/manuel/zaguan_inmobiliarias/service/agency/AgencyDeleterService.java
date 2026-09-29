@@ -1,49 +1,26 @@
 package com.manuel.zaguan_inmobiliarias.service.agency;
 
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
-import com.manuel.zaguan_inmobiliarias.entity.user.User;
-import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
-import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
-import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyDeletedException;
-import com.manuel.zaguan_inmobiliarias.exception.agency.NotAgencyOwnerException;
+import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
-import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class AgencyDeleterService {
     private final JpaAgencyRepository jpaAgencyRepository;
-    private final AgencyFinderService agencyFinderService;
-    private final JpaUserRepository jpaUserRepository;
 
+    //Baja logica, como en Property: la fila no se borra nunca. Property.idAgency es un id
+    //suelto, sin FK, asi que el delete fisico dejaba propiedades apuntando a una
+    //inmobiliaria que ya no existe
+    @Transactional //Necesario porque no hay un metodo save para guardar el cambio
     public void delete (Long id){
-        agencyFinderService.findById(id);
-        jpaAgencyRepository.deleteById(id);
-    }
+        Agency agency = jpaAgencyRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new AgencyNotFoundException(id));
 
-    @Transactional
-    public void deleteAgency(Long id, Long userId){
-        Agency agency = agencyFinderService.findAgency(id);
-
-        if(agency.getStatus() == AgencyStatus.DELETED){
-           throw new AgencyAlreadyDeletedException("Agency with id: " + agency.getId() + " is already deleted.");
-        }
-        if(!agency.getUser().getId().equals(userId)){
-            throw new NotAgencyOwnerException("Only the agency owner can delete the account.");
-        }
-        agency.setStatus(AgencyStatus.DELETED);
-        jpaAgencyRepository.save(agency);
-        List<User> affectedUsers = jpaUserRepository.findByAgency_Id(id);
-        for (User user : affectedUsers) {
-            user.setAgency(null);
-            user.setRol(UserRol.USER);
-        }
-        jpaUserRepository.saveAll(affectedUsers);
+        agency.setActive(false);
     }
 
 }

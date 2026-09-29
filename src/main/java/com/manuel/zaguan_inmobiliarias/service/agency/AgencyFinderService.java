@@ -9,15 +9,19 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 @AllArgsConstructor
 public class AgencyFinderService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
 
+    //Una inmobiliaria dada de baja responde 404. Para encontrarla hay que listar con
+    //active=false, igual que en Property
     public AgencyResponse findById(Long id){
-        Agency agency = jpaAgencyRepository.findById(id)
+        Agency agency = jpaAgencyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()-> new AgencyNotFoundException(id));
         return agencyMapper.toResponse(agency);
     }

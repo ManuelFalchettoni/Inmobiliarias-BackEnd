@@ -1,50 +1,50 @@
 package com.manuel.zaguan_inmobiliarias.service.agency;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyUpdaterRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
-import com.manuel.zaguan_inmobiliarias.entity.user.User;
-import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
-import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyDeletedException;
-import com.manuel.zaguan_inmobiliarias.exception.agency.NotAgencyOwnerException;
+import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
+import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.agency.AgencyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
-import com.manuel.zaguan_inmobiliarias.service.user.UserFinderService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class AgencyUpdaterService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
-    private final AgencyFinderService agencyFinderService;
-    private final UserFinderService userFinderService;
-
 
     @Transactional
-    public AgencyResponse update (Long id, AgencyUpdaterRequest agencyRequest, Long userId){
-        Agency toUpdate = agencyFinderService.findAgency(id);
+    public AgencyResponse update (Long id, AgencyUpdateRequest agencyUpdateRequest){
+        Agency toUpdate = jpaAgencyRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new AgencyNotFoundException(id));
 
-        if (!toUpdate.getUser().getId().equals(userId)){
-            throw  new NotAgencyOwnerException("Only the owner of the agency can update.");
+        //Los controles van antes de los set: si la inmobiliaria ya tiene los datos nuevos, la
+        //consulta exists haria flush y saltaria el error de la base antes que el nuestro.
+        //Se busca el valor en otras inmobiliarias: la que se edita puede mantener sus datos
+        if (jpaAgencyRepository.existsByCuitAndIdNot(agencyUpdateRequest.getCuit(), id)) {
+            throw new AgencyAlreadyExistsException("Cuit already registered: " + agencyUpdateRequest.getCuit());
         }
-        if (toUpdate.getStatus() == AgencyStatus.DELETED){
-            throw  new AgencyAlreadyDeletedException("The agency with id: " + toUpdate.getId() + " is deleted.");
+        if (jpaAgencyRepository.existsByCompanyNameAndIdNot(agencyUpdateRequest.getCompanyName(), id)) {
+            throw new AgencyAlreadyExistsException("Company name already registered: " + agencyUpdateRequest.getCompanyName());
         }
-        User user = userFinderService.find(userId);
+        if (jpaAgencyRepository.existsByEmailAndIdNot(agencyUpdateRequest.getEmail(), id)) {
+            throw new AgencyAlreadyExistsException("Email already registered: " + agencyUpdateRequest.getEmail());
+        }
+        if (jpaAgencyRepository.existsByPhoneNumberAndIdNot(agencyUpdateRequest.getPhoneNumber(), id)) {
+            throw new AgencyAlreadyExistsException("Phone number already registered: " + agencyUpdateRequest.getPhoneNumber());
+        }
 
-        toUpdate.setCompanyName(agencyRequest.getCompanyName());
-        toUpdate.setPublicName(agencyRequest.getPublicName());
-        toUpdate.setAddress(agencyRequest.getAddress());
-        toUpdate.setSocials(agencyRequest.getSocials());
-        toUpdate.setWebURL(agencyRequest.getWebURL());
-        LocalDateTime now = LocalDateTime.now();
-        toUpdate.setUpdatedAt(now);
+        if (jpaAgencyRepository.existsByAddressAndIdNot(agencyUpdateRequest.getAddress(), id)) {
+            throw new AgencyAlreadyExistsException("Address already registered: " + agencyUpdateRequest.getAddress());
+        }
 
-        return agencyMapper.toResponse(jpaAgencyRepository.save(toUpdate));
+        agencyMapper.updateEntity(agencyUpdateRequest, toUpdate);
+
+        //updatedAt lo pone @UpdateTimestamp al flushear
+        return agencyMapper.toResponse(jpaAgencyRepository.saveAndFlush(toUpdate));
     }
 }

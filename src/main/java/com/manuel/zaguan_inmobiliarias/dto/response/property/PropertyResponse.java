@@ -1,6 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.property;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.property.photo.PropertyPhotoResponse;
+import com.manuel.zaguan_inmobiliarias.dto.response.property.price.PropertyPriceResponse;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
@@ -25,7 +26,15 @@ public class PropertyResponse {
 
     private PropertyType type;
 
-    private String location;
+    private String province;
+
+    private String county;
+
+    private String city;
+
+    private Double latitude;
+
+    private Double longitude;
 
     private Long idAgency;
 
@@ -46,4 +55,6 @@ public class PropertyResponse {
     private int floorNumber;
 
     private List<PropertyPhotoResponse> photos = new ArrayList<>();
+
+    private List<PropertyPriceResponse> prices = new ArrayList<>();
 }

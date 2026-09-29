@@ -1,29 +1,34 @@
 package com.manuel.zaguan_inmobiliarias.mapper.user;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.user.UserRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.user.UserUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
 @Component
 public class UserMapper {
-    public User toEntity(AuthUserRequest userRequest){
+    public User toEntity(UserRequest userRequest){
         User user = new User();
 
         user.setName(userRequest.getName());
         user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
+        //La contraseña no se copia aca: la hashea UserCreatorService
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
-
-        LocalDateTime now = LocalDateTime.now();
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
+        user.setIdAgency(userRequest.getIdAgency());
         user.setActive(true);
+        //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
 
         return user;
+    }
+
+    //La contraseña, el rol y active no se tocan al editar: cada uno tiene su endpoint.
+    //idAgency tampoco: un usuario no cambia de inmobiliaria
+    public void updateEntity(UserUpdateRequest userUpdateRequest, User user){
+        user.setName(userUpdateRequest.getName());
+        user.setEmail(userUpdateRequest.getEmail());
+        user.setPhoneNumber(userUpdateRequest.getPhoneNumber());
     }
 
     public UserResponse toResponse(User user) {
@@ -32,8 +37,9 @@ public class UserMapper {
         userResponse.setId(user.getId());
         userResponse.setName(user.getName());
         userResponse.setEmail(user.getEmail());
-        userResponse.setPhoneNumber(userResponse.getPhoneNumber());
+        userResponse.setPhoneNumber(user.getPhoneNumber());
         userResponse.setRol(user.getRol());
+        userResponse.setIdAgency(user.getIdAgency());
         userResponse.setActive(user.isActive());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());

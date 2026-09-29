@@ -8,17 +8,24 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 @AllArgsConstructor
 public class UsersSearcherService {
     private final JpaUserRepository jpaUserRepository;
     private final UserMapper userMapper;
 
-    public Page<UserResponse> findAll(Pageable pageable){
-        Page<User> users = jpaUserRepository.findAll(pageable);
+    public Page<UserResponse> findAll(Boolean active, Pageable pageable){
+        Page<User> users = jpaUserRepository.findAllByActive(active, pageable);
         return users.map(
                 userMapper::toResponse
         );
+    }
+
+    public Page<UserResponse> findByAgency(Long idAgency, Boolean active, Pageable pageable){
+        return jpaUserRepository.findAllByIdAgencyAndActive(idAgency, active, pageable)
+                .map(userMapper::toResponse);
     }
 }
