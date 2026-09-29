@@ -132,7 +132,7 @@ entre lo vigente y lo dado de baja (true por defecto).
 |---|---|---|---|
 | `/api/properties` | 20 | `createdAt` desc | `idAgency` |
 | `/api/agencies` | 20 | `createdAt` desc | — |
-| `/api/users` | 20 | `createdAt` desc | — |
+| `/api/users` | 20 | `createdAt` desc | `idAgency` |
 
 El listado de fotos es la excepción: array común, sin paginar.
 
@@ -450,10 +450,12 @@ Baja lógica, como propiedades e inmobiliarias. `GET /{id}`, `PUT`, `PATCH /pass
 El email y el teléfono siguen ocupados por los dados de baja: no se puede crear otro usuario
 con el mismo email, hay que restaurar el que está.
 
+Al crear, la inmobiliaria del `idAgency` tiene que existir y estar activa.
+
 ### Request
 
 `POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email y teléfono, y mandar
-`password` o `rol` da 400. El rol no se puede cambiar por API. `DELETE` y `PATCH /restore` no
+`password`, `rol` o `idAgency` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
 llevan body.
 
 ```json
@@ -462,7 +464,8 @@ llevan body.
   "email": "manuel@mail.com",
   "password": "unaClave123",
   "phoneNumber": "3415551234",
-  "rol": "USER"
+  "rol": "USER",
+  "idAgency": 1
 }
 ```
 
@@ -473,6 +476,7 @@ llevan body.
 | `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `rol` | enum `UserRol` | sí | **no** | `USER`, `AGENT`, `AGENCY`, `ADMIN` |
+| `idAgency` | number | sí | **no** | existente y activa |
 
 El campo es `rol`, no `role`.
 
@@ -496,6 +500,7 @@ Si `currentPassword` no coincide con la guardada, da 400 con
   "active": true,
   "phoneNumber": "3415551234",
   "rol": "USER",
+  "idAgency": 1,
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234"
 }
@@ -507,10 +512,10 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 409 email o teléfono repetidos |
+| `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` o `rol` · 404 · 409 email o teléfono de otro usuario |
+| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `idAgency` · 404 · 409 email o teléfono de otro usuario |
 | `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |

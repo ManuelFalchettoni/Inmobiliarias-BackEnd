@@ -16,13 +16,15 @@ public class UserMapper {
         //La contraseña no se copia aca: la hashea UserCreatorService
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
+        user.setIdAgency(userRequest.getIdAgency());
         user.setActive(true);
         //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
 
         return user;
     }
 
-    //La contraseña, el rol y active no se tocan al editar: cada uno tiene su endpoint
+    //La contraseña, el rol y active no se tocan al editar: cada uno tiene su endpoint.
+    //idAgency tampoco: un usuario no cambia de inmobiliaria
     public void updateEntity(UserUpdateRequest userUpdateRequest, User user){
         user.setName(userUpdateRequest.getName());
         user.setEmail(userUpdateRequest.getEmail());
@@ -37,6 +39,7 @@ public class UserMapper {
         userResponse.setEmail(user.getEmail());
         userResponse.setPhoneNumber(user.getPhoneNumber());
         userResponse.setRol(user.getRol());
+        userResponse.setIdAgency(user.getIdAgency());
         userResponse.setActive(user.isActive());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());

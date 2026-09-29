@@ -25,10 +25,13 @@ public class UsersGetController {
     //active por defecto en true: el que no lo manda ve solo los vigentes
     @GetMapping
     public ResponseEntity<Page<UserResponse>> getUsers(
+            @RequestParam(required = false) Long idAgency,
             @RequestParam(defaultValue = "true") Boolean active,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
 
-        Page<UserResponse> usersResponse = usersSearcherService.findAll(active, pageable);
+        Page<UserResponse> usersResponse = (idAgency == null)
+                ? usersSearcherService.findAll(active, pageable)
+                : usersSearcherService.findByAgency(idAgency, active, pageable);
         return ResponseEntity.ok(usersResponse);
     }
 }

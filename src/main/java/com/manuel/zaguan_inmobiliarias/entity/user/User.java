@@ -38,6 +38,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
+    //Id suelto, como Property.idAgency. La columna acepta null por los usuarios que ya
+    //existian antes del campo; los nuevos lo traen obligatorio desde UserRequest
+    @Column
+    private Long idAgency;
+
     //Baja logica: el delete lo pone en false, la fila no se borra
     @Column(nullable = false)
     private boolean active;

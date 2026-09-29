@@ -25,6 +25,8 @@ public class UserResponse {
 
     private UserRol rol;
 
+    private Long idAgency;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
