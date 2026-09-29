@@ -35,6 +35,34 @@ el mapper. Los errores los unifica `GlobalExceptionHandler` con `@RestController
 Las excepciones siguen el mismo corte por entidad; la única compartida por dos entidades,
 `InvalidCurrentPasswordException`, vive en la raíz de `exception`.
 
+## Modelo de datos
+
+| Dominio | Entidad | Qué guarda |
+|---|---|---|
+| Core | `Agency` | la inmobiliaria |
+| Core | `User` | usuarios y agentes de una inmobiliaria |
+| Propiedades | `Property` | el inmueble |
+| Propiedades | `PropertyPhoto` | fotos, con su `position` |
+| Propiedades | `PropertyPrice` | precio por operación (`SALE`, `RENT`) y moneda |
+| Personas y contratos | `People` | clientes y propietarios de la inmobiliaria |
+| Personas y contratos | `PropertyOwner` | qué personas son dueñas de qué propiedad |
+| Personas y contratos | `PropertyContract` | contrato de venta o alquiler: monto, fechas, estado, documento |
+| Personas y contratos | `ContractParty` | quién participa del contrato y con qué `Role` |
+| CRM | `CrmProperty` | un cliente interesado en una propiedad, con el agente y la etapa (`Stage`) |
+| CRM | `CrmHistory` | eventos del lead: nota, llamada, visita, oferta, cambio de etapa |
+| CRM | `Offer` | ofertas del lead, con monto, moneda y estado |
+| CRM | `CrmAlert` | recordatorios para un agente sobre un lead |
+
+Enums nuevos:
+
+- `Currency`: `ARS`, `USD`
+- `OperationType` / `ContractType`: `SALE`, `RENT`
+- `ContractStatus`: `ACTIVE`, `FINISHED`, `CANCELLED`
+- `ContractRole`: `OWNER`, `TENANT`, `BUYER`, `GUARANTOR`
+- `CrmStage`: `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST`
+- `CrmEventType`: `NOTE`, `CALL`, `VISIT`, `OFFER`, `STAGE_CHANGE`
+- `OfferStatus`: `PENDING`, `ACCEPTED`, `REJECTED`
+
 ---
 
 # Reglas de toda la API
@@ -101,7 +129,7 @@ Los tres aceptan `page`, `size` y `sort`, con tope de 100 por página, y `active
 entre lo vigente y lo dado de baja (true por defecto).
 
 | Recurso | `size` default | Orden default | Filtros extra |
-|---|---|---|---|
+|---|---|---|
 | `/api/properties` | 20 | `createdAt` desc | `idAgency` |
 | `/api/agencies` | 20 | `createdAt` desc | — |
 | `/api/users` | 20 | `createdAt` desc | — |
@@ -156,7 +184,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 ```
 
 | Campo | Tipo | Obligatorio | Reglas |
-|---|---|---|---|
+|---|---|---|
 | `address` | string | sí | no vacío, máx 150 |
 | `type` | enum `PropertyType` | sí | |
 | `location` | string | sí | no vacío, máx 100 |
