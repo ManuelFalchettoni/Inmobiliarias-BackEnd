@@ -18,6 +18,8 @@ public interface JpaUserRepository extends JpaRepository<User, Long>, JpaSpecifi
 
     boolean existsById(@NonNull Long id);
 
+    Page<User> findAllByIdAgencyAndActive(Long idAgency, Boolean active, Pageable pageable);
+
     boolean existsByEmail(@NonNull String email);
 
 }

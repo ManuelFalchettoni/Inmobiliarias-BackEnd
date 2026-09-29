@@ -24,6 +24,8 @@ public class UserResponse {
 
     private String rol;
 
+    private Long idAgency;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

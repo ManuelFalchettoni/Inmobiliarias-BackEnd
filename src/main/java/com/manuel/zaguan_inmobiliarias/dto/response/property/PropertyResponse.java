@@ -25,7 +25,15 @@ public class PropertyResponse {
 
     private PropertyType type;
 
-    private String location;
+    private String province;
+
+    private String county;
+
+    private String city;
+
+    private Double latitude;
+
+    private Double longitude;
 
     private Long idAgency;
 

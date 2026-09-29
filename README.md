@@ -35,6 +35,34 @@ el mapper. Los errores los unifica `GlobalExceptionHandler` con `@RestController
 Las excepciones siguen el mismo corte por entidad; la única compartida por dos entidades,
 `InvalidCurrentPasswordException`, vive en la raíz de `exception`.
 
+## Modelo de datos
+
+| Dominio | Entidad | Qué guarda |
+|---|---|---|
+| Core | `Agency` | la inmobiliaria |
+| Core | `User` | usuarios y agentes de una inmobiliaria |
+| Propiedades | `Property` | el inmueble |
+| Propiedades | `PropertyPhoto` | fotos, con su `position` |
+| Propiedades | `PropertyPrice` | precio por operación (`SALE`, `RENT`) y moneda |
+| Personas y contratos | `People` | clientes y propietarios de la inmobiliaria |
+| Personas y contratos | `PropertyOwner` | qué personas son dueñas de qué propiedad |
+| Personas y contratos | `PropertyContract` | contrato de venta o alquiler: monto, fechas, estado, documento |
+| Personas y contratos | `ContractParty` | quién participa del contrato y con qué `Role` |
+| CRM | `CrmProperty` | un cliente interesado en una propiedad, con el agente y la etapa (`Stage`) |
+| CRM | `CrmHistory` | eventos del lead: nota, llamada, visita, oferta, cambio de etapa |
+| CRM | `Offer` | ofertas del lead, con monto, moneda y estado |
+| CRM | `CrmAlert` | recordatorios para un agente sobre un lead |
+
+Enums nuevos:
+
+- `Currency`: `ARS`, `USD`
+- `OperationType` / `ContractType`: `SALE`, `RENT`
+- `ContractStatus`: `ACTIVE`, `FINISHED`, `CANCELLED`
+- `ContractRole`: `OWNER`, `TENANT`, `BUYER`, `GUARANTOR`
+- `CrmStage`: `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST`
+- `CrmEventType`: `NOTE`, `CALL`, `VISIT`, `OFFER`, `STAGE_CHANGE`
+- `OfferStatus`: `PENDING`, `ACCEPTED`, `REJECTED`
+
 ---
 
 # Reglas de toda la API
@@ -104,7 +132,7 @@ entre lo vigente y lo dado de baja (true por defecto).
 |---|---|---|---|
 | `/api/properties` | 20 | `createdAt` desc | `idAgency` |
 | `/api/agencies` | 20 | `createdAt` desc | — |
-| `/api/users` | 20 | `createdAt` desc | — |
+| `/api/users` | 20 | `createdAt` desc | `idAgency` |
 
 El listado de fotos es la excepción: array común, sin paginar.
 
@@ -144,7 +172,11 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 {
   "address": "Av. Siempre Viva 742",
   "type": "HOUSE",
-  "location": "Rosario",
+  "province": "Santa Fe",
+  "county": "Rosario",
+  "city": "Rosario",
+  "latitude": -32.9468,
+  "longitude": -60.6393,
   "idAgency": 1,
   "year": 1998,
   "rooms": 4,
@@ -159,7 +191,11 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 |---|---|---|---|
 | `address` | string | sí | no vacío, máx 150 |
 | `type` | enum `PropertyType` | sí | |
-| `location` | string | sí | no vacío, máx 100 |
+| `province` | string | sí | no vacío, máx 50 |
+| `county` | string | no | máx 100 (partido o departamento) |
+| `city` | string | sí | no vacío, máx 100 |
+| `latitude` | number | no | entre -90 y 90 |
+| `longitude` | number | no | entre -180 y 180 |
 | `idAgency` | number | sí | existente y activa; en el `PUT`, el mismo que ya tiene |
 | `year` | number | no | entre 1800 y 2100 |
 | `rooms` | number | sí | entero >= 0 |
@@ -187,7 +223,11 @@ Enums:
   "address": "Av. Siempre Viva 742",
   "active": true,
   "type": "HOUSE",
-  "location": "Rosario",
+  "province": "Santa Fe",
+  "county": "Rosario",
+  "city": "Rosario",
+  "latitude": -32.9468,
+  "longitude": -60.6393,
   "idAgency": 1,
   "year": 1998,
   "createdAt": "2025-09-15T18:22:41.1234",
@@ -422,10 +462,12 @@ Baja lógica, como propiedades e inmobiliarias. `GET /{id}`, `PUT`, `PATCH /pass
 El email y el teléfono siguen ocupados por los dados de baja: no se puede crear otro usuario
 con el mismo email, hay que restaurar el que está.
 
+Al crear, la inmobiliaria del `idAgency` tiene que existir y estar activa.
+
 ### Request
 
 `POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email y teléfono, y mandar
-`password` o `rol` da 400. El rol no se puede cambiar por API. `DELETE` y `PATCH /restore` no
+`password`, `rol` o `idAgency` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
 llevan body.
 
 ```json
@@ -434,7 +476,8 @@ llevan body.
   "email": "manuel@mail.com",
   "password": "unaClave123",
   "phoneNumber": "3415551234",
-  "rol": "USER"
+  "rol": "USER",
+  "idAgency": 1
 }
 ```
 
@@ -445,6 +488,7 @@ llevan body.
 | `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `rol` | enum `UserRol` | sí | **no** | `USER`, `AGENT`, `AGENCY`, `ADMIN` |
+| `idAgency` | number | sí | **no** | existente y activa |
 
 El campo es `rol`, no `role`.
 
@@ -468,6 +512,7 @@ Si `currentPassword` no coincide con la guardada, da 400 con
   "active": true,
   "phoneNumber": "3415551234",
   "rol": "USER",
+  "idAgency": 1,
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234"
 }
@@ -479,10 +524,10 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 409 email o teléfono repetidos |
+| `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` o `rol` · 404 · 409 email o teléfono de otro usuario |
+| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `idAgency` · 404 · 409 email o teléfono de otro usuario |
 | `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |

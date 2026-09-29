@@ -34,4 +34,7 @@ public class UserRequest {
 
     @NotNull
     private UserRol rol;
+
+    @NotNull
+    private Long idAgency;
 }
