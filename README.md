@@ -129,7 +129,7 @@ Los tres aceptan `page`, `size` y `sort`, con tope de 100 por página, y `active
 entre lo vigente y lo dado de baja (true por defecto).
 
 | Recurso | `size` default | Orden default | Filtros extra |
-|---|---|---|
+|---|---|---|---|
 | `/api/properties` | 20 | `createdAt` desc | `idAgency` |
 | `/api/agencies` | 20 | `createdAt` desc | — |
 | `/api/users` | 20 | `createdAt` desc | — |
@@ -184,7 +184,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 ```
 
 | Campo | Tipo | Obligatorio | Reglas |
-|---|---|---|
+|---|---|---|---|
 | `address` | string | sí | no vacío, máx 150 |
 | `type` | enum `PropertyType` | sí | |
 | `location` | string | sí | no vacío, máx 100 |
