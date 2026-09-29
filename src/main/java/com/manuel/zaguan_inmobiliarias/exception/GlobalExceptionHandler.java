@@ -9,6 +9,8 @@ import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoExce
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceAlreadyExistsException;
+import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,6 +75,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException e, HttpServletRequest request){
         return build(HttpStatus.CONTENT_TOO_LARGE, "The file is too large", request);
+    }
+
+    //---------------------PropertyPrice----------------------------
+    @ExceptionHandler(PropertyPriceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePriceNotFound(PropertyPriceNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyPriceAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePriceAlreadyExists(PropertyPriceAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
     //-------------------------------User-------------------------------

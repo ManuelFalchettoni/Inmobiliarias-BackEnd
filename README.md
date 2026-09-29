@@ -134,7 +134,7 @@ entre lo vigente y lo dado de baja (true por defecto).
 | `/api/agencies` | 20 | `createdAt` desc | — |
 | `/api/users` | 20 | `createdAt` desc | `idAgency` |
 
-El listado de fotos es la excepción: array común, sin paginar.
+Los listados de fotos y de precios son la excepción: array común, sin paginar.
 
 ## Serialización
 
@@ -244,12 +244,15 @@ Enums:
       "photoName": "frente.jpg",
       "position": 0
     }
+  ],
+  "prices": [
+    { "id": 5, "operationType": "SALE", "currency": "USD", "amount": 95000.00 }
   ]
 }
 ```
 
 Las fotos vienen embebidas sin orden garantizado; para tenerlas por `position` está el
-endpoint de fotos. Sin fotos, `photos` viene `[]`.
+endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precios, la lista viene `[]`.
 
 ### Códigos
 
@@ -336,6 +339,50 @@ original, solo para mostrar.
 | `DELETE /{photoId}` | 204 sin body | 404 igual que arriba · 500 MinIO caído |
 
 El 413 lo tira el servidor antes del controller: en una subida de varios no dice cuál se pasó.
+
+## Precios de propiedades
+
+`/api/properties/{propertyId}/prices`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar los de una propiedad |
+| `GET /{priceId}` | traer uno |
+| `PUT /{priceId}` | editar |
+| `DELETE /{priceId}` | borrar |
+
+Un precio por operación: una propiedad puede estar en venta y en alquiler, pero no tener dos
+precios de venta. El borrado es físico. Como las fotos, un precio solo se ve o se toca desde la
+URL de su propia propiedad, y la propiedad tiene que estar activa.
+
+### Request
+
+Mismo body para `POST` y `PUT`.
+
+```json
+{ "operationType": "SALE", "currency": "USD", "amount": 95000.00 }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `operationType` | enum `OperationType` | sí | `SALE`, `RENT`; uno por propiedad |
+| `currency` | enum `Currency` | sí | `ARS`, `USD` |
+| `amount` | number | sí | > 0, hasta 13 enteros y 2 decimales |
+
+### Response
+
+El mismo objeto con su `id`. `GET` devuelve un array ordenado por `operationType`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 404 propiedad inexistente o dada de baja · 409 ya hay precio para esa operación |
+| `GET` listado | 200 | 404 propiedad inexistente o dada de baja |
+| `GET /{priceId}` | 200 | 404 propiedad o precio inexistente · 404 el precio es de otra propiedad |
+| `PUT /{priceId}` | 200 | 400 validación · 404 igual que arriba · 409 otro precio ya usa esa operación |
+| `DELETE /{priceId}` | 204 sin body | 404 igual que arriba |
 
 ## Inmobiliarias
 
