@@ -172,7 +172,11 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 {
   "address": "Av. Siempre Viva 742",
   "type": "HOUSE",
-  "location": "Rosario",
+  "province": "Santa Fe",
+  "county": "Rosario",
+  "city": "Rosario",
+  "latitude": -32.9468,
+  "longitude": -60.6393,
   "idAgency": 1,
   "year": 1998,
   "rooms": 4,
@@ -187,7 +191,11 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 |---|---|---|---|
 | `address` | string | sí | no vacío, máx 150 |
 | `type` | enum `PropertyType` | sí | |
-| `location` | string | sí | no vacío, máx 100 |
+| `province` | string | sí | no vacío, máx 50 |
+| `county` | string | no | máx 100 (partido o departamento) |
+| `city` | string | sí | no vacío, máx 100 |
+| `latitude` | number | no | entre -90 y 90 |
+| `longitude` | number | no | entre -180 y 180 |
 | `idAgency` | number | sí | existente y activa; en el `PUT`, el mismo que ya tiene |
 | `year` | number | no | entre 1800 y 2100 |
 | `rooms` | number | sí | entero >= 0 |
@@ -215,7 +223,11 @@ Enums:
   "address": "Av. Siempre Viva 742",
   "active": true,
   "type": "HOUSE",
-  "location": "Rosario",
+  "province": "Santa Fe",
+  "county": "Rosario",
+  "city": "Rosario",
+  "latitude": -32.9468,
+  "longitude": -60.6393,
   "idAgency": 1,
   "year": 1998,
   "createdAt": "2025-09-15T18:22:41.1234",

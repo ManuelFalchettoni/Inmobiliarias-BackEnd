@@ -41,8 +41,22 @@ public class Property{
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
+    @Column(nullable = false, length = 50)
+    private String province;
+
+    //Partido o departamento. Opcional: en CABA no aplica
+    @Column(length = 100)
+    private String county;
+
     @Column(nullable = false, length = 100)
-    private String location;
+    private String city;
+
+    //Opcionales: el front puede no tener el punto en el mapa
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
 
     @Column
     private Long idAgency;
