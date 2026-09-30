@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.entity.property.contract;
 
+import com.manuel.zaguan_inmobiliarias.enums.Currency;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractStatus;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractType;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Table(name = "property_contracts")
@@ -32,8 +34,11 @@ public class PropertyContract {
     @Column
     private ContractStatus status;
 
+    @Column
+    private Currency currency;
+
     @Column(nullable = false)
-    private int amount;
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private LocalDateTime startDate;
