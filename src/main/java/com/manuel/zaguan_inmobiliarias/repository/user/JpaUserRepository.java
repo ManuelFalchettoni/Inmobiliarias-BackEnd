@@ -2,22 +2,31 @@ package com.manuel.zaguan_inmobiliarias.repository.user;
 
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
+public interface JpaUserRepository extends JpaRepository<User, Long> {
 
-public interface JpaUserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+    //Los vigentes. Uno dado de baja se busca con findById pelado, para poder restaurarlo
+    Optional<User> findByIdAndActiveTrue(@NonNull Long id);
 
-    Optional<User> findUserById(@NonNull Long id);
+    //Con true salen los vigentes, con false los dados de baja
+    Page<User> findAllByActive(Boolean active, Pageable pageable);
 
-    Optional<User> findByEmail(String email);
-
-    boolean existsById(@NonNull Long id);
+    Page<User> findAllByIdAgencyAndActive(Long idAgency, Boolean active, Pageable pageable);
 
     boolean existsByEmail(@NonNull String email);
+
+    boolean existsByPhoneNumber(@NonNull String phoneNumber);
+
+    //Para editar: busca el valor en otros usuarios, sin contar al que se esta editando
+    boolean existsByEmailAndIdNot(@NonNull String email, @NonNull Long id);
+
+    boolean existsByPhoneNumberAndIdNot(@NonNull String phoneNumber, @NonNull Long id);
 
 }

@@ -1,6 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.entity.property;
 
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
+import com.manuel.zaguan_inmobiliarias.entity.property.price.PropertyPrice;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
 import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
@@ -41,8 +42,22 @@ public class Property{
     @Enumerated(EnumType.STRING)
     private PropertyType type;
 
+    @Column(nullable = false, length = 50)
+    private String province;
+
+    //Partido o departamento. Opcional: en CABA no aplica
+    @Column(length = 100)
+    private String county;
+
     @Column(nullable = false, length = 100)
-    private String location;
+    private String city;
+
+    //Opcionales: el front puede no tener el punto en el mapa
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
 
     @Column
     private Long idAgency;
@@ -80,4 +95,10 @@ public class Property{
     @BatchSize(size = 20)
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PropertyPhoto> photos = new ArrayList<>();
+
+    //Igual que photos. No va en el EntityGraph de findByIdAndActiveTrue: dos List en el
+    //mismo fetch tiran MultipleBagFetchException; se cargan aparte con el BatchSize
+    @BatchSize(size = 20)
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyPrice> prices = new ArrayList<>();
 }

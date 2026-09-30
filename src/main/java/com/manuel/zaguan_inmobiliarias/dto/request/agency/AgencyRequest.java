@@ -28,25 +28,26 @@ public class AgencyRequest {
 
     @NotBlank
     @Email
-    @Size(min = 3, max = 20, message = "Email must be between 3 and 20 characters.")
+    @Size(min = 3, max = 100, message = "Email must be between 3 and 100 characters.")
     private String email;
 
     @NotBlank
     @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters.")
     private String password;
 
-    @NotNull
+    @NotBlank
     @Size(min = 8, max = 15, message = "Phone number must be between 8 and 15 characters.")
-    private int phoneNumber;
+    private String phoneNumber;
 
     @NotBlank
     @Size(min = 6, max = 40, message = "Address must be between 6 and 40 characters.")
     private String address;
 
-    @NotBlank
+    //Opcionales
+    @Size(max = 255, message = "Web URL must be at most 255 characters.")
     private String webURL;
 
-    @NotBlank
+    @Size(max = 255, message = "Socials must be at most 255 characters.")
     private String socials;
 
     @NotNull

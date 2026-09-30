@@ -24,9 +24,18 @@ public class UserResponse {
 
     private String rol;
 
+    private Long idAgency;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private Long agencyId;
+
+    private String cuit;
+
+    private String license;
+
 
     public UserResponse(Long id, String name, String email, String rol){
         this.id = id;
