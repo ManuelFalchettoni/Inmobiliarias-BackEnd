@@ -1,6 +1,5 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.user;
 
-import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,12 +22,26 @@ public class UserResponse {
 
     private String phoneNumber;
 
-    private UserRol rol;
+    private String rol;
 
     private Long idAgency;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private Long agencyId;
+
+    private String cuit;
+
+    private String license;
+
+
+    public UserResponse(Long id, String name, String email, String rol){
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.rol = rol;
+    }
 
 }
