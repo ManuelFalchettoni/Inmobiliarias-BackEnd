@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.service.jwt;
 
+import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -39,6 +40,18 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public String getUsernameFromToken(String token){return  getClaims(token).get("username", String.class);}
+    public String getEmailFromToken(String token){
+        return getClaims(token).getSubject();
+    }
+    public UserRol getRoleFromToken(String token){
+        String rol = getClaims(token).get("role", String.class);
+        return UserRol.valueOf(rol);
+    }
+    public Long getUserIdFromToken(String token){
+        return getClaims(token).get("userId",Long.class);
     }
 
     public boolean isTokenValid (String token){

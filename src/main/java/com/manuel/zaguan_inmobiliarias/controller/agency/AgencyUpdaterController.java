@@ -1,6 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.controller.agency;
 
-import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyRequest;
+import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
 import com.manuel.zaguan_inmobiliarias.service.agency.AgencyUpdaterService;
 import jakarta.validation.Valid;
@@ -16,8 +16,8 @@ public class AgencyPutController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AgencyResponse> put (@PathVariable Long id,
-                                               @Valid @RequestBody AgencyRequest agencyRequest){
-       AgencyResponse agencyResponse = agencyUpdaterService.update(id, agencyRequest);
+                                               @Valid @RequestBody AgencyUpdateRequest agencyUpdateRequest){
+       AgencyResponse agencyResponse = agencyUpdaterService.update(id, agencyUpdateRequest);
 
        return ResponseEntity.ok(agencyResponse);
     }
