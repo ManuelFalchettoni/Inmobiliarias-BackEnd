@@ -12,7 +12,7 @@ public class PropertyContractMapper {
         propertyContract.setType(propertyContractRequest.getType());
         propertyContract.setStatus(propertyContractRequest.getStatus());
         propertyContract.setAmount(propertyContractRequest.getAmount());
-        propertyContract.setCurrency(propertyContract.getCurrency());
+        propertyContract.setCurrency(propertyContractRequest.getCurrency());
         propertyContract.setStartDate(propertyContractRequest.getStartDate());
         propertyContract.setEndDate(propertyContractRequest.getEndDate());
         propertyContract.setDocumentURL(propertyContractRequest.getDocumentURL());
