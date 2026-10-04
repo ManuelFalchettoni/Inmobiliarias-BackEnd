@@ -16,6 +16,7 @@ public class PropertyContractMapper {
         propertyContract.setStartDate(propertyContractRequest.getStartDate());
         propertyContract.setEndDate(propertyContractRequest.getEndDate());
         propertyContract.setDocumentURL(propertyContractRequest.getDocumentURL());
+        propertyContract.setPropertyId(propertyContractRequest.getPropertyId());
 
         return propertyContract;
     }
