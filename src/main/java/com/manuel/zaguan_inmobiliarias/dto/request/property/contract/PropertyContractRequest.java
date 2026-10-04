@@ -21,6 +21,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PropertyContractRequest {
     @NotBlank
+    private Long propertyId;
+
+    @NotBlank
     private ContractType type;
 
     @NotBlank
