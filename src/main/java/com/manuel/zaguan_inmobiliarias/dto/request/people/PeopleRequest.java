@@ -14,6 +14,9 @@ import lombok.Setter;
 public class PeopleRequest {
 
     @NotBlank
+    private Long agencyId;
+
+    @NotBlank
     @Size(min = 3, max = 20, message = "Name must be between 3 and 20 characters.")
     private String name;
 
