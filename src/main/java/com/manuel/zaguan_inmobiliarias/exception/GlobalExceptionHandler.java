@@ -5,6 +5,8 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsExcep
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
+import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
@@ -107,6 +109,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AgencyAlreadyExistsException.class)
     public ResponseEntity<ApiErrorResponse> handleAgencyAlreadyExists(AgencyAlreadyExistsException e, HttpServletRequest request){
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    //---------------------------Property owner -----------------------
+    @ExceptionHandler(PropertyOwnerAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyOwnerAlreadyExists(PropertyOwnerAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyOwnerNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyOwnerNotFound(PropertyOwnerNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
     //Red de seguridad para los unique que no se controlan antes (direccion) o si dos
