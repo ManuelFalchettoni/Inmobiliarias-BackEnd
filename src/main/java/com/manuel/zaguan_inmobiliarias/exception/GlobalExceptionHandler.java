@@ -3,6 +3,7 @@ package com.manuel.zaguan_inmobiliarias.exception;
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
@@ -136,6 +137,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
+    //-----------------------------Contract Party------------------------
+    @ExceptionHandler(ContractPartyNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleContractPartyNotFound(ContractPartyNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
     //Red de seguridad para los unique que no se controlan antes (direccion) o si dos
     //requests guardan el mismo dato a la vez. No se muestra el mensaje de MySQL al cliente
     @ExceptionHandler(DataIntegrityViolationException.class)
