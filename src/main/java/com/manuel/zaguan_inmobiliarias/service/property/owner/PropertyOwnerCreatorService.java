@@ -4,6 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.request.property.owner.PropertyOwnerR
 import com.manuel.zaguan_inmobiliarias.dto.response.property.owner.PropertyOwnerResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.Owner.PropertyOwner;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.owner.PropertyOwnerMapper;
 import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
