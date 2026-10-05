@@ -3,6 +3,7 @@ package com.manuel.zaguan_inmobiliarias.service.contractparty;
 import com.manuel.zaguan_inmobiliarias.dto.request.contractparty.ContractPartyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.contractparty.ContractPartyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.contractparty.ContractParty;
+import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.contractparty.ContractPartyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.contractparty.JpaContractPartyRepository;
 import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
