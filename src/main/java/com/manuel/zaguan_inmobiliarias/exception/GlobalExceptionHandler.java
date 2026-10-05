@@ -6,6 +6,7 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
@@ -129,8 +130,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
-
-
+    //-----------------------------Property Contract-------------------
+    @ExceptionHandler(PropertyContractNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyContractNotFound(PropertyContractNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
 
     //Red de seguridad para los unique que no se controlan antes (direccion) o si dos
     //requests guardan el mismo dato a la vez. No se muestra el mensaje de MySQL al cliente
