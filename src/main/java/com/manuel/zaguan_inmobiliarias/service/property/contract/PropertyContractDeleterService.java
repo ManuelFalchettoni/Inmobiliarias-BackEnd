@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.service.property.contract;
 
 import com.manuel.zaguan_inmobiliarias.entity.property.contract.PropertyContract;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractStatus;
+import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.property.contract.JpaPropertyContractRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
