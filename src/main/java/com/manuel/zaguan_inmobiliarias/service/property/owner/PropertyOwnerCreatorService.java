@@ -3,6 +3,7 @@ package com.manuel.zaguan_inmobiliarias.service.property.owner;
 import com.manuel.zaguan_inmobiliarias.dto.request.property.owner.PropertyOwnerRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.owner.PropertyOwnerResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.Owner.PropertyOwner;
+import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.owner.PropertyOwnerMapper;
