@@ -12,13 +12,13 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-@Component
+//Sin @Component mientras auth esta en pausa: un Filter que es bean, Spring Boot lo aplica a
+//todos los requests, y sin cookie devolvia 401 en toda la API.
 @AllArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
@@ -57,7 +57,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 user.getEmail(),
                 user.getName(),
                 user.getRol(),
-                user.getAgency() != null ? user.getAgency().getId() : null
+                user.getIdAgency()
         );
 
 
