@@ -14,19 +14,20 @@ import lombok.Setter;
 
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
+//@NotBlank es solo para String: en Long, enums o fechas tira excepcion al validar. Para el resto va @NotNull
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PropertyContractRequest {
-    @NotBlank
+    @NotNull
     private Long propertyId;
 
-    @NotBlank
+    @NotNull
     private ContractType type;
 
-    @NotBlank
+    @NotNull
     private ContractStatus status;
 
     @NotNull
@@ -34,14 +35,14 @@ public class PropertyContractRequest {
     @Digits(integer = 15, fraction = 2, message = "Amount format is not valid.")
     private BigDecimal amount;
 
-    @NotBlank
+    @NotNull
     private Currency currency;
 
-    @NotBlank
-    private LocalDateTime startDate;
+    @NotNull
+    private LocalDate startDate;
 
-    @NotBlank
-    private LocalDateTime endDate;
+    //Opcional: un contrato de venta no tiene fecha de fin
+    private LocalDate endDate;
 
     @NotBlank
     private String documentURL;

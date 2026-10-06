@@ -34,7 +34,7 @@ public class PropertyContractMapper {
         propertyContractResponse.setCurrency(propertyContract.getCurrency());
         propertyContractResponse.setStartDate(propertyContract.getStartDate());
         propertyContractResponse.setEndDate(propertyContract.getEndDate());
-        propertyContractResponse.setDocumentURl(propertyContract.getDocumentURL());
+        propertyContractResponse.setDocumentURL(propertyContract.getDocumentURL());
         propertyContractResponse.setCreatedAt(propertyContract.getCreatedAt());
         propertyContractResponse.setUpdatedAt(propertyContract.getUpdatedAt());
 
