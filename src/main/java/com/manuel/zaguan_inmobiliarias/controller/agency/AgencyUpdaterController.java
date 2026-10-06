@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/agencies")
-public class AgencyPutController {
+public class AgencyUpdaterController {
     private final AgencyUpdaterService agencyUpdaterService;
 
     @PutMapping("/{id}")
