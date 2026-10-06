@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsExcep
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.crm.OfferNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
@@ -146,6 +147,11 @@ public class GlobalExceptionHandler {
     //---------------------------------CRM------------------------------
     @ExceptionHandler(CrmPropertyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleCrmPropertyNotFound(CrmPropertyNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(OfferNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleOfferNotFound(OfferNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
