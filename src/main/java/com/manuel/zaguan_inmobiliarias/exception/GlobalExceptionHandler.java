@@ -4,6 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.crm.CrmHistoryNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.OfferNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
@@ -152,6 +153,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OfferNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleOfferNotFound(OfferNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(CrmHistoryNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCrmHistoryNotFound(CrmHistoryNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
     }
 
