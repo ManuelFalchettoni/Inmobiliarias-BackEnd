@@ -25,11 +25,11 @@ public class PropertyCreatorService {
     @Transactional
     public PropertyResponse create(PropertyRequest request){
         //existsByIdAndActiveTrue: no se cargan propiedades a una inmobiliaria dada de baja
-        if (jpaAgencyRepository.existsByIdAndActiveTrue(request.getIdAgency())){
+        if (jpaAgencyRepository.existsByIdAndActiveTrue(request.getAgencyId())){
             Property property = jpaPropertyRepository.save(propertyMapper.toEntity(request));
             return propertyMapper.toResponse(property);
         }
-        throw new AgencyNotFoundException(request.getIdAgency());
+        throw new AgencyNotFoundException(request.getAgencyId());
 
     }
 }

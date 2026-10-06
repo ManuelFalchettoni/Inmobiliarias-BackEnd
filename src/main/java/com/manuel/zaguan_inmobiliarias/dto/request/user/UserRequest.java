@@ -36,7 +36,7 @@ public class UserRequest {
     private UserRol rol;
 
     @NotNull
-    private Long idAgency;
+    private Long agencyId;
 
     //Opcionales
     @Size(min = 11, max = 13, message = "Cuit must be between 11 and 13 characters.")

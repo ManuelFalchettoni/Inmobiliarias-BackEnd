@@ -24,8 +24,8 @@ public class UsersSearcherService {
         );
     }
 
-    public Page<UserResponse> findByAgency(Long idAgency, Boolean active, Pageable pageable){
-        return jpaUserRepository.findAllByIdAgencyAndActive(idAgency, active, pageable)
+    public Page<UserResponse> findByAgency(Long agencyId, Boolean active, Pageable pageable){
+        return jpaUserRepository.findAllByAgencyIdAndActive(agencyId, active, pageable)
                 .map(userMapper::toResponse);
     }
 }

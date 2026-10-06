@@ -36,7 +36,7 @@ public class PropertyResponse {
 
     private Double longitude;
 
-    private Long idAgency;
+    private Long agencyId;
 
     private Integer year;
 

@@ -25,13 +25,11 @@ public class UserResponse {
 
     private UserRol rol;
 
-    private Long idAgency;
+    private Long agencyId;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-
-    private Long agencyId;
 
     private String cuit;
 

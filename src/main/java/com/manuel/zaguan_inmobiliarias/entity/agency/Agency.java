@@ -53,7 +53,7 @@ public class Agency {
     @Column(length = 255)
     private String socials;
 
-    //Baja logica: la inmobiliaria no se borra nunca de la base. Property.idAgency es un id
+    //Baja logica: la inmobiliaria no se borra nunca de la base. Property.agencyId es un id
     //suelto, sin FK, asi que un borrado fisico dejaria propiedades apuntando a la nada
     @Column(nullable = false)
     private Boolean active;

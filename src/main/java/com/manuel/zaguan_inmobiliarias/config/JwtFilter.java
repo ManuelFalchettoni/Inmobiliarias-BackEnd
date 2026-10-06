@@ -57,7 +57,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 user.getEmail(),
                 user.getName(),
                 user.getRol(),
-                user.getIdAgency()
+                user.getAgencyId()
         );
 
 

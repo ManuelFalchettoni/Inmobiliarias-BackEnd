@@ -49,7 +49,7 @@ public class PropertyRequest {
     private Double longitude;
 
     @NotNull
-    private Long idAgency;
+    private Long agencyId;
 
     @Min(1800)
     @Max(2100)

@@ -18,7 +18,7 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
     //Con true salen los vigentes, con false los dados de baja
     Page<User> findAllByActive(Boolean active, Pageable pageable);
 
-    Page<User> findAllByIdAgencyAndActive(Long idAgency, Boolean active, Pageable pageable);
+    Page<User> findAllByAgencyIdAndActive(Long agencyId, Boolean active, Pageable pageable);
 
     boolean existsByEmail(@NonNull String email);
 

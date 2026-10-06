@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AgencyDeleterService {
     private final JpaAgencyRepository jpaAgencyRepository;
 
-    //Baja logica, como en Property: la fila no se borra nunca. Property.idAgency es un id
+    //Baja logica, como en Property: la fila no se borra nunca. Property.agencyId es un id
     //suelto, sin FK, asi que el delete fisico dejaba propiedades apuntando a una
     //inmobiliaria que ya no existe
     @Transactional //Necesario porque no hay un metodo save para guardar el cambio

@@ -18,7 +18,7 @@ public class UserMapper {
         //La contraseña no se copia aca: la hashea UserCreatorService
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
-        user.setIdAgency(userRequest.getIdAgency());
+        user.setAgencyId(userRequest.getAgencyId());
         user.setCuit(userRequest.getCuit());
         user.setLicense(userRequest.getLicense());
         user.setActive(true);
@@ -28,7 +28,7 @@ public class UserMapper {
     }
 
     //Registro desde auth. AuthUserRequest no trae rol ni inmobiliaria: entra como USER y sin
-    //idAgency. La contraseña la hashea AuthUserRegisterService
+    //agencyId. La contraseña la hashea AuthUserRegisterService
     public User toEntity(AuthUserRequest authUserRequest){
         User user = new User();
 
@@ -42,7 +42,7 @@ public class UserMapper {
     }
 
     //La contraseña, el rol y active no se tocan al editar: cada uno tiene su endpoint.
-    //idAgency tampoco: un usuario no cambia de inmobiliaria
+    //agencyId tampoco: un usuario no cambia de inmobiliaria
     public void updateEntity(UserUpdateRequest userUpdateRequest, User user){
         user.setName(userUpdateRequest.getName());
         user.setEmail(userUpdateRequest.getEmail());
@@ -59,7 +59,7 @@ public class UserMapper {
         userResponse.setEmail(user.getEmail());
         userResponse.setPhoneNumber(user.getPhoneNumber());
         userResponse.setRol(user.getRol());
-        userResponse.setIdAgency(user.getIdAgency());
+        userResponse.setAgencyId(user.getAgencyId());
         userResponse.setCuit(user.getCuit());
         userResponse.setLicense(user.getLicense());
         userResponse.setActive(user.isActive());

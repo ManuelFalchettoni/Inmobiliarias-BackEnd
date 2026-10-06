@@ -60,7 +60,7 @@ public class Property{
     private Double longitude;
 
     @Column
-    private Long idAgency;
+    private Long agencyId;
 
     @Column(name = "construction_year")
     private Integer year;
