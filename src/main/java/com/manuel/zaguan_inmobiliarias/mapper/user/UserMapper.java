@@ -1,9 +1,11 @@
 package com.manuel.zaguan_inmobiliarias.mapper.user;
 
+import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserRequest;
 import com.manuel.zaguan_inmobiliarias.dto.request.user.UserRequest;
 import com.manuel.zaguan_inmobiliarias.dto.request.user.UserUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
+import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +21,20 @@ public class UserMapper {
         user.setIdAgency(userRequest.getIdAgency());
         user.setActive(true);
         //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
+
+        return user;
+    }
+
+    //Registro desde auth. AuthUserRequest no trae rol ni inmobiliaria: entra como USER y sin
+    //idAgency. La contraseña la hashea AuthUserRegisterService
+    public User toEntity(AuthUserRequest authUserRequest){
+        User user = new User();
+
+        user.setName(authUserRequest.getName());
+        user.setEmail(authUserRequest.getEmail());
+        user.setPhoneNumber(authUserRequest.getPhoneNumber());
+        user.setRol(UserRol.USER);
+        user.setActive(true);
 
         return user;
     }
