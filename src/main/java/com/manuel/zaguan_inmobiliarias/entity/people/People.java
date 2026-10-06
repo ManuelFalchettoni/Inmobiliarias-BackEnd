@@ -13,10 +13,13 @@ import java.time.LocalDateTime;
 
 @Entity
 //Cada inmobiliaria tiene su propia cartera: la misma persona puede estar cargada en dos
-//inmobiliarias distintas, pero no dos veces en la misma. El DNI acepta null y MySQL
-//permite varios null en un unique, asi que los interesados sin DNI no chocan
+//inmobiliarias distintas, pero no dos veces en la misma. DNI y CUIT aceptan null y MySQL
+//permite varios null en un unique, asi que los interesados sin DNI o sin CUIT no chocan
 @Table(name = "people",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"agency_id", "dni"}))
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"agency_id", "dni"}),
+                @UniqueConstraint(columnNames = {"agency_id", "cuit"})
+        })
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
