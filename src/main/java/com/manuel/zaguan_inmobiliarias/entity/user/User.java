@@ -43,6 +43,13 @@ public class User {
     @Column
     private Long idAgency;
 
+    //Opcionales: los completa el agente (matricula y CUIT para facturar)
+    @Column(length = 13)
+    private String cuit;
+
+    @Column(length = 20)
+    private String license;
+
     //Baja logica: el delete lo pone en false, la fila no se borra
     @Column(nullable = false)
     private boolean active;

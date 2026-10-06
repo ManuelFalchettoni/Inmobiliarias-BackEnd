@@ -37,4 +37,11 @@ public class UserRequest {
 
     @NotNull
     private Long idAgency;
+
+    //Opcionales
+    @Size(min = 11, max = 13, message = "Cuit must be between 11 and 13 characters.")
+    private String cuit;
+
+    @Size(max = 20, message = "License must be at most 20 characters.")
+    private String license;
 }

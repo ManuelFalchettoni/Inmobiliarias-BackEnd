@@ -19,6 +19,8 @@ public class UserMapper {
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setRol(userRequest.getRol());
         user.setIdAgency(userRequest.getIdAgency());
+        user.setCuit(userRequest.getCuit());
+        user.setLicense(userRequest.getLicense());
         user.setActive(true);
         //createdAt y updatedAt los ponen @CreationTimestamp y @UpdateTimestamp
 
@@ -45,6 +47,8 @@ public class UserMapper {
         user.setName(userUpdateRequest.getName());
         user.setEmail(userUpdateRequest.getEmail());
         user.setPhoneNumber(userUpdateRequest.getPhoneNumber());
+        user.setCuit(userUpdateRequest.getCuit());
+        user.setLicense(userUpdateRequest.getLicense());
     }
 
     public UserResponse toResponse(User user) {
@@ -56,6 +60,8 @@ public class UserMapper {
         userResponse.setPhoneNumber(user.getPhoneNumber());
         userResponse.setRol(user.getRol());
         userResponse.setIdAgency(user.getIdAgency());
+        userResponse.setCuit(user.getCuit());
+        userResponse.setLicense(user.getLicense());
         userResponse.setActive(user.isActive());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());

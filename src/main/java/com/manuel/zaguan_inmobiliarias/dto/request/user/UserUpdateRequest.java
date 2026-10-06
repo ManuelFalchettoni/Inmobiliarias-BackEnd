@@ -27,4 +27,11 @@ public class UserUpdateRequest {
     @NotBlank
     @Size(min = 8, max = 15, message = "phoneNumber must be between 8 and 15 characters.")
     private String phoneNumber;
+
+    //Opcionales
+    @Size(min = 11, max = 13, message = "Cuit must be between 11 and 13 characters.")
+    private String cuit;
+
+    @Size(max = 20, message = "License must be at most 20 characters.")
+    private String license;
 }
