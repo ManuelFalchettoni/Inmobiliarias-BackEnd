@@ -12,7 +12,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "people")
+//Cada inmobiliaria tiene su propia cartera: la misma persona puede estar cargada en dos
+//inmobiliarias distintas, pero no dos veces en la misma. DNI y CUIT aceptan null y MySQL
+//permite varios null en un unique, asi que los interesados sin DNI o sin CUIT no chocan
+@Table(name = "people",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"agency_id", "dni"}),
+                @UniqueConstraint(columnNames = {"agency_id", "cuit"})
+        })
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,23 +29,24 @@ public class People {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 15)
+    @Column(nullable = false, length = 15)
     private String phone;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     @Email
     private String email;
 
-    @Column(length = 30)
+    @Column(length = 150)
     private String address;
 
-    @Column(nullable = false, unique = true, length = 10)
+    //DNI y CUIT opcionales: un interesado del CRM se carga con nombre y telefono
+    @Column(length = 10)
     private String dni;
 
-    @Column(nullable = false, unique = true, length = 13)
+    @Column(length = 13)
     private String cuit;
 
     @CreationTimestamp
@@ -49,7 +57,7 @@ public class People {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    @Column(name = "agency_id", nullable = false)
     private Long agencyId;
 
 

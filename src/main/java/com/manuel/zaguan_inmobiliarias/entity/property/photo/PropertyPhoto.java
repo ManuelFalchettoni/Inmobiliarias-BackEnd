@@ -30,7 +30,7 @@ public class PropertyPhoto {
     private String photoName;
 
     @Column(name = "photo_position", nullable = false)
-    private int position;
+    private Integer position;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -3,7 +3,9 @@ package com.manuel.zaguan_inmobiliarias.mapper.property.contract;
 import com.manuel.zaguan_inmobiliarias.dto.request.property.contract.PropertyContractRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.contract.PropertyContractResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.contract.PropertyContract;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PropertyContractMapper {
 
     public PropertyContract toEntity(PropertyContractRequest propertyContractRequest){
@@ -32,7 +34,7 @@ public class PropertyContractMapper {
         propertyContractResponse.setCurrency(propertyContract.getCurrency());
         propertyContractResponse.setStartDate(propertyContract.getStartDate());
         propertyContractResponse.setEndDate(propertyContract.getEndDate());
-        propertyContractResponse.setDocumentURl(propertyContract.getDocumentURL());
+        propertyContractResponse.setDocumentURL(propertyContract.getDocumentURL());
         propertyContractResponse.setCreatedAt(propertyContract.getCreatedAt());
         propertyContractResponse.setUpdatedAt(propertyContract.getUpdatedAt());
 

@@ -49,17 +49,19 @@ public class PropertyRequest {
     private Double longitude;
 
     @NotNull
-    private Long idAgency;
+    private Long agencyId;
 
     @Min(1800)
     @Max(2100)
     private Integer year;
 
+    @NotNull
     @PositiveOrZero
-    private int rooms;
+    private Integer rooms;
 
+    @NotNull
     @Positive
-    private int size;
+    private Integer size;
 
     @NotNull
     private PropertyCondition condition;
@@ -67,6 +69,7 @@ public class PropertyRequest {
     @NotNull
     private PropertyOccupancy occupancy;
 
+    //Opcional: una casa o un terreno no tienen piso
     @PositiveOrZero
-    private int floorNumber;
+    private Integer floorNumber;
 }

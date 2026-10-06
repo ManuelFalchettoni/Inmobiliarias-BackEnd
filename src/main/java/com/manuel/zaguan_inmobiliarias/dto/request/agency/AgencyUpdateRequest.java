@@ -10,8 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-//Los mismos campos que AgencyRequest pero sin password: para editar los datos no hace falta
-//reenviar la contraseña. La contraseña se cambia por PATCH /api/agencies/{id}/password
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor

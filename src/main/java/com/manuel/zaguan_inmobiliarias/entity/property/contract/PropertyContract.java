@@ -12,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Table(name = "property_contracts")
@@ -28,29 +29,35 @@ public class PropertyContract {
     @Column(nullable = false)
     private Long propertyId;
 
-    @Column
+    //Sin @Enumerated(STRING) JPA guarda el numero de orden del enum, y reordenar las
+    //constantes cambiaria el significado de las filas guardadas
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     private ContractType type;
 
-    @Column
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     private ContractStatus status;
 
-    @Column
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(10)")
     private Currency currency;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
     @Column(nullable = false)
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
+    //Acepta null: un contrato de venta no tiene fecha de fin
     @Column
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Column(nullable = false)
     private String documentURL;
 
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

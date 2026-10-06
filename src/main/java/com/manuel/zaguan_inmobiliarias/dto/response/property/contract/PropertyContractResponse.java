@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter @Setter
@@ -21,9 +22,9 @@ public class PropertyContractResponse {
     private ContractStatus status;
     private BigDecimal amount;
     private Currency currency;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String documentURl;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String documentURL;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

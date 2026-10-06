@@ -23,7 +23,7 @@ public class PropertyMapper {
     public Property toEntity(PropertyRequest request) {
         Property property = new Property();
 
-        property.setIdAgency(request.getIdAgency());
+        property.setAgencyId(request.getAgencyId());
         property.setActive(true);
         copyFields(request, property);
 
@@ -46,7 +46,7 @@ public class PropertyMapper {
         response.setCity(property.getCity());
         response.setLatitude(property.getLatitude());
         response.setLongitude(property.getLongitude());
-        response.setIdAgency(property.getIdAgency());
+        response.setAgencyId(property.getAgencyId());
         response.setYear(property.getYear());
         response.setCreatedAt(property.getCreatedAt());
         response.setUpdatedAt(property.getUpdatedAt());

@@ -36,6 +36,7 @@ public class PropertyOwnerUpdaterService {
         }
 
         toUpdate.setPropertyId(propertyOwnerRequest.getPropertyId());
+        toUpdate.setPeopleId(propertyOwnerRequest.getPeopleId());
         toUpdate.setComments(propertyOwnerRequest.getComments());
 
         return propertyOwnerMapper.toResponse(jpaPropertyOwnerRepository.save(toUpdate));

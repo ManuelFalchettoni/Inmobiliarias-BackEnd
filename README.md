@@ -130,9 +130,9 @@ entre lo vigente y lo dado de baja (true por defecto).
 
 | Recurso | `size` default | Orden default | Filtros extra |
 |---|---|---|---|
-| `/api/properties` | 20 | `createdAt` desc | `idAgency` |
+| `/api/properties` | 20 | `createdAt` desc | `agencyId` |
 | `/api/agencies` | 20 | `createdAt` desc | — |
-| `/api/users` | 20 | `createdAt` desc | `idAgency` |
+| `/api/users` | 20 | `createdAt` desc | `agencyId` |
 
 Los listados de fotos y de precios son la excepción: array común, sin paginar.
 
@@ -162,7 +162,7 @@ Los listados de fotos y de precios son la excepción: array común, sin paginar.
 Baja lógica: `DELETE` pone `active` en false, la fila queda. `GET /{id}`, `PUT` y `DELETE`
 solo ven activas; `restore` busca sin ese filtro.
 
-Al crear, la inmobiliaria del `idAgency` tiene que existir y estar activa.
+Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
 
 ### Request
 
@@ -177,7 +177,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
   "city": "Rosario",
   "latitude": -32.9468,
   "longitude": -60.6393,
-  "idAgency": 1,
+  "agencyId": 1,
   "year": 1998,
   "rooms": 4,
   "size": 120,
@@ -196,7 +196,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 | `city` | string | sí | no vacío, máx 100 |
 | `latitude` | number | no | entre -90 y 90 |
 | `longitude` | number | no | entre -180 y 180 |
-| `idAgency` | number | sí | existente y activa; en el `PUT`, el mismo que ya tiene |
+| `agencyId` | number | sí | existente y activa; en el `PUT`, el mismo que ya tiene |
 | `year` | number | no | entre 1800 y 2100 |
 | `rooms` | number | sí | entero >= 0 |
 | `size` | number | sí | entero > 0 |
@@ -207,7 +207,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 `rooms`, `size` y `floorNumber` son `int` primitivos: si no se mandan valen 0, y ese 0 hace
 fallar la validación de `size`.
 
-Una propiedad no cambia de inmobiliaria desde el `PUT`: si `idAgency` viene distinto, 400.
+Una propiedad no cambia de inmobiliaria desde el `PUT`: si `agencyId` viene distinto, 400.
 
 Enums:
 
@@ -228,7 +228,7 @@ Enums:
   "city": "Rosario",
   "latitude": -32.9468,
   "longitude": -60.6393,
-  "idAgency": 1,
+  "agencyId": 1,
   "year": 1998,
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234",
@@ -261,7 +261,7 @@ endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precio
 | `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 `idAgency` distinto al actual · 404 |
+| `PUT /{id}` | 200 | 400 validación · 400 `agencyId` distinto al actual · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 
@@ -394,12 +394,14 @@ El mismo objeto con su `id`. `GET` devuelve un array ordenado por `operationType
 | `GET /api/agencies` | listar, paginado |
 | `GET /api/agencies/{id}` | traer una |
 | `PUT /api/agencies/{id}` | editar |
-| `PATCH /api/agencies/{id}/password` | cambiar la contraseña |
 | `DELETE /api/agencies/{id}` | dar de baja |
 | `PATCH /api/agencies/{id}/restore` | restaurar |
 
-Baja lógica, como propiedades. `GET /{id}`, `PUT`, `PATCH /password` y `DELETE` solo ven
-activas; `restore` busca sin ese filtro.
+Baja lógica, como propiedades. `GET /{id}`, `PUT` y `DELETE` solo ven activas; `restore`
+busca sin ese filtro.
+
+La inmobiliaria no tiene contraseña: se entra con un usuario de rol `AGENCY` vinculado por
+`agencyId` (`POST /api/users`).
 
 `active` y `status` son cosas distintas: `status` es el circuito de verificación y no se toca
 al dar de baja.
@@ -411,8 +413,7 @@ hay que restaurar la que está.
 
 ### Request
 
-`POST` y `PUT` no llevan el mismo body: el `PUT` no acepta `password` y mandarla da 400. El
-resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llevan body.
+`POST` y `PUT` llevan el mismo body; el `PUT` pisa todos los campos. `DELETE` y `PATCH /restore` no llevan body.
 
 ```json
 {
@@ -420,7 +421,6 @@ resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llev
   "companyName": "Inmobiliaria Zaguán SRL",
   "publicName": "Zaguán",
   "email": "contacto@zaguan.com",
-  "password": "unaClave123",
   "phoneNumber": "3415551234",
   "address": "Córdoba 1234",
   "webURL": "https://zaguan.com",
@@ -435,22 +435,11 @@ resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llev
 | `companyName` | string | sí | sí | 3 a 30, único |
 | `publicName` | string | sí | sí | 3 a 30 |
 | `email` | string | sí | sí | formato email, 3 a 100, único |
-| `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `address` | string | sí | sí | 6 a 40, único |
 | `webURL` | string | no | sí | máx 255 |
 | `socials` | string | no | sí | máx 255 |
 | `status` | enum `AgencyStatus` | sí | sí | `PENDING`, `VERIFY`, `DENIED` |
-
-`PATCH /{id}/password` lleva la contraseña actual y la nueva. Las dos son obligatorias: sin
-la actual no se cambia nada.
-
-```json
-{ "currentPassword": "unaClave123", "password": "otraClave123" }
-```
-
-Si `currentPassword` no coincide con la guardada, da 400 con
-`"Current password does not match"`.
 
 ### Response
 
@@ -472,8 +461,6 @@ Si `currentPassword` no coincide con la guardada, da 400 con
 }
 ```
 
-La contraseña nunca sale. `PATCH /password` no devuelve body.
-
 ### Códigos
 
 | Endpoint | OK | Errores |
@@ -481,8 +468,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `POST` | 201 | 400 validación · 409 CUIT, razón social, email o teléfono repetidos · 409 dirección repetida |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` · 404 · 409 igual que el `POST` |
-| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 
@@ -509,12 +495,12 @@ Baja lógica, como propiedades e inmobiliarias. `GET /{id}`, `PUT`, `PATCH /pass
 El email y el teléfono siguen ocupados por los dados de baja: no se puede crear otro usuario
 con el mismo email, hay que restaurar el que está.
 
-Al crear, la inmobiliaria del `idAgency` tiene que existir y estar activa.
+Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
 
 ### Request
 
 `POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email y teléfono, y mandar
-`password`, `rol` o `idAgency` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
+`password`, `rol` o `agencyId` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
 llevan body.
 
 ```json
@@ -524,7 +510,7 @@ llevan body.
   "password": "unaClave123",
   "phoneNumber": "3415551234",
   "rol": "USER",
-  "idAgency": 1
+  "agencyId": 1
 }
 ```
 
@@ -535,7 +521,7 @@ llevan body.
 | `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `rol` | enum `UserRol` | sí | **no** | `USER`, `AGENT`, `AGENCY`, `ADMIN` |
-| `idAgency` | number | sí | **no** | existente y activa |
+| `agencyId` | number | sí | **no** | existente y activa |
 
 El campo es `rol`, no `role`.
 
@@ -559,7 +545,7 @@ Si `currentPassword` no coincide con la guardada, da 400 con
   "active": true,
   "phoneNumber": "3415551234",
   "rol": "USER",
-  "idAgency": 1,
+  "agencyId": 1,
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234"
 }
@@ -574,7 +560,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `idAgency` · 404 · 409 email o teléfono de otro usuario |
+| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `agencyId` · 404 · 409 email o teléfono de otro usuario |
 | `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |

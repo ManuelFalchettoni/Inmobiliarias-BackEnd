@@ -27,12 +27,12 @@ public class PropertyFinderController {
     //Con active=false salen las dadas de baja, para poder restaurarlas.
     @GetMapping
     public ResponseEntity<Page<PropertyResponse>> findAll(
-            @RequestParam(required = false) Long idAgency,
+            @RequestParam(required = false) Long agencyId,
             @RequestParam(defaultValue = "true") Boolean active,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
-            Page<PropertyResponse> properties = (idAgency == null)
+            Page<PropertyResponse> properties = (agencyId == null)
                     ? propertyFinderService.findAll(active, pageable)
-                    : propertyFinderService.findByAgency(idAgency, active, pageable);
+                    : propertyFinderService.findByAgency(agencyId, active, pageable);
 
             return ResponseEntity.ok(properties);
     }

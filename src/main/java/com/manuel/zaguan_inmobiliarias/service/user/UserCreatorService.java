@@ -26,8 +26,8 @@ public class UserCreatorService {
     @Transactional
     public UserResponse creator(UserRequest userRequest){
         //Como en PropertyCreatorService: no se cargan usuarios a una inmobiliaria dada de baja
-        if (!jpaAgencyRepository.existsByIdAndActiveTrue(userRequest.getIdAgency())) {
-            throw new AgencyNotFoundException(userRequest.getIdAgency());
+        if (!jpaAgencyRepository.existsByIdAndActiveTrue(userRequest.getAgencyId())) {
+            throw new AgencyNotFoundException(userRequest.getAgencyId());
         }
         if (jpaUserRepository.existsByEmail(userRequest.getEmail())) {
             throw new UserAlreadyExistsException("Email already registered: " + userRequest.getEmail());

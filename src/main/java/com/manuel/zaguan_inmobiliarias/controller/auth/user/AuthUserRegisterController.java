@@ -14,13 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/api/users")
+//Va aparte de /api/users: POST /api/users es el alta con inmobiliaria y rol (UserCreatorService)
+@RequestMapping("/api/auth")
 @AllArgsConstructor
 public class AuthUserRegisterController {
 
     private final AuthUserRegisterService authUserRegisterService;
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserResponse> create (@Valid @RequestBody AuthUserRequest userRequest){
         UserResponse userResponse = authUserRegisterService.userRegister(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);

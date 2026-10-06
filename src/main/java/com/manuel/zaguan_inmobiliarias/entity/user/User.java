@@ -38,14 +38,21 @@ public class User {
     @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 
-    //Id suelto, como Property.idAgency. La columna acepta null por los usuarios que ya
+    //Id suelto, como Property.agencyId. La columna acepta null por los usuarios que ya
     //existian antes del campo; los nuevos lo traen obligatorio desde UserRequest
     @Column
-    private Long idAgency;
+    private Long agencyId;
+
+    //Opcionales: los completa el agente (matricula y CUIT para facturar)
+    @Column(length = 13)
+    private String cuit;
+
+    @Column(length = 20)
+    private String license;
 
     //Baja logica: el delete lo pone en false, la fila no se borra
     @Column(nullable = false)
-    private boolean active;
+    private Boolean active;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

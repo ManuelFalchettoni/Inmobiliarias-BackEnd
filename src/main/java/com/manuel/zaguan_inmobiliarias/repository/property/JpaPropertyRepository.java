@@ -22,7 +22,7 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
     //con false las dadas de baja, que es la unica forma de encontrarlas para restaurarlas
     Page<Property> findAllByActive(Boolean active, Pageable pageable);
 
-    Page<Property> findAllByIdAgencyAndActive(Long idAgency, Boolean active, Pageable pageable);
+    Page<Property> findAllByAgencyIdAndActive(Long agencyId, Boolean active, Pageable pageable);
 
     boolean existsByIdAndActiveTrue(Long id);
 

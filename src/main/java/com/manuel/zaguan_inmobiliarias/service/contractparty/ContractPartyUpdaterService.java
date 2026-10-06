@@ -21,6 +21,7 @@ public class ContractPartyUpdaterService {
 
         toUpdate.setContractId(contractPartyRequest.getContractId());
         toUpdate.setPeopleId(contractPartyRequest.getPeopleId());
+        toUpdate.setRole(contractPartyRequest.getRole());
         toUpdate.setComments(contractPartyRequest.getComments());
 
         return contractPartyMapper.toResponse(jpaContractPartyRepository.save(toUpdate));

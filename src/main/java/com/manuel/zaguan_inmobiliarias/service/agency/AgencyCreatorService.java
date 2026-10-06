@@ -7,7 +7,6 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsExcep
 import com.manuel.zaguan_inmobiliarias.mapper.agency.AgencyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +16,6 @@ public class AgencyCreatorService {
 
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
-    private final PasswordEncoder passwordEncoder;
 
     //Los exists y el save en la misma transaccion. Igual queda la red del handler de
     //DataIntegrityViolationException, para dos altas simultaneas con el mismo dato
@@ -41,8 +39,6 @@ public class AgencyCreatorService {
         }
 
         Agency agency = agencyMapper.toEntity(agencyRequest);
-        //La contraseña nunca se guarda como llega: se guarda el hash de BCrypt
-        agency.setPassword(passwordEncoder.encode(agencyRequest.getPassword()));
 
         return agencyMapper.toResponse(jpaAgencyRepository.save(agency));
     }

@@ -24,14 +24,20 @@ public class CrmHistory {
     @Column(nullable = false)
     private Long crmPropertyId;
 
-    @Enumerated(EnumType.STRING)
+    //El agente que registro el evento: puede no ser el asignado al lead
     @Column(nullable = false)
+    private Long userId;
+
+    //varchar y no ENUM nativo, por lo mismo que en User: con ddl-auto=update agregar
+    //una constante nueva al enum romperia los inserts
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     private CrmEventType type;
 
     @Column(nullable = true, columnDefinition = "TEXT")
     private String comments;
 
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

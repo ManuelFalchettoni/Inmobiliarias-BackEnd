@@ -32,8 +32,8 @@ public class PropertyFinderService {
                 .map(propertyMapper::toResponse);
     }
 
-    public Page<PropertyResponse> findByAgency(Long idAgency, Boolean active, Pageable pageable) {
-        return jpaPropertyRepository.findAllByIdAgencyAndActive(idAgency, active, pageable)
+    public Page<PropertyResponse> findByAgency(Long agencyId, Boolean active, Pageable pageable) {
+        return jpaPropertyRepository.findAllByAgencyIdAndActive(agencyId, active, pageable)
                 .map(propertyMapper::toResponse);
     }
 }

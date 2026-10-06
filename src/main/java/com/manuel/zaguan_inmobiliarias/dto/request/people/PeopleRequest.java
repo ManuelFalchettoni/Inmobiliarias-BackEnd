@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.dto.request.people;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,11 +14,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PeopleRequest {
 
-    @NotBlank
+    @NotNull
     private Long agencyId;
 
     @NotBlank
-    @Size(min = 3, max = 20, message = "Name must be between 3 and 20 characters.")
+    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters.")
     private String name;
 
     @NotBlank
@@ -29,14 +30,13 @@ public class PeopleRequest {
     @Size(min = 8, max = 15, message = "Phone must be between 8 and 15 characters.")
     private String phone;
 
-    @Size(min = 5, max = 150, message = "Address must be between 8 and 150 characters.")
+    @Size(min = 5, max = 150, message = "Address must be between 5 and 150 characters.")
     private String address;
 
-    @NotBlank
+    //Opcionales
     @Size(min = 6, max = 10, message = "DNI must be between 6 and 10 characters.")
     private String dni;
 
-    @NotBlank
     @Size(min = 11, max = 13, message = "Cuit must be between 11 and 13 characters.")
     private String cuit;
 

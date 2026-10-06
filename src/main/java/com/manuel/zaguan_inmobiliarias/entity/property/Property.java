@@ -60,7 +60,7 @@ public class Property{
     private Double longitude;
 
     @Column
-    private Long idAgency;
+    private Long agencyId;
 
     @Column(name = "construction_year")
     private Integer year;
@@ -74,10 +74,10 @@ public class Property{
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private int rooms;
+    private Integer rooms;
 
     @Column(nullable = false)
-    private int size;
+    private Integer size;
 
     @Column(name = "property_condition", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
@@ -87,8 +87,9 @@ public class Property{
     @Enumerated(EnumType.STRING)
     private PropertyOccupancy occupancy;
 
+    //Acepta null: una casa o un terreno no tienen piso. 0 es planta baja
     @Column
-    private int floorNumber;
+    private Integer floorNumber;
 
     //BatchSize va aca, sobre la coleccion: en un listado Hibernate trae las fotos de a 20
     //propiedades por consulta, en vez de una consulta por propiedad (N+1)

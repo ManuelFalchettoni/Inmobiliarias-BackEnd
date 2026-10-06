@@ -10,7 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "crm_alert")
+@Table(name = "crm_alerts")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,16 +25,17 @@ public class CrmAlert {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = true, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Column(nullable = false)
     private LocalDateTime alertDate;
 
+    //isRead y no read: READ es palabra reservada en MySQL
     @Column(nullable = false)
     private Boolean isRead;
 
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

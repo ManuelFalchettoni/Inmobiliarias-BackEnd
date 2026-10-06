@@ -15,7 +15,6 @@ public class AgencyMapper {
         agency.setEmail(agencyRequest.getEmail());
         agency.setCompanyName(agencyRequest.getCompanyName());
         agency.setPublicName(agencyRequest.getPublicName());
-        //La contraseña no se copia aca: la hashea AgencyCreatorService
         agency.setAddress(agencyRequest.getAddress());
         agency.setSocials(agencyRequest.getSocials());
         agency.setPhoneNumber(agencyRequest.getPhoneNumber());
@@ -26,7 +25,7 @@ public class AgencyMapper {
         return agency;
     }
 
-    //La contraseña y active no se tocan al editar: cada uno tiene su endpoint
+    //active no se toca al editar: se maneja con DELETE y restore
     public void updateEntity(AgencyUpdateRequest agencyUpdateRequest, Agency agency){
         agency.setCuit(agencyUpdateRequest.getCuit());
         agency.setEmail(agencyUpdateRequest.getEmail());

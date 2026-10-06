@@ -27,11 +27,11 @@ public class PropertyUpdaterService {
         Property property = jpaPropertyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new PropertyNotFoundException(id));
 
-        //El PropertyMapper no copia idAgency, asi que antes el campo se descartaba en silencio:
+        //El PropertyMapper no copia agencyId, asi que antes el campo se descartaba en silencio:
         //el cliente mandaba otra inmobiliaria, recibia 200 y la propiedad no se movia.
-        //Objects.equals y no equals: la columna id_agency acepta null
-        if (!Objects.equals(property.getIdAgency(), request.getIdAgency())) {
-            throw new PropertyAgencyMismatchException(id, property.getIdAgency(), request.getIdAgency());
+        //Objects.equals y no equals: la columna agency_id acepta null
+        if (!Objects.equals(property.getAgencyId(), request.getAgencyId())) {
+            throw new PropertyAgencyMismatchException(id, property.getAgencyId(), request.getAgencyId());
         }
 
         propertyMapper.updateEntity(request, property);
