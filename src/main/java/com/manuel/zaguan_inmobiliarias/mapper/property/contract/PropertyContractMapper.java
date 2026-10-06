@@ -3,7 +3,9 @@ package com.manuel.zaguan_inmobiliarias.mapper.property.contract;
 import com.manuel.zaguan_inmobiliarias.dto.request.property.contract.PropertyContractRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.contract.PropertyContractResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.contract.PropertyContract;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PropertyContractMapper {
 
     public PropertyContract toEntity(PropertyContractRequest propertyContractRequest){

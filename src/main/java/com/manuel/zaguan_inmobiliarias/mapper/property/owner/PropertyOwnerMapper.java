@@ -3,7 +3,9 @@ package com.manuel.zaguan_inmobiliarias.mapper.property.owner;
 import com.manuel.zaguan_inmobiliarias.dto.request.property.owner.PropertyOwnerRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.owner.PropertyOwnerResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.Owner.PropertyOwner;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PropertyOwnerMapper {
     public PropertyOwner toEntity(PropertyOwnerRequest propertyOwnerRequest){
         PropertyOwner propertyOwner = new PropertyOwner();

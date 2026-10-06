@@ -3,7 +3,9 @@ package com.manuel.zaguan_inmobiliarias.mapper.people;
 import com.manuel.zaguan_inmobiliarias.dto.request.people.PeopleRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.people.PeopleResponse;
 import com.manuel.zaguan_inmobiliarias.entity.people.People;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PeopleMapper {
 
     public People toEntity(PeopleRequest peopleRequest){
