@@ -394,12 +394,14 @@ El mismo objeto con su `id`. `GET` devuelve un array ordenado por `operationType
 | `GET /api/agencies` | listar, paginado |
 | `GET /api/agencies/{id}` | traer una |
 | `PUT /api/agencies/{id}` | editar |
-| `PATCH /api/agencies/{id}/password` | cambiar la contraseña |
 | `DELETE /api/agencies/{id}` | dar de baja |
 | `PATCH /api/agencies/{id}/restore` | restaurar |
 
-Baja lógica, como propiedades. `GET /{id}`, `PUT`, `PATCH /password` y `DELETE` solo ven
-activas; `restore` busca sin ese filtro.
+Baja lógica, como propiedades. `GET /{id}`, `PUT` y `DELETE` solo ven activas; `restore`
+busca sin ese filtro.
+
+La inmobiliaria no tiene contraseña: se entra con un usuario de rol `AGENCY` vinculado por
+`agencyId` (`POST /api/users`).
 
 `active` y `status` son cosas distintas: `status` es el circuito de verificación y no se toca
 al dar de baja.
@@ -411,8 +413,7 @@ hay que restaurar la que está.
 
 ### Request
 
-`POST` y `PUT` no llevan el mismo body: el `PUT` no acepta `password` y mandarla da 400. El
-resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llevan body.
+`POST` y `PUT` llevan el mismo body; el `PUT` pisa todos los campos. `DELETE` y `PATCH /restore` no llevan body.
 
 ```json
 {
@@ -420,7 +421,6 @@ resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llev
   "companyName": "Inmobiliaria Zaguán SRL",
   "publicName": "Zaguán",
   "email": "contacto@zaguan.com",
-  "password": "unaClave123",
   "phoneNumber": "3415551234",
   "address": "Córdoba 1234",
   "webURL": "https://zaguan.com",
@@ -435,22 +435,11 @@ resto de los campos el `PUT` los pisa todos. `DELETE` y `PATCH /restore` no llev
 | `companyName` | string | sí | sí | 3 a 30, único |
 | `publicName` | string | sí | sí | 3 a 30 |
 | `email` | string | sí | sí | formato email, 3 a 100, único |
-| `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `address` | string | sí | sí | 6 a 40, único |
 | `webURL` | string | no | sí | máx 255 |
 | `socials` | string | no | sí | máx 255 |
 | `status` | enum `AgencyStatus` | sí | sí | `PENDING`, `VERIFY`, `DENIED` |
-
-`PATCH /{id}/password` lleva la contraseña actual y la nueva. Las dos son obligatorias: sin
-la actual no se cambia nada.
-
-```json
-{ "currentPassword": "unaClave123", "password": "otraClave123" }
-```
-
-Si `currentPassword` no coincide con la guardada, da 400 con
-`"Current password does not match"`.
 
 ### Response
 
@@ -472,8 +461,6 @@ Si `currentPassword` no coincide con la guardada, da 400 con
 }
 ```
 
-La contraseña nunca sale. `PATCH /password` no devuelve body.
-
 ### Códigos
 
 | Endpoint | OK | Errores |
@@ -481,8 +468,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `POST` | 201 | 400 validación · 409 CUIT, razón social, email o teléfono repetidos · 409 dirección repetida |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password` · 404 · 409 igual que el `POST` |
-| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 

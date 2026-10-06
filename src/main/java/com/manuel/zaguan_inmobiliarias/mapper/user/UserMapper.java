@@ -62,7 +62,7 @@ public class UserMapper {
         userResponse.setAgencyId(user.getAgencyId());
         userResponse.setCuit(user.getCuit());
         userResponse.setLicense(user.getLicense());
-        userResponse.setActive(user.isActive());
+        userResponse.setActive(user.getActive());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());
 

@@ -44,15 +44,15 @@ public class PropertyResponse {
 
     private LocalDateTime updatedAt;
 
-    private int rooms;
+    private Integer rooms;
 
-    private int size;
+    private Integer size;
 
     private PropertyCondition condition;
 
     private PropertyOccupancy occupancy;
 
-    private int floorNumber;
+    private Integer floorNumber;
 
     private List<PropertyPhotoResponse> photos = new ArrayList<>();
 

@@ -52,7 +52,7 @@ public class User {
 
     //Baja logica: el delete lo pone en false, la fila no se borra
     @Column(nullable = false)
-    private boolean active;
+    private Boolean active;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

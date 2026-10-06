@@ -14,7 +14,7 @@ public class PropertyPhotoResponse {
 
     private String photoName;
 
-    private int position;
+    private Integer position;
 
 
 }

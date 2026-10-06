@@ -36,10 +36,6 @@ public class Agency {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    //Se guarda el hash de BCrypt (60 caracteres), no la contraseña
-    @Column(nullable = false)
-    private String password;
-
     @Column(nullable = false, unique = true, length = 15)
     private String phoneNumber;
 

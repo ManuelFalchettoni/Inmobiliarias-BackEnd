@@ -19,7 +19,7 @@ public class UserResponse {
 
     private String email;
 
-    private boolean active;
+    private Boolean active;
 
     private String phoneNumber;
 
