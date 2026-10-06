@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.service.people;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.people.PeopleResponse;
 import com.manuel.zaguan_inmobiliarias.entity.people.People;
+import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.people.PeopleMapper;
 import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
 import lombok.AllArgsConstructor;

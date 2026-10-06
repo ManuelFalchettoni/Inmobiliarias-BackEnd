@@ -50,7 +50,7 @@ public class People {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private Long idAgency;
+    private Long agencyId;
 
 
 

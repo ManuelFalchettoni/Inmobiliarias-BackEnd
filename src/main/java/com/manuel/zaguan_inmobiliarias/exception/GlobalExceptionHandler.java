@@ -3,8 +3,13 @@ package com.manuel.zaguan_inmobiliarias.exception;
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
+import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoStorageException;
@@ -109,6 +114,34 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
+    //---------------------------Property owner -----------------------
+    @ExceptionHandler(PropertyOwnerAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyOwnerAlreadyExists(PropertyOwnerAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyOwnerNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyOwnerNotFound(PropertyOwnerNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    //--------------------------------People--------------------------
+    @ExceptionHandler(PeopleNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePeopleNotFound(PeopleNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    //-----------------------------Property Contract-------------------
+    @ExceptionHandler(PropertyContractNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyContractNotFound(PropertyContractNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    //-----------------------------Contract Party------------------------
+    @ExceptionHandler(ContractPartyNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleContractPartyNotFound(ContractPartyNotFoundException e, HttpServletRequest request){
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
     //Red de seguridad para los unique que no se controlan antes (direccion) o si dos
     //requests guardan el mismo dato a la vez. No se muestra el mensaje de MySQL al cliente
     @ExceptionHandler(DataIntegrityViolationException.class)

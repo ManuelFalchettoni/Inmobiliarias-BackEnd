@@ -14,6 +14,7 @@ public class PeopleMapper {
         people.setAddress(peopleRequest.getAddress());
         people.setPhone(peopleRequest.getPhone());
         people.setDni(peopleRequest.getDni());
+        people.setAgencyId(peopleRequest.getAgencyId());
 
         return people;
     }
@@ -27,7 +28,7 @@ public class PeopleMapper {
         peopleResponse.setPhone(people.getPhone());
         peopleResponse.setCuit(people.getCuit());
         peopleResponse.setAddress(people.getAddress());
-        peopleResponse.setAgencyId(people.getIdAgency());
+        peopleResponse.setAgencyId(people.getAgencyId());
         peopleResponse.setCreatedAt(people.getCreatedAt());
         peopleResponse.setUpdatedAt(people.getUpdatedAt());
 
