@@ -47,13 +47,13 @@ Las excepciones siguen el mismo corte por entidad; la única compartida por dos 
 | Personas y contratos | `People` | clientes y propietarios de la inmobiliaria |
 | Personas y contratos | `PropertyOwner` | qué personas son dueñas de qué propiedad |
 | Personas y contratos | `PropertyContract` | contrato de venta o alquiler: monto, fechas, estado, documento |
-| Personas y contratos | `ContractParty` | quién participa del contrato y con qué `Role` |
-| CRM | `CrmProperty` | un cliente interesado en una propiedad, con el agente y la etapa (`Stage`) |
+| Personas y contratos | `ContractParty` | quién participa del contrato y con qué `ContractRole` |
+| CRM | `CrmProperty` | un cliente interesado en una propiedad, con el agente y la etapa (`CrmStage`) |
 | CRM | `CrmHistory` | eventos del lead: nota, llamada, visita, oferta, cambio de etapa |
 | CRM | `Offer` | ofertas del lead, con monto, moneda y estado |
 | CRM | `CrmAlert` | recordatorios para un agente sobre un lead |
 
-Enums nuevos:
+Enums:
 
 - `Currency`: `ARS`, `USD`
 - `OperationType` / `ContractType`: `SALE`, `RENT`
@@ -62,6 +62,56 @@ Enums nuevos:
 - `CrmStage`: `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST`
 - `CrmEventType`: `NOTE`, `CALL`, `VISIT`, `OFFER`, `STAGE_CHANGE`
 - `OfferStatus`: `PENDING`, `ACCEPTED`, `REJECTED`
+
+## Casos de uso
+
+### 1. Alta de una inmobiliaria y sus agentes
+
+1. `POST /api/agencies` con `status: "PENDING"`.
+2. `PUT /api/agencies/{id}` con `status: "VERIFY"` una vez revisados los datos.
+3. `POST /api/users` con `rol: "AGENCY"` y el `agencyId`: el usuario de la inmobiliaria.
+4. `POST /api/users` con `rol: "AGENT"` por cada agente, con `cuit` y `license` si los tiene.
+5. `GET /api/users?agencyId={id}` para ver el equipo.
+
+### 2. Publicar una propiedad
+
+1. `POST /api/properties`.
+2. `POST /api/properties/{id}/photos` con las fotos, de a seis por request.
+3. `POST /api/properties/{id}/prices` por cada operación: `SALE`, `RENT` o las dos.
+4. `POST /api/people` con el dueño, si no está cargado, y `POST /api/property_owners` para
+   vincularlo.
+5. `GET /api/properties/{id}`: trae fotos y precios embebidos.
+
+Para sacarla del mercado, `DELETE /api/properties/{id}`; vuelve con `PATCH /{id}/restore`.
+
+### 3. Seguimiento de un interesado
+
+1. `POST /api/people` con nombre, teléfono y email.
+2. `POST /api/crm_properties` con la propiedad, la persona, el agente y `stage: "NEW"`.
+3. Después de cada contacto, `POST .../history` con el evento (`CALL`, `VISIT`, `NOTE`) y
+   `PUT /api/crm_properties/{id}` con la etapa nueva, más su evento `STAGE_CHANGE`.
+4. `POST .../alerts` para agendar la visita; `PUT .../alerts/{id}` con `isRead: true` al
+   cumplirla.
+5. `GET .../history` para ver la línea de tiempo del lead.
+
+### 4. Negociación y cierre con contrato
+
+1. `POST .../offers` con `status: "PENDING"`, su evento `OFFER` en el historial y el lead en
+   `NEGOTIATION`.
+2. Ante una contraoferta, `PUT .../offers/{id}` con `REJECTED` y un `POST .../offers` nuevo.
+3. Al aceptar, la oferta pasa a `ACCEPTED` y el lead a `WON`.
+4. `POST /api/property_contracts` con tipo, monto, moneda, fechas y documento.
+5. `POST /api/contract_parties` por cada persona: `OWNER`, `TENANT` o `BUYER`, y `GUARANTOR` si
+   es alquiler.
+
+Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLED`.
+
+### 5. Agenda diaria del agente
+
+1. `GET /api/crm_properties?userId={id}`: sus leads.
+2. `GET .../alerts` de cada lead, la fecha más próxima primero.
+3. Por cada alerta: `PUT` con `isRead: true`, `PUT` con otro `userId` para pasarla, o `DELETE`.
+4. `GET .../offers` de cada lead para repasar las pendientes.
 
 ---
 
@@ -125,16 +175,21 @@ Devuelven un `Page` de Spring, no un array:
 }
 ```
 
-Los tres aceptan `page`, `size` y `sort`, con tope de 100 por página, y `active` para elegir
-entre lo vigente y lo dado de baja (true por defecto).
+Aceptan `page`, `size` y `sort`, con tope de 100 por página. Los que tienen baja lógica aceptan
+además `active` para elegir entre lo vigente y lo dado de baja (true por defecto).
 
 | Recurso | `size` default | Orden default | Filtros extra |
 |---|---|---|---|
-| `/api/properties` | 20 | `createdAt` desc | `agencyId` |
-| `/api/agencies` | 20 | `createdAt` desc | — |
-| `/api/users` | 20 | `createdAt` desc | `agencyId` |
+| `/api/properties` | 20 | `createdAt` desc | `active`, `agencyId` |
+| `/api/agencies` | 20 | `createdAt` desc | `active` |
+| `/api/users` | 20 | `createdAt` desc | `active`, `agencyId` |
+| `/api/crm_properties` | 20 | `createdAt` desc | `userId` |
 
-Los listados de fotos y de precios son la excepción: array común, sin paginar.
+`/api/people`, `/api/property_owners`, `/api/property_contracts` y `/api/contract_parties`
+aceptan solo `page` y `size`, con 5 por defecto, sin `sort` ni tope.
+
+Lo que cuelga de otro recurso (fotos, precios, ofertas, historial y alertas) sale en un array
+común, sin paginar.
 
 ## Serialización
 
@@ -202,10 +257,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 | `size` | number | sí | entero > 0 |
 | `condition` | enum `PropertyCondition` | sí | |
 | `occupancy` | enum `PropertyOccupancy` | sí | |
-| `floorNumber` | number | sí | entero >= 0 |
-
-`rooms`, `size` y `floorNumber` son `int` primitivos: si no se mandan valen 0, y ese 0 hace
-fallar la validación de `size`.
+| `floorNumber` | number | no | entero >= 0; 0 es planta baja |
 
 Una propiedad no cambia de inmobiliaria desde el `PUT`: si `agencyId` viene distinto, 400.
 
@@ -439,7 +491,7 @@ hay que restaurar la que está.
 | `address` | string | sí | sí | 6 a 40, único |
 | `webURL` | string | no | sí | máx 255 |
 | `socials` | string | no | sí | máx 255 |
-| `status` | enum `AgencyStatus` | sí | sí | `PENDING`, `VERIFY`, `DENIED` |
+| `status` | enum `AgencyStatus` | sí | sí | `PENDING`, `VERIFY`, `DENIED`, `DELETED` |
 
 ### Response
 
@@ -499,8 +551,8 @@ Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
 
 ### Request
 
-`POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email y teléfono, y mandar
-`password`, `rol` o `agencyId` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
+`POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email, teléfono, CUIT y
+matrícula, y mandar `password`, `rol` o `agencyId` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
 llevan body.
 
 ```json
@@ -510,7 +562,9 @@ llevan body.
   "password": "unaClave123",
   "phoneNumber": "3415551234",
   "rol": "USER",
-  "agencyId": 1
+  "agencyId": 1,
+  "cuit": "20301234567",
+  "license": "CMCPSI 1234"
 }
 ```
 
@@ -522,6 +576,8 @@ llevan body.
 | `phoneNumber` | string | sí | sí | 8 a 15, único |
 | `rol` | enum `UserRol` | sí | **no** | `USER`, `AGENT`, `AGENCY`, `ADMIN` |
 | `agencyId` | number | sí | **no** | existente y activa |
+| `cuit` | string | no | sí | 11 a 13 |
+| `license` | string | no | sí | matrícula, máx 20 |
 
 El campo es `rol`, no `role`.
 
@@ -546,6 +602,8 @@ Si `currentPassword` no coincide con la guardada, da 400 con
   "phoneNumber": "3415551234",
   "rol": "USER",
   "agencyId": 1,
+  "cuit": "20301234567",
+  "license": "CMCPSI 1234",
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234"
 }
@@ -566,3 +624,352 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `PATCH /{id}/restore` | 200 | 404 |
 
 El 409 dice cuál es el campo repetido (`"Phone number already registered: 3415551234"`).
+
+## Registro
+
+`POST /api/auth/register`
+
+Alta pública de un usuario, aparte de `POST /api/users`: entra con rol `USER` y sin
+inmobiliaria. No hay login todavía.
+
+```json
+{ "name": "Manuel", "email": "manuel@mail.com", "password": "unaClave123", "phoneNumber": "3415551234" }
+```
+
+Las reglas de los campos son las mismas que en `POST /api/users`. Devuelve el usuario como
+`GET /api/users/{id}`.
+
+| OK | Errores |
+|---|---|
+| 201 | 400 validación · 409 email o teléfono repetidos |
+
+## Personas
+
+`/api/people`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar, paginado |
+| `GET /{id}` | traer una |
+| `PUT /{id}` | editar |
+
+Clientes, interesados y propietarios de cada inmobiliaria. La misma persona puede estar en dos
+inmobiliarias, pero no dos veces en la misma: el DNI y el CUIT son únicos por inmobiliaria.
+
+### Request
+
+Mismo body para `POST` y `PUT`. En el `PUT` el `agencyId` se ignora: una persona no cambia de
+inmobiliaria.
+
+```json
+{
+  "agencyId": 1,
+  "name": "Juan Pérez",
+  "email": "juan@mail.com",
+  "phone": "3415559876",
+  "address": "Mitre 456",
+  "dni": "30123456",
+  "cuit": "20301234567"
+}
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `agencyId` | number | sí | |
+| `name` | string | sí | 3 a 100 |
+| `email` | string | sí | formato email, máx 100 |
+| `phone` | string | sí | 8 a 15 |
+| `address` | string | no | 5 a 150 |
+| `dni` | string | no | 6 a 10, único por inmobiliaria |
+| `cuit` | string | no | 11 a 13, único por inmobiliaria |
+
+### Response
+
+Los mismos campos con `id`, `createdAt` y `updatedAt`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 409 DNI o CUIT repetidos en la inmobiliaria |
+| `GET` listado | 200 | — |
+| `GET /{id}` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
+
+## Dueños de propiedades
+
+`/api/property_owners`
+
+| | |
+|---|---|
+| `POST` | vincular una persona como dueña de una propiedad |
+| `GET` | listar, paginado |
+| `GET /{id}` | traer uno |
+| `PUT /{id}` | editar |
+| `DELETE /{id}` | desvincular |
+
+Una propiedad puede tener varios dueños, pero la misma persona no se vincula dos veces a la
+misma propiedad. El borrado es físico.
+
+### Request
+
+Mismo body para `POST` y `PUT`.
+
+```json
+{ "propertyId": 7, "peopleId": 3, "comments": "50% de la propiedad" }
+```
+
+Los tres campos son obligatorios. `propertyId` y `peopleId` tienen que existir.
+
+### Response
+
+Los mismos campos con su `id`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 404 propiedad o persona inexistente · 409 la persona ya es dueña |
+| `GET` listado | 200 | — |
+| `GET /{id}` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 vínculo, propiedad o persona inexistente |
+| `DELETE /{id}` | 204 sin body | 404 |
+
+## Contratos
+
+`/api/property_contracts`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar, paginado |
+| `GET /{id}` | traer uno |
+| `PUT /{id}` | editar |
+| `DELETE /{id}` | cancelar |
+
+El `DELETE` no borra la fila: pasa el contrato a `CANCELLED`. Sigue saliendo en el listado y en
+el `GET /{id}`.
+
+### Request
+
+Mismo body para `POST` y `PUT`. En el `PUT` el `propertyId` se ignora: un contrato no cambia de
+propiedad.
+
+```json
+{
+  "propertyId": 7,
+  "type": "RENT",
+  "status": "ACTIVE",
+  "amount": 450000.00,
+  "currency": "ARS",
+  "startDate": "2026-10-01",
+  "endDate": "2028-09-30",
+  "documentURL": "https://..."
+}
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `propertyId` | number | sí | |
+| `type` | enum `ContractType` | sí | `SALE`, `RENT` |
+| `status` | enum `ContractStatus` | sí | `ACTIVE`, `FINISHED`, `CANCELLED` |
+| `amount` | number | sí | > 0, hasta 15 enteros y 2 decimales |
+| `currency` | enum `Currency` | sí | `ARS`, `USD` |
+| `startDate` | fecha | sí | `yyyy-MM-dd` |
+| `endDate` | fecha | no | `yyyy-MM-dd`; una venta no tiene fecha de fin |
+| `documentURL` | string | sí | |
+
+### Response
+
+Los mismos campos con `id`, `createdAt` y `updatedAt`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación |
+| `GET` listado | 200 | — |
+| `GET /{id}` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 |
+| `DELETE /{id}` | 204 sin body | 404 |
+
+## Partes de contratos
+
+`/api/contract_parties`
+
+| | |
+|---|---|
+| `POST` | agregar una persona a un contrato |
+| `GET` | listar, paginado |
+| `GET /{id}` | traer una |
+| `PUT /{id}` | editar |
+| `DELETE /{id}` | sacar del contrato |
+
+El borrado es físico.
+
+### Request
+
+Mismo body para `POST` y `PUT`.
+
+```json
+{ "contractId": 4, "peopleId": 3, "role": "TENANT", "comments": "Titular" }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `contractId` | number | sí | contrato existente |
+| `peopleId` | number | sí | persona existente |
+| `role` | enum `ContractRole` | sí | `OWNER`, `TENANT`, `BUYER`, `GUARANTOR` |
+| `comments` | string | no | |
+
+### Response
+
+Los mismos campos con su `id`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 404 contrato o persona inexistente |
+| `GET` listado | 200 | — |
+| `GET /{id}` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 |
+| `DELETE /{id}` | 204 sin body | 404 |
+
+---
+
+# CRM
+
+Todo el CRM gira alrededor del lead (`CrmProperty`): una persona interesada en una propiedad,
+con un agente asignado. Ofertas, historial y alertas cuelgan del lead en la URL, como las fotos
+y los precios cuelgan de la propiedad: solo se ven o se tocan desde la URL de su propio lead.
+
+## Leads
+
+`/api/crm_properties`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar, paginado |
+| `GET /{id}` | traer uno |
+| `PUT /{id}` | editar: cambiar la etapa o reasignar el agente |
+
+No hay `DELETE`: un lead que no avanza pasa a `LOST`.
+
+### Request
+
+Mismo body para `POST` y `PUT`.
+
+```json
+{ "propertyId": 7, "peopleId": 3, "userId": 1, "stage": "NEW" }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `propertyId` | number | sí | propiedad existente y activa |
+| `peopleId` | number | sí | persona existente |
+| `userId` | number | sí | agente existente y activo |
+| `stage` | enum `CrmStage` | sí | `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST` |
+
+### Response
+
+Los mismos campos con `id`, `createdAt` y `updatedAt`.
+
+### Códigos
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 404 propiedad, persona o agente inexistente o dado de baja |
+| `GET` listado | 200 | — |
+| `GET /{id}` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 lead · 404 igual que el `POST` |
+
+## Ofertas
+
+`/api/crm_properties/{crmPropertyId}/offers`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar las del lead, las más nuevas primero |
+| `GET /{offerId}` | traer una |
+| `PUT /{offerId}` | editar: aceptar o rechazar con `status` |
+| `DELETE /{offerId}` | borrar |
+
+Una oferta rechazada no se borra, pasa a `REJECTED`. El `DELETE` es físico, para una cargada
+por error.
+
+```json
+{ "amount": 90000.00, "currency": "USD", "status": "PENDING" }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `amount` | number | sí | > 0, hasta 13 enteros y 2 decimales |
+| `currency` | enum `Currency` | sí | `ARS`, `USD` |
+| `status` | enum `OfferStatus` | sí | `PENDING`, `ACCEPTED`, `REJECTED` |
+
+El response trae además `id`, `crmPropertyId`, `createdAt` y `updatedAt`.
+
+## Historial
+
+`/api/crm_properties/{crmPropertyId}/history`
+
+| | |
+|---|---|
+| `POST` | registrar un evento |
+| `GET` | la línea de tiempo del lead, lo más nuevo primero |
+| `GET /{historyId}` | traer un evento |
+
+Un evento no se edita ni se borra.
+
+```json
+{ "userId": 1, "type": "CALL", "comments": "Quiere visitar el sábado" }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `userId` | number | sí | el agente que registra el evento, existente y activo |
+| `type` | enum `CrmEventType` | sí | `NOTE`, `CALL`, `VISIT`, `OFFER`, `STAGE_CHANGE` |
+| `comments` | string | no | |
+
+El response trae además `id`, `crmPropertyId` y `createdAt`.
+
+## Alertas
+
+`/api/crm_properties/{crmPropertyId}/alerts`
+
+| | |
+|---|---|
+| `POST` | crear |
+| `GET` | listar las del lead, la fecha más próxima primero |
+| `GET /{alertId}` | traer una |
+| `PUT /{alertId}` | editar: marcar como leída o pasarla a otro agente |
+| `DELETE /{alertId}` | borrar |
+
+El borrado es físico.
+
+```json
+{ "userId": 1, "message": "Llamar para confirmar la visita", "alertDate": "2026-10-10T10:00:00", "isRead": false }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `userId` | number | sí | el agente al que le llega, existente y activo |
+| `message` | string | sí | no vacío |
+| `alertDate` | fecha y hora | sí | `yyyy-MM-ddTHH:mm:ss` |
+| `isRead` | boolean | sí | `false` al crear |
+
+El response trae además `id`, `crmPropertyId` y `createdAt`.
+
+### Códigos de ofertas, historial y alertas
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST` | 201 | 400 validación · 404 lead inexistente · 404 agente inexistente o dado de baja (historial y alertas) |
+| `GET` listado | 200 | 404 lead inexistente |
+| `GET /{id}` | 200 | 404 lead o registro inexistente · 404 el registro es de otro lead |
+| `PUT /{id}` | 200 | 400 validación · 404 igual que arriba |
+| `DELETE /{id}` | 204 sin body | 404 igual que arriba |
