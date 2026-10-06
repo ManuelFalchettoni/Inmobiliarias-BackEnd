@@ -12,7 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "crm_property")
+@Table(name = "crm_properties")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,12 +30,14 @@ public class CrmProperty {
     @Column(nullable = false)
     private Long userId;
 
+    //varchar y no ENUM nativo, por lo mismo que en User: con ddl-auto=update agregar
+    //una constante nueva al enum romperia los inserts
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
     private CrmStage stage;
 
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
