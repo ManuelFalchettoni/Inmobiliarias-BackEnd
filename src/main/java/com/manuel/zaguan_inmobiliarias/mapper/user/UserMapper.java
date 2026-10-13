@@ -58,7 +58,7 @@ public class UserMapper {
         userResponse.setName(user.getName());
         userResponse.setEmail(user.getEmail());
         userResponse.setPhoneNumber(user.getPhoneNumber());
-        userResponse.setRol(user.getRol());
+        userResponse.setRol(user.getRol().name());
         userResponse.setAgencyId(user.getAgencyId());
         userResponse.setCuit(user.getCuit());
         userResponse.setLicense(user.getLicense());
