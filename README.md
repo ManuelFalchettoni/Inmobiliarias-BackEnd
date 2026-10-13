@@ -16,7 +16,10 @@ Queda en `http://localhost:8080`.
 
 Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NAME`,
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
-`CORS_ORIGINS`.
+`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `SEED_ENABLED`.
+
+- `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
+- `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
 
 - MySQL: en el 3306, con `root` / `root`. La base la crea el driver con
   `createDatabaseIfNotExist` y el esquema Hibernate con `ddl-auto=update`.
@@ -125,10 +128,10 @@ Configurado en `SecurityConfig`, aplica a `/api/**`.
 
 | | |
 |---|---|
-| Orígenes | `http://localhost:5173` y `http://localhost:3000`; se cambian con `CORS_ORIGINS`, separados por coma |
+| Orígenes | `http://localhost:5173`, `http://localhost:5174` y `http://localhost:3000`; se cambian con `CORS_ORIGINS`, separados por coma |
 | Métodos | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` |
 | Headers | todos |
-| `allowCredentials` | false: el front no manda `credentials: "include"` |
+| `allowCredentials` | true: el login manda el token en una cookie, así que el front llama con `credentials: "include"` (fetch) o `withCredentials: true` (axios) |
 
 Las fotos salen de MinIO, no del backend. Con el `src` de un `<img>` no pasan por CORS; con
 `fetch` hay que configurar CORS en MinIO.
@@ -190,6 +193,12 @@ además `active` para elegir entre lo vigente y lo dado de baja (true por defect
 `/api/people`, `/api/property_owners`, `/api/property_contracts` y `/api/contract_parties`
 aceptan solo `page` y `size`, con 5 por defecto, sin `sort` ni tope.
 
+Propiedades, personas y contratos tienen además un `GET /search` con filtros combinables,
+paginado igual que su listado. Los filtros que no se mandan no filtran; los de texto son
+parciales y no distinguen mayúsculas ni acentos (`city=cordoba` encuentra "Córdoba"). Un enum
+va con el nombre exacto de la constante (`type=HOUSE`) y una fecha como `yyyy-MM-dd`; otro valor
+da 400.
+
 Lo que cuelga de otro recurso (fotos, precios, ofertas, historial y alertas) sale en un array
 común, sin paginar.
 
@@ -211,6 +220,7 @@ común, sin paginar.
 |---|---|
 | `POST /api/properties` | crear |
 | `GET /api/properties` | listar, paginado |
+| `GET /api/properties/search` | buscar con filtros, paginado |
 | `GET /api/properties/{id}` | traer una |
 | `PUT /api/properties/{id}` | editar |
 | `DELETE /api/properties/{id}` | dar de baja |
@@ -220,6 +230,20 @@ Baja lógica: `DELETE` pone `active` en false, la fila queda. `GET /{id}`, `PUT`
 solo ven activas; `restore` busca sin ese filtro.
 
 Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
+
+### Búsqueda
+
+`GET /api/properties/search?city=cordoba&type=HOUSE&rooms=3&minSize=80`
+
+Solo trae activas. Todos los filtros son opcionales.
+
+| Filtro | Cómo filtra |
+|---|---|
+| `province`, `county`, `city` | texto parcial |
+| `type`, `condition`, `occupancy` | enum exacto |
+| `rooms` | exacto |
+| `minSize`, `maxSize` | rango de `size` |
+| `minYear`, `maxYear` | rango de `year` |
 
 ### Request
 
@@ -632,7 +656,7 @@ El 409 dice cuál es el campo repetido (`"Phone number already registered: 34155
 `POST /api/auth/register`
 
 Alta pública de un usuario, aparte de `POST /api/users`: entra con rol `USER` y sin
-inmobiliaria. No hay login todavía.
+inmobiliaria.
 
 ```json
 { "name": "Manuel", "email": "manuel@mail.com", "password": "unaClave123", "phoneNumber": "3415551234" }
@@ -645,6 +669,30 @@ Las reglas de los campos son las mismas que en `POST /api/users`. Devuelve el us
 |---|---|
 | 201 | 400 validación · 409 email o teléfono repetidos |
 
+## Login
+
+`POST /api/auth/login`
+
+```json
+{ "email": "manuel@mail.com", "password": "unaClave123", "remember": true }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `email` | string | sí | formato email |
+| `password` | string | sí | 8 a 20 |
+| `remember` | boolean | no | `true` hace que la cookie dure 24 horas; sin él, dura lo que la sesión del navegador |
+
+El token JWT no viaja en el body: va en la cookie `token`, `HttpOnly` y con path `/`. El body
+trae el usuario con `id`, `name`, `email` y `rol`.
+
+Email inexistente, usuario dado de baja y contraseña incorrecta dan el mismo 401, para no
+revelar qué emails están registrados.
+
+| OK | Errores |
+|---|---|
+| 200 | 400 validación · 401 `"Invalid email or password"` |
+
 ## Personas
 
 `/api/people`
@@ -653,11 +701,20 @@ Las reglas de los campos son las mismas que en `POST /api/users`. Devuelve el us
 |---|---|
 | `POST` | crear |
 | `GET` | listar, paginado |
+| `GET /search` | buscar en la cartera de una inmobiliaria, paginado |
 | `GET /{id}` | traer una |
 | `PUT /{id}` | editar |
 
 Clientes, interesados y propietarios de cada inmobiliaria. La misma persona puede estar en dos
 inmobiliarias, pero no dos veces en la misma: el DNI y el CUIT son únicos por inmobiliaria.
+
+### Búsqueda
+
+`GET /api/people/search?agencyId=1&name=garcia`
+
+`agencyId` es obligatorio: cada inmobiliaria busca solo en su cartera, y sin él da 400. Los
+demás filtros son opcionales y todos de texto parcial: `name`, `email`, `phone`, `address`,
+`dni`, `cuit`. Ordena por nombre.
 
 ### Request
 
@@ -746,12 +803,29 @@ Los mismos campos con su `id`.
 |---|---|
 | `POST` | crear |
 | `GET` | listar, paginado |
+| `GET /search` | buscar en los contratos de una inmobiliaria, paginado |
 | `GET /{id}` | traer uno |
 | `PUT /{id}` | editar |
 | `DELETE /{id}` | cancelar |
 
 El `DELETE` no borra la fila: pasa el contrato a `CANCELLED`. Sigue saliendo en el listado y en
 el `GET /{id}`.
+
+### Búsqueda
+
+`GET /api/property_contracts/search?agencyId=1&endFrom=2026-01-01&endTo=2026-12-31`
+
+`agencyId` es obligatorio, sin él da 400. El contrato no tiene inmobiliaria propia: se busca
+por la de su propiedad. Los demás filtros son opcionales. Ordena por `startDate`, el más nuevo
+primero.
+
+| Filtro | Cómo filtra |
+|---|---|
+| `propertyId` | exacto |
+| `type`, `status`, `currency` | enum exacto |
+| `minAmount`, `maxAmount` | rango de `amount` |
+| `startFrom`, `startTo` | rango de `startDate` |
+| `endFrom`, `endTo` | rango de `endDate`: los que vencen en un período |
 
 ### Request
 
