@@ -6,6 +6,7 @@ import com.manuel.zaguan_inmobiliarias.service.auth.user.AuthUserLoginService;
 import com.manuel.zaguan_inmobiliarias.service.jwt.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,14 +22,14 @@ public class AuthUserLoginController {
     private final JwtService jwtService;
 
     @PostMapping()
-    public ResponseEntity<UserResponse> login(@RequestBody AuthUserLoginRequest loginRequest,
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody AuthUserLoginRequest loginRequest,
                                               HttpServletResponse response) {
         String token = authUserLoginService.login(loginRequest);
         Cookie cookie = new Cookie("token", token);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        if(loginRequest.isRemember()) cookie.setMaxAge(86400);
+        if(Boolean.TRUE.equals(loginRequest.getRemember())) cookie.setMaxAge(86400);
         response.addCookie(cookie);
 
         UserResponse userResponse = jwtService.getUserResponse(token);

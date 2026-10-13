@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.exception;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
+import com.manuel.zaguan_inmobiliarias.exception.auth.InvalidCredentialsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmAlertNotFoundException;
@@ -57,6 +58,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCurrentPasswordException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidCurrentPassword(InvalidCurrentPasswordException e, HttpServletRequest request){
         return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
+    //-------------------------------Auth-------------------------------
+    //401: el login fallo. El mensaje no dice si fue el email o la contraseña
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException e, HttpServletRequest request){
+        return build(HttpStatus.UNAUTHORIZED, e.getMessage(), request);
     }
 
     //---------------------PropertyPhoto----------------------------

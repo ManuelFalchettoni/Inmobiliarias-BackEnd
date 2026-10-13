@@ -1,14 +1,11 @@
 package com.manuel.zaguan_inmobiliarias.repository.user;
 
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 
 import java.util.Optional;
 
@@ -34,5 +31,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long> {
 
     boolean existsByPhoneNumberAndIdNot(@NonNull String phoneNumber, @NonNull Long id);
 
-    Optional<User> findByEmail(@NotBlank @Email(message = "Email should be valid.") String email);
+    //Para el login: un usuario dado de baja no puede entrar
+    Optional<User> findByEmailAndActiveTrue(@NonNull String email);
 }

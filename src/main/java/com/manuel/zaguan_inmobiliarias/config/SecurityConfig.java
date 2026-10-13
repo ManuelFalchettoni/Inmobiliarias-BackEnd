@@ -42,8 +42,10 @@ public class SecurityConfig {
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        //Sin credenciales: la API no usa cookies ni sesion. Si algun dia se agrega login con
-        //cookie hay que poner setAllowCredentials(true), y ahi los origenes no pueden ser "*"
+        //Con credenciales: el login manda el token en una cookie, y sin esto el navegador no la
+        //guarda ni la reenvia a otro puerto. Por eso los origenes van con nombre y nunca "*".
+        //El front tiene que llamar con credentials: "include" (fetch) o withCredentials (axios)
+        config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
