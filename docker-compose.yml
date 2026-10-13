@@ -1,6 +1,8 @@
 services:
   minio:
-    image: quay.io/minio/minio
+    # Las imagenes oficiales de MinIO ya no se pueden bajar (quay.io da 401, Docker Hub las
+    # saco). pgsty/minio es un fork comunitario con el mismo binario y los mismos comandos
+    image: pgsty/minio
     container_name: minio
     ports:
       - "9000:9000"

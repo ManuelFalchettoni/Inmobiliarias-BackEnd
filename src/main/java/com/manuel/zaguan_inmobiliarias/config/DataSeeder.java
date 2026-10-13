@@ -37,24 +37,29 @@ import com.manuel.zaguan_inmobiliarias.repository.property.contract.JpaPropertyC
 import com.manuel.zaguan_inmobiliarias.repository.property.owner.JpaPropertyOwnerRepository;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
-//Carga datos de prueba al arrancar. Solo corre con la base vacia (sin inmobiliarias):
-//para volver a cargarlos hay que borrar la base y reiniciar. Todos los usuarios tienen
-//la contraseña de PASSWORD. Las fotos no se cargan porque necesitan el archivo en MinIO
+//Llena la base con datos de prueba al arrancar. Se apaga con app.seed.enabled=false
+//(por defecto prendido) y corre solo si la tabla de usuarios esta vacia, asi que reiniciar la app
+//no duplica nada. Para volver a cargar: borrar la base y arrancar de nuevo.
+//No carga fotos: necesitan el archivo en MinIO, se suben por el endpoint.
+//Todos los usuarios de prueba tienen la contraseña SEED_PASSWORD
+@Slf4j
 @Component
 @AllArgsConstructor
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
 public class DataSeeder implements CommandLineRunner {
 
-    private static final String PASSWORD = "zaguan123";
+    private static final String SEED_PASSWORD = "Password123";
 
     private final JpaAgencyRepository jpaAgencyRepository;
     private final JpaUserRepository jpaUserRepository;
@@ -69,315 +74,279 @@ public class DataSeeder implements CommandLineRunner {
     private final JpaCrmAlertRepository jpaCrmAlertRepository;
     private final PasswordEncoder passwordEncoder;
 
-    //Las 15 propiedades que se cargan por inmobiliaria: tipo, ambientes y metros
-    private static final PropertyType[] TYPES = {
-            PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.PH, PropertyType.APARTMENT,
-            PropertyType.OFFICE, PropertyType.LAND, PropertyType.APARTMENT, PropertyType.COMMERCIAL_SPACE,
-            PropertyType.HOUSE, PropertyType.GARAGE, PropertyType.APARTMENT, PropertyType.WAREHOUSE,
-            PropertyType.PH, PropertyType.HOUSE, PropertyType.FARM
-    };
-    private static final int[] ROOMS = {2, 4, 3, 1, 2, 0, 3, 1, 5, 0, 2, 1, 4, 3, 6};
-    private static final int[] SIZES = {55, 180, 90, 35, 60, 300, 75, 120, 220, 15, 48, 400, 110, 160, 5000};
-
-    private static final String[] PEOPLE_NAMES = {
-            "Juan Perez", "Maria Lopez", "Carlos Garcia", "Ana Martinez", "Jorge Rodriguez", "Laura Sanchez",
-            "Pablo Romero", "Valeria Diaz", "Federico Alvarez", "Camila Torres", "Nicolas Ruiz", "Julieta Flores",
-            "Ricardo Acosta", "Florencia Benitez", "Gustavo Medina", "Paula Herrera", "Hernan Suarez", "Agustina Rios",
-            "Santiago Molina", "Micaela Castro", "Tomas Ortiz", "Rocio Silva", "Matias Rojas", "Daniela Nunez"
-    };
-
     @Override
+    @Transactional
     public void run(String... args) {
-        if (jpaAgencyRepository.count() > 0) return;
+        if (jpaUserRepository.count() > 0) {
+            log.info("DataSeeder: la base ya tiene datos, no se carga nada");
+            return;
+        }
 
-        Agency centro = createAgency("30-71234567-1", "Zaguan Propiedades SRL", "Zaguan Centro",
-                "contacto@zaguancentro.com", "1145678901", "Av. Corrientes 1234, CABA");
-        Agency lomas = createAgency("30-71876543-5", "Lomas Inmuebles SA", "Lomas Inmuebles",
-                "info@lomasinmuebles.com", "1142445566", "Av. Meeks 456, Lomas de Zamora");
+        // ---------- Inmobiliarias ----------
+        Agency zaguan = agency("30-71234567-8", "Zaguan Propiedades SRL", "Zaguan Propiedades",
+                "contacto@zaguan.test", "1145678901", "Av. Cabildo 2040, CABA",
+                "https://zaguan.test", "@zaguanprop", AgencyStatus.VERIFY);
+        Agency delSur = agency("30-79876543-2", "Del Sur Inmuebles SA", "Del Sur Inmuebles",
+                "info@delsur.test", "2234567890", "Av. Colon 1500, Mar del Plata",
+                null, "@delsurinmuebles", AgencyStatus.VERIFY);
+        Agency nueva = agency("30-70000111-5", "Nueva Casa SAS", "Nueva Casa",
+                "hola@nuevacasa.test", "3514445566", "Bv. San Juan 300, Cordoba",
+                null, null, AgencyStatus.PENDING);
 
-        createUser("Admin Zaguan", "admin@zaguan.com", "1100000001", centro.getId(), UserRol.ADMIN, null, null);
-        createUser("Zaguan Centro", "centro@zaguan.com", "1100000002", centro.getId(), UserRol.AGENCY, null, null);
-        createUser("Lomas Inmuebles", "lomas@zaguan.com", "1100000003", lomas.getId(), UserRol.AGENCY, null, null);
-        User lucia = createUser("Lucia Fernandez", "lucia@zaguan.com", "1100000004", centro.getId(), UserRol.AGENT, "CUCICBA 4521", "27-30111222-5");
-        User martin = createUser("Martin Gomez", "martin@zaguan.com", "1100000005", centro.getId(), UserRol.AGENT, "CUCICBA 5873", "20-31222333-4");
-        User sofia = createUser("Sofia Ramirez", "sofia@zaguan.com", "1100000006", lomas.getId(), UserRol.AGENT, "CMCPLZ 1189", "27-32333444-2");
-        User diego = createUser("Diego Torres", "diego@zaguan.com", "1100000007", lomas.getId(), UserRol.AGENT, "CMCPLZ 1342", "20-33444555-1");
-        createUser("Usuario Prueba", "usuario@zaguan.com", "1100000008", null, UserRol.USER, null, null);
+        // ---------- Usuarios ----------
+        user("Admin", "admin@zaguan.test", "1100000001", null, UserRol.ADMIN, null, null);
+        User zaguanOwner = user("Laura Gomez", "laura@zaguan.test", "1100000002", zaguan.getId(),
+                UserRol.AGENCY, "27-28111222-3", "CUCICBA 1234");
+        User zaguanAgent = user("Martin Perez", "martin@zaguan.test", "1100000003", zaguan.getId(),
+                UserRol.AGENT, "20-30111222-4", "CUCICBA 5678");
+        User delSurOwner = user("Sofia Rios", "sofia@delsur.test", "2230000004", delSur.getId(),
+                UserRol.AGENCY, "27-29333444-5", "CMCPMDP 910");
+        User delSurAgent = user("Diego Sosa", "diego@delsur.test", "2230000005", delSur.getId(),
+                UserRol.AGENT, null, null);
+        user("Pablo Diaz", "pablo@nuevacasa.test", "3510000006", nueva.getId(), UserRol.AGENCY, null, null);
+        user("Ana Lopez", "ana@mail.test", "1100000007", null, UserRol.USER, null, null);
 
-        List<People> centroPeople = createPeople(centro, 0);
-        List<People> lomasPeople = createPeople(lomas, 12);
+        // ---------- Personas ----------
+        People carlos = people("Carlos Fernandez", "1155550001", "carlos.f@mail.test",
+                "Av. Santa Fe 3200, CABA", "20111222", "20-20111222-1", zaguan.getId());
+        People marta = people("Marta Suarez", "1155550002", "marta.s@mail.test",
+                "Ciudad de la Paz 1800, CABA", "18333444", null, zaguan.getId());
+        People julian = people("Julian Acosta", "1155550003", "julian.a@mail.test",
+                null, "35555666", null, zaguan.getId());
+        People lucia = people("Lucia Herrera", "1155550004", "lucia.h@mail.test",
+                null, null, null, zaguan.getId());
+        People roberto = people("Roberto Molina", "2235550005", "roberto.m@mail.test",
+                "Guemes 2900, Mar del Plata", "16777888", "20-16777888-9", delSur.getId());
+        People valeria = people("Valeria Castro", "2235550006", "valeria.c@mail.test",
+                null, "38999000", null, delSur.getId());
 
-        List<Property> centroProperties = createProperties(centro, "CABA", null,
-                new String[]{"Palermo", "Belgrano", "Caballito", "Almagro", "Recoleta", "Villa Crespo", "Nunez"},
-                new String[]{"Gorriti", "Av. Cabildo", "Av. Rivadavia", "Billinghurst", "Arenales", "Thames", "Juramento"},
-                -34.60, -58.43);
-        List<Property> lomasProperties = createProperties(lomas, "Buenos Aires", "Lomas de Zamora",
-                new String[]{"Lomas de Zamora", "Banfield", "Temperley", "Turdera"},
-                new String[]{"Av. Meeks", "Laprida", "Alem", "Boedo", "Colombres", "Sarmiento", "Av. Hipolito Yrigoyen"},
-                -34.76, -58.40);
+        // ---------- Propiedades y precios ----------
+        Property depto = property("Av. Cabildo 1850 4B", PropertyType.APARTMENT, "CABA", null, "Buenos Aires",
+                -34.5612, -58.4567, zaguan.getId(), 2010, 3, 75, PropertyCondition.GOOD,
+                PropertyOccupancy.OWNER_OCCUPIED, 4);
+        price(depto, OperationType.SALE, Currency.USD, "145000");
+        jpaPropertyRepository.save(depto);
 
-        createOwners(centroProperties, centroPeople);
-        createOwners(lomasProperties, lomasPeople);
+        Property ph = property("Mendoza 2500", PropertyType.PH, "CABA", null, "Buenos Aires",
+                -34.5601, -58.4589, zaguan.getId(), 1965, 4, 110, PropertyCondition.NEEDS_REPAIR,
+                PropertyOccupancy.VACANT, 0);
+        price(ph, OperationType.SALE, Currency.USD, "180000");
+        price(ph, OperationType.RENT, Currency.ARS, "850000");
+        jpaPropertyRepository.save(ph);
 
-        createContracts(centroProperties, centroPeople);
-        createContracts(lomasProperties, lomasPeople);
+        Property oficina = property("Lavalle 1200 piso 8", PropertyType.OFFICE, "CABA", null, "Buenos Aires",
+                -34.6025, -58.3850, zaguan.getId(), 1980, 2, 60, PropertyCondition.GOOD,
+                PropertyOccupancy.TENANT_OCCUPIED, 8);
+        price(oficina, OperationType.RENT, Currency.ARS, "650000");
+        jpaPropertyRepository.save(oficina);
 
-        createCrm(centroProperties, centroPeople, lucia, martin, 0);
-        createCrm(lomasProperties, lomasPeople, sofia, diego, 1);
+        Property casa = property("Alem 3400", PropertyType.HOUSE, "Buenos Aires", "General Pueyrredon",
+                "Mar del Plata", -38.0180, -57.5300, delSur.getId(), 1998, 5, 220, PropertyCondition.GOOD,
+                PropertyOccupancy.VACANT, null);
+        price(casa, OperationType.SALE, Currency.USD, "260000");
+        jpaPropertyRepository.save(casa);
+
+        Property lote = property("Ruta 11 km 520", PropertyType.LAND, "Buenos Aires", "General Pueyrredon",
+                "Mar del Plata", null, null, delSur.getId(), null, 0, 600, PropertyCondition.BRAND_NEW,
+                PropertyOccupancy.VACANT, null);
+        price(lote, OperationType.SALE, Currency.USD, "45000");
+        jpaPropertyRepository.save(lote);
+
+        //Una dada de baja, para probar el restore
+        Property baja = property("Juramento 2100", PropertyType.GARAGE, "CABA", null, "Buenos Aires",
+                null, null, zaguan.getId(), 1990, 0, 12, PropertyCondition.GOOD,
+                PropertyOccupancy.VACANT, -1);
+        baja.setActive(false);
+        jpaPropertyRepository.save(baja);
+
+        // ---------- Dueños ----------
+        owner(depto, carlos, "Titular unico");
+        owner(ph, marta, null);
+        owner(oficina, carlos, null);
+        owner(casa, roberto, "Heredero, tiene poder de la hermana");
+        owner(lote, roberto, null);
+
+        // ---------- Contratos ----------
+        PropertyContract alquilerOficina = contract(oficina, ContractType.RENT, ContractStatus.ACTIVE,
+                Currency.ARS, "600000", LocalDate.of(2025, 3, 1), LocalDate.of(2028, 2, 29));
+        party(alquilerOficina, carlos, ContractRole.OWNER, null);
+        party(alquilerOficina, julian, ContractRole.TENANT, null);
+        party(alquilerOficina, marta, ContractRole.GUARANTOR, "Garantia propietaria");
+
+        PropertyContract alquilerCasa = contract(casa, ContractType.RENT, ContractStatus.FINISHED,
+                Currency.ARS, "300000", LocalDate.of(2022, 1, 1), LocalDate.of(2024, 12, 31));
+        party(alquilerCasa, roberto, ContractRole.OWNER, null);
+        party(alquilerCasa, valeria, ContractRole.TENANT, null);
+
+        // ---------- CRM ----------
+        CrmProperty leadDepto = crm(depto, lucia, zaguanAgent, CrmStage.NEGOTIATION);
+        history(leadDepto, zaguanAgent, CrmEventType.CALL, "Consulta por WhatsApp, pide visita");
+        history(leadDepto, zaguanAgent, CrmEventType.VISIT, "Le gusto, pregunta por expensas");
+        history(leadDepto, zaguanOwner, CrmEventType.OFFER, "Ofrece USD 135.000");
+        history(leadDepto, zaguanAgent, CrmEventType.STAGE_CHANGE, "VISIT -> NEGOTIATION");
+        offer(leadDepto, "135000", Currency.USD, OfferStatus.REJECTED);
+        offer(leadDepto, "140000", Currency.USD, OfferStatus.PENDING);
+        alert(leadDepto, zaguanAgent, "Responder contraoferta de Lucia", LocalDateTime.now().plusDays(1), false);
+
+        CrmProperty leadPh = crm(ph, julian, zaguanAgent, CrmStage.CONTACTED);
+        history(leadPh, zaguanAgent, CrmEventType.NOTE, "Busca PH con patio para alquilar");
+        alert(leadPh, zaguanAgent, "Coordinar visita al PH", LocalDateTime.now().plusDays(3), false);
+
+        CrmProperty leadCasa = crm(casa, valeria, delSurAgent, CrmStage.WON);
+        history(leadCasa, delSurAgent, CrmEventType.VISIT, null);
+        history(leadCasa, delSurOwner, CrmEventType.STAGE_CHANGE, "NEGOTIATION -> WON");
+        offer(leadCasa, "250000", Currency.USD, OfferStatus.ACCEPTED);
+        alert(leadCasa, delSurOwner, "Pedir documentacion para escritura", LocalDateTime.now().minusDays(2), true);
+
+        CrmProperty leadLote = crm(lote, valeria, delSurAgent, CrmStage.LOST);
+        history(leadLote, delSurAgent, CrmEventType.NOTE, "No le sirve, queda lejos");
+
+        crm(depto, julian, zaguanOwner, CrmStage.NEW);
+
+        log.info("DataSeeder: datos de prueba cargados");
     }
 
-    private Agency createAgency(String cuit, String companyName, String publicName, String email,
-                                String phone, String address) {
+    private Agency agency(String cuit, String companyName, String publicName, String email, String phoneNumber,
+                          String address, String webURL, String socials, AgencyStatus status) {
         Agency agency = new Agency();
         agency.setCuit(cuit);
         agency.setCompanyName(companyName);
         agency.setPublicName(publicName);
         agency.setEmail(email);
-        agency.setPhoneNumber(phone);
+        agency.setPhoneNumber(phoneNumber);
         agency.setAddress(address);
-        agency.setWebURL("https://www." + email.substring(email.indexOf('@') + 1));
-        agency.setSocials("@" + publicName.toLowerCase().replace(" ", ""));
+        agency.setWebURL(webURL);
+        agency.setSocials(socials);
         agency.setActive(true);
-        agency.setStatus(AgencyStatus.VERIFY);
+        agency.setStatus(status);
         return jpaAgencyRepository.save(agency);
     }
 
-    private User createUser(String name, String email, String phone, Long agencyId, UserRol rol,
-                            String license, String cuit) {
+    private User user(String name, String email, String phoneNumber, Long agencyId, UserRol rol,
+                      String cuit, String license) {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(PASSWORD));
-        user.setPhoneNumber(phone);
+        user.setPassword(passwordEncoder.encode(SEED_PASSWORD));
+        user.setPhoneNumber(phoneNumber);
         user.setAgencyId(agencyId);
-        user.setRol(rol);
-        user.setLicense(license);
         user.setCuit(cuit);
+        user.setLicense(license);
         user.setActive(true);
+        user.setRol(rol);
         return jpaUserRepository.save(user);
     }
 
-    //12 personas por inmobiliaria: las primeras 6 son dueños (con DNI y CUIT), las otras
-    //6 son interesados e inquilinos (solo algunos con DNI)
-    private List<People> createPeople(Agency agency, int firstName) {
-        List<People> people = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
-            int n = firstName + i;
-            String dni = String.valueOf(20000000 + n * 731911);
-
-            People person = new People();
-            person.setName(PEOPLE_NAMES[n]);
-            person.setPhone("11" + (50000000 + n * 12345));
-            person.setEmail(PEOPLE_NAMES[n].toLowerCase().replace(" ", ".") + "@mail.com");
-            person.setAgencyId(agency.getId());
-            if (i < 6) {
-                person.setDni(dni);
-                person.setCuit(buildCuit("20", dni));
-                person.setAddress("Calle " + (100 + n) + " N° " + (1000 + n * 37));
-            } else if (i % 2 == 0) {
-                person.setDni(dni);
-            }
-            people.add(jpaPeopleRepository.save(person));
-        }
-        return people;
+    private People people(String name, String phone, String email, String address, String dni, String cuit,
+                          Long agencyId) {
+        People people = new People();
+        people.setName(name);
+        people.setPhone(phone);
+        people.setEmail(email);
+        people.setAddress(address);
+        people.setDni(dni);
+        people.setCuit(cuit);
+        people.setAgencyId(agencyId);
+        return jpaPeopleRepository.save(people);
     }
 
-    //Arma un CUIT valido calculando el digito verificador de AFIP. Si la cuenta da 10 no hay
-    //digito posible y AFIP cambia el prefijo a 23
-    private String buildCuit(String prefix, String dni) {
-        String digits = prefix + dni;
-        int[] weights = {5, 4, 3, 2, 7, 6, 5, 4, 3, 2};
-        int sum = 0;
-        for (int i = 0; i < weights.length; i++) {
-            sum += Character.getNumericValue(digits.charAt(i)) * weights[i];
-        }
-        int check = 11 - sum % 11;
-        if (check == 11) check = 0;
-        if (check == 10) return buildCuit("23", dni);
-        return prefix + "-" + dni + "-" + check;
+    //No se guarda aca: los precios se agregan antes y se guardan en cascada con la propiedad
+    private Property property(String address, PropertyType type, String province, String county, String city,
+                              Double latitude, Double longitude, Long agencyId, Integer year, Integer rooms,
+                              Integer size, PropertyCondition condition, PropertyOccupancy occupancy,
+                              Integer floorNumber) {
+        Property property = new Property();
+        property.setAddress(address);
+        property.setActive(true);
+        property.setType(type);
+        property.setProvince(province);
+        property.setCounty(county);
+        property.setCity(city);
+        property.setLatitude(latitude);
+        property.setLongitude(longitude);
+        property.setAgencyId(agencyId);
+        property.setYear(year);
+        property.setRooms(rooms);
+        property.setSize(size);
+        property.setCondition(condition);
+        property.setOccupancy(occupancy);
+        property.setFloorNumber(floorNumber);
+        return property;
     }
 
-    private List<Property> createProperties(Agency agency, String province, String county, String[] cities,
-                                            String[] streets, double latitude, double longitude) {
-        List<Property> properties = new ArrayList<>();
-        for (int i = 0; i < TYPES.length; i++) {
-            PropertyType type = TYPES[i];
-
-            Property property = new Property();
-            property.setAddress(streets[i % streets.length] + " " + (500 + i * 113));
-            property.setType(type);
-            property.setProvince(province);
-            property.setCounty(county);
-            property.setCity(cities[i % cities.length]);
-            property.setLatitude(latitude + i * 0.003);
-            property.setLongitude(longitude - i * 0.002);
-            property.setAgencyId(agency.getId());
-            property.setYear(1965 + i * 4);
-            property.setRooms(ROOMS[i]);
-            property.setSize(SIZES[i]);
-            property.setCondition(PropertyCondition.values()[i % PropertyCondition.values().length]);
-            property.setOccupancy(PropertyOccupancy.values()[i % PropertyOccupancy.values().length]);
-            if (type == PropertyType.APARTMENT || type == PropertyType.OFFICE) {
-                property.setFloorNumber(i % 9);
-            }
-            //La ultima queda dada de baja, para probar la baja logica
-            property.setActive(i != TYPES.length - 1);
-
-            //Casi todas en venta, una de cada tres tambien en alquiler y algunas solo en alquiler
-            if (i % 5 != 4) {
-                addPrice(property, OperationType.SALE, Currency.USD, SIZES[i] * 1800);
-            }
-            if (i % 3 == 0 || i % 5 == 4) {
-                addPrice(property, OperationType.RENT, Currency.ARS, SIZES[i] * 9000);
-            }
-            properties.add(jpaPropertyRepository.save(property));
-        }
-        return properties;
-    }
-
-    //Se guarda junto con la propiedad por el cascade de Property.prices
-    private void addPrice(Property property, OperationType operationType, Currency currency, long amount) {
+    private void price(Property property, OperationType operationType, Currency currency, String amount) {
         PropertyPrice price = new PropertyPrice();
         price.setOperationType(operationType);
         price.setCurrency(currency);
-        price.setAmount(BigDecimal.valueOf(amount));
+        price.setAmount(new BigDecimal(amount));
         price.setProperty(property);
         property.getPrices().add(price);
     }
 
-    //Cada propiedad tiene uno de los 6 dueños. Cada tercera tiene ademas un co-titular
-    private void createOwners(List<Property> properties, List<People> people) {
-        for (int i = 0; i < properties.size(); i++) {
-            createOwner(properties.get(i), people.get(i % 6), null);
-            if (i % 3 == 1) {
-                createOwner(properties.get(i), people.get((i + 1) % 6), "Co-titular");
-            }
-        }
-    }
-
-    private void createOwner(Property property, People person, String comments) {
+    private void owner(Property property, People people, String comments) {
         PropertyOwner owner = new PropertyOwner();
         owner.setPropertyId(property.getId());
-        owner.setPeopleId(person.getId());
+        owner.setPeopleId(people.getId());
         owner.setComments(comments);
         jpaPropertyOwnerRepository.save(owner);
     }
 
-    //Tres alquileres (dos vigentes y uno terminado) y una venta terminada
-    private void createContracts(List<Property> properties, List<People> people) {
-        int[] rentProperties = {0, 3, 6};
-        for (int k = 0; k < rentProperties.length; k++) {
-            int i = rentProperties[k];
-            ContractStatus status = k < 2 ? ContractStatus.ACTIVE : ContractStatus.FINISHED;
-            LocalDate start = status == ContractStatus.ACTIVE ? LocalDate.of(2025, 3 + k * 3, 1) : LocalDate.of(2022, 4, 1);
-
-            PropertyContract contract = createContract(properties.get(i), ContractType.RENT, status,
-                    Currency.ARS, SIZES[i] * 9000L, start, start.plusYears(2));
-            createParty(contract, people.get(i % 6), ContractRole.OWNER);
-            createParty(contract, people.get(6 + k), ContractRole.TENANT);
-            createParty(contract, people.get(9 + k), ContractRole.GUARANTOR);
-        }
-
-        PropertyContract sale = createContract(properties.get(1), ContractType.SALE, ContractStatus.FINISHED,
-                Currency.USD, SIZES[1] * 1700L, LocalDate.of(2025, 11, 15), null);
-        createParty(sale, people.get(1), ContractRole.OWNER);
-        createParty(sale, people.get(11), ContractRole.BUYER);
-    }
-
-    private PropertyContract createContract(Property property, ContractType type, ContractStatus status,
-                                            Currency currency, long amount, LocalDate start, LocalDate end) {
+    private PropertyContract contract(Property property, ContractType type, ContractStatus status,
+                                      Currency currency, String amount, LocalDate startDate, LocalDate endDate) {
         PropertyContract contract = new PropertyContract();
         contract.setPropertyId(property.getId());
         contract.setType(type);
         contract.setStatus(status);
         contract.setCurrency(currency);
-        contract.setAmount(BigDecimal.valueOf(amount));
-        contract.setStartDate(start);
-        contract.setEndDate(end);
-        contract.setDocumentURL("https://example.com/contratos/propiedad-" + property.getId() + ".pdf");
+        contract.setAmount(new BigDecimal(amount));
+        contract.setStartDate(startDate);
+        contract.setEndDate(endDate);
+        contract.setDocumentURL("https://docs.zaguan.test/contratos/" + property.getId() + "-" + startDate + ".pdf");
         return jpaPropertyContractRepository.save(contract);
     }
 
-    private void createParty(PropertyContract contract, People person, ContractRole role) {
+    private void party(PropertyContract contract, People people, ContractRole role, String comments) {
         ContractParty party = new ContractParty();
         party.setContractId(contract.getId());
-        party.setPeopleId(person.getId());
+        party.setPeopleId(people.getId());
         party.setRole(role);
+        party.setComments(comments);
         jpaContractPartyRepository.save(party);
     }
 
-    //Cinco leads por inmobiliaria, cada uno en una etapa distinta. Con stageOffset 1 la
-    //segunda inmobiliaria arranca en CONTACTED y llega hasta LOST
-    private void createCrm(List<Property> properties, List<People> people, User agent1, User agent2,
-                           int stageOffset) {
-        int[] leadProperties = {1, 2, 5, 7, 8};
-        for (int k = 0; k < leadProperties.length; k++) {
-            int i = leadProperties[k];
-            CrmStage stage = CrmStage.values()[k + stageOffset];
-            User agent = k % 2 == 0 ? agent1 : agent2;
-
-            CrmProperty lead = new CrmProperty();
-            lead.setPropertyId(properties.get(i).getId());
-            lead.setPeopleId(people.get(6 + k).getId());
-            lead.setUserId(agent.getId());
-            lead.setStage(stage);
-            lead = jpaCrmPropertyRepository.save(lead);
-
-            //El historial acompaña a la etapa: cuanto mas avanzado el lead, mas eventos tiene
-            createHistory(lead, agent, CrmEventType.NOTE, "Consulta recibida por la web");
-            if (stage.ordinal() >= CrmStage.CONTACTED.ordinal()) {
-                createHistory(lead, agent, CrmEventType.CALL, "Se lo llamo para coordinar una visita");
-            }
-            if (stage.ordinal() >= CrmStage.VISIT.ordinal()) {
-                createHistory(lead, agent, CrmEventType.VISIT, "Visito la propiedad, le gusto la ubicacion");
-            }
-            if (stage.ordinal() >= CrmStage.NEGOTIATION.ordinal()) {
-                createHistory(lead, agent, CrmEventType.OFFER, "Hizo una oferta por debajo del precio publicado");
-            }
-            createHistory(lead, agent, CrmEventType.STAGE_CHANGE, "Paso a " + stage);
-
-            long salePrice = SIZES[i] * 1800L;
-            if (stage == CrmStage.NEGOTIATION) {
-                createOffer(lead, salePrice * 85 / 100, OfferStatus.REJECTED);
-                createOffer(lead, salePrice * 92 / 100, OfferStatus.PENDING);
-            } else if (stage == CrmStage.WON) {
-                createOffer(lead, salePrice * 95 / 100, OfferStatus.ACCEPTED);
-            } else if (stage == CrmStage.LOST) {
-                createOffer(lead, salePrice * 70 / 100, OfferStatus.REJECTED);
-            }
-
-            //Alertas solo para los leads abiertos: una vencida y ya leida, otra pendiente
-            if (stage != CrmStage.WON && stage != CrmStage.LOST) {
-                createAlert(lead, agent, "Volver a llamar al interesado", LocalDateTime.now().minusDays(2), true);
-                createAlert(lead, agent, "Enviar fotos y precio actualizado", LocalDateTime.now().plusDays(k + 1), false);
-            }
-        }
+    private CrmProperty crm(Property property, People people, User user, CrmStage stage) {
+        CrmProperty crmProperty = new CrmProperty();
+        crmProperty.setPropertyId(property.getId());
+        crmProperty.setPeopleId(people.getId());
+        crmProperty.setUserId(user.getId());
+        crmProperty.setStage(stage);
+        return jpaCrmPropertyRepository.save(crmProperty);
     }
 
-    private void createHistory(CrmProperty lead, User agent, CrmEventType type, String comments) {
+    private void history(CrmProperty crmProperty, User user, CrmEventType type, String comments) {
         CrmHistory history = new CrmHistory();
-        history.setCrmPropertyId(lead.getId());
-        history.setUserId(agent.getId());
+        history.setCrmPropertyId(crmProperty.getId());
+        history.setUserId(user.getId());
         history.setType(type);
         history.setComments(comments);
         jpaCrmHistoryRepository.save(history);
     }
 
-    private void createOffer(CrmProperty lead, long amount, OfferStatus status) {
+    private void offer(CrmProperty crmProperty, String amount, Currency currency, OfferStatus status) {
         Offer offer = new Offer();
-        offer.setCrmPropertyId(lead.getId());
-        offer.setAmount(BigDecimal.valueOf(amount));
-        offer.setCurrency(Currency.USD);
+        offer.setCrmPropertyId(crmProperty.getId());
+        offer.setAmount(new BigDecimal(amount));
+        offer.setCurrency(currency);
         offer.setStatus(status);
         jpaOfferRepository.save(offer);
     }
 
-    private void createAlert(CrmProperty lead, User agent, String message, LocalDateTime date, boolean isRead) {
+    private void alert(CrmProperty crmProperty, User user, String message, LocalDateTime alertDate, Boolean isRead) {
         CrmAlert alert = new CrmAlert();
-        alert.setCrmPropertyId(lead.getId());
-        alert.setUserId(agent.getId());
+        alert.setCrmPropertyId(crmProperty.getId());
+        alert.setUserId(user.getId());
         alert.setMessage(message);
-        alert.setAlertDate(date);
+        alert.setAlertDate(alertDate);
         alert.setIsRead(isRead);
         jpaCrmAlertRepository.save(alert);
     }

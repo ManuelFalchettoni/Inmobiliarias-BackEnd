@@ -5,8 +5,10 @@ Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 Hace falta MySQL corriendo en el 3306: no está en el `docker-compose.yml`, que levanta solo
 MinIO. La base no hay que crearla, el servidor sí tiene que estar levantado.
 
+MinIO lo levanta la app sola al arrancar (`spring-boot-docker-compose`): solo hace falta
+tener Docker Desktop abierto.
+
 ```
-docker compose up -d
 ./mvnw spring-boot:run
 ```
 
