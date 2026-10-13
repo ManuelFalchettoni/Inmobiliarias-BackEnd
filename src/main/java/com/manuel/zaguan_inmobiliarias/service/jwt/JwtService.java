@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.security.Key;
 import java.util.Date;
 
 @Service
+@Getter
 public class JwtService {
     @Value ("${jwt.secret}")
     private String secret;
@@ -22,7 +24,7 @@ public class JwtService {
 
     private Key getKey() { return Keys.hmacShaKeyFor(secret.getBytes());}
 
-    private String generateToken (String email, UserRol userRol, Long userId, String username){
+    public String generateToken (String email, UserRol userRol, Long userId, String username){
         return Jwts.builder()
                 .subject(email)
                 .claim("role", userRol.name())
@@ -40,6 +42,14 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public UserResponse getUserResponse(String token){
+        Long userId = getUserIdFromToken(token);
+        String username = getUsernameFromToken(token);
+        String email = getEmailFromToken(token);
+        String role = getRoleFromToken(token).name();
+        return new UserResponse(userId, username, email, role);
     }
 
     public String getUsernameFromToken(String token){return  getClaims(token).get("username", String.class);}
