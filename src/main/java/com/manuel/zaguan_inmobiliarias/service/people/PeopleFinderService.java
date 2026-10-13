@@ -29,4 +29,13 @@ public class PeopleFinderService {
                 peopleMapper :: toResponse
         );
     }
+
+    public Page<PeopleResponse> search(Long agencyId, String name, String email, String phone,
+                                       String address, String dni, String cuit, Pageable pageable){
+        Page<People> peoples = jpaPeopleRepository.search(agencyId, name, email, phone, address, dni, cuit, pageable);
+
+        return peoples.map(
+                peopleMapper :: toResponse
+        );
+    }
 }
