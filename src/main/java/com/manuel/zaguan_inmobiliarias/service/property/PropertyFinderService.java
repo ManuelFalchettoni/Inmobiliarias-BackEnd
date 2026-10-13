@@ -1,6 +1,9 @@
 package com.manuel.zaguan_inmobiliarias.service.property;
 
 import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertyResponse;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
+import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.PropertyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
@@ -34,6 +37,15 @@ public class PropertyFinderService {
 
     public Page<PropertyResponse> findByAgency(Long agencyId, Boolean active, Pageable pageable) {
         return jpaPropertyRepository.findAllByAgencyIdAndActive(agencyId, active, pageable)
+                .map(propertyMapper::toResponse);
+    }
+
+    public Page<PropertyResponse> search(PropertyType type, String province, String county, String city,
+                                         Integer rooms, PropertyCondition condition, PropertyOccupancy occupancy,
+                                         Integer minSize, Integer maxSize, Integer minYear, Integer maxYear,
+                                         Pageable pageable) {
+        return jpaPropertyRepository.search(type, province, county, city, rooms, condition, occupancy,
+                        minSize, maxSize, minYear, maxYear, pageable)
                 .map(propertyMapper::toResponse);
     }
 }
