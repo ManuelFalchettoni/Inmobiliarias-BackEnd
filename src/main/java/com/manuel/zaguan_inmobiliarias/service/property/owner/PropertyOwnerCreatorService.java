@@ -7,9 +7,8 @@ import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.owner.PropertyOwnerMapper;
-import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.repository.property.owner.JpaPropertyOwnerRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @AllArgsConstructor
 public class PropertyOwnerCreatorService {
-    private final JpaPropertyRepository jpaPropertyRepository;
-    private final JpaPeopleRepository jpaPeopleRepository;
     private final JpaPropertyOwnerRepository jpaPropertyOwnerRepository;
     private final PropertyOwnerMapper propertyOwnerMapper;
+    private final AgencyScopeService agencyScopeService;
 
     @Transactional
     public PropertyOwnerResponse create(PropertyOwnerRequest propertyOwnerRequest){
@@ -28,11 +26,12 @@ public class PropertyOwnerCreatorService {
             throw new PropertyOwnerAlreadyExistsException(propertyOwnerRequest.getPropertyId(),propertyOwnerRequest.getPeopleId());
         }
 
-        if (!jpaPropertyRepository.existsById(propertyOwnerRequest.getPropertyId()) ){
+        //La propiedad y la persona tienen que existir y ser de la inmobiliaria del usuario
+        if (!agencyScopeService.canAccessProperty(propertyOwnerRequest.getPropertyId())){
             throw new PropertyNotFoundException(propertyOwnerRequest.getPropertyId());
         }
 
-        if (!jpaPeopleRepository.existsById(propertyOwnerRequest.getPeopleId())){
+        if (!agencyScopeService.canAccessPeople(propertyOwnerRequest.getPeopleId())){
             throw new PeopleNotFoundException(propertyOwnerRequest.getPeopleId());
         }
 
