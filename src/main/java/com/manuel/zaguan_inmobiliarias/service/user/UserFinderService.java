@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.user.UserMapper;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class UserFinderService {
     private final JpaUserRepository jpaUserRepository;
+    private final AgencyScopeService agencyScopeService;
     private final UserMapper userMapper;
 
     //Un usuario dado de baja responde 404. Para encontrarlo hay que listar con active=false,
@@ -21,6 +23,11 @@ public class UserFinderService {
     public UserResponse findById(Long id){
          User user = jpaUserRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
+
+         //Uno de otra inmobiliaria responde 404, igual que uno que no existe
+         if (!agencyScopeService.canAccess(user.getAgencyId())) {
+             throw new UserNotFoundException(id);
+         }
          return userMapper.toResponse(user);
     }
 

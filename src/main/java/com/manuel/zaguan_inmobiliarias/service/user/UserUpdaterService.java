@@ -7,6 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.user.UserAlreadyExistsException
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.user.UserMapper;
 import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +19,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserUpdaterService {
     private final JpaUserRepository jpaUserRepository;
+    private final AgencyScopeService agencyScopeService;
     private final UserMapper userMapper;
 
     @Transactional
     public UserResponse update(Long id, UserUpdateRequest userUpdateRequest){
         User toUpdate = jpaUserRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
+
+        //Uno de otra inmobiliaria responde 404, igual que uno que no existe
+        if (!agencyScopeService.canAccess(toUpdate.getAgencyId())) {
+            throw new UserNotFoundException(id);
+        }
 
         //Los controles van antes de los set: si el usuario ya tiene los datos nuevos, la consulta
         //exists haria flush y saltaria el error de la base antes que el nuestro

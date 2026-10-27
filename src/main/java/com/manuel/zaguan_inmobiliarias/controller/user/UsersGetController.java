@@ -29,9 +29,8 @@ public class UsersGetController {
             @RequestParam(defaultValue = "true") Boolean active,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
 
-        Page<UserResponse> usersResponse = (agencyId == null)
-                ? usersSearcherService.findAll(active, pageable)
-                : usersSearcherService.findByAgency(agencyId, active, pageable);
+        //agencyId lo respeta solo el admin: una inmobiliaria ve siempre su equipo
+        Page<UserResponse> usersResponse = usersSearcherService.findAll(agencyId, active, pageable);
         return ResponseEntity.ok(usersResponse);
     }
 }
