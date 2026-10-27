@@ -17,12 +17,13 @@ public class UserPrincipal implements UserDetails {
     private final String email;
     private final String username;
     private final UserRol rol;
-    private final Long agency_Id;
+    private final Long agencyId;
 
+    //"ROLE_" y no otro prefijo: hasRole("ADMIN") de Spring busca exactamente "ROLE_ADMIN"
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities(){
-        return List.of(new SimpleGrantedAuthority("ROL_" + rol.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.name()));
     }
 
     @Override

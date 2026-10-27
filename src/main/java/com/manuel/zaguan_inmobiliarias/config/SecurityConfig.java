@@ -1,13 +1,19 @@
 package com.manuel.zaguan_inmobiliarias.config;
 
+import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
+import com.manuel.zaguan_inmobiliarias.service.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -18,15 +24,29 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // API abierta para desarrollo.
+    //Todo pide login salvo /api/auth (login y registro). El JwtFilter lee la cookie y carga el
+    //usuario; lo que ve cada uno dentro de su inmobiliaria lo decide AgencyScopeService
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService,
+                                           JpaUserRepository jpaUserRepository) throws Exception {
         http
                 //Sin esto el bean de abajo no se usa: el filtro de CORS es parte de la cadena
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .addFilterBefore(new JwtFilter(jwtService, jpaUserRepository), UsernamePasswordAuthenticationFilter.class)
+                //Sin login, 401. Sin esto Spring devuelve 403, que es para "logueado pero sin permiso"
+                .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(auth -> auth
+                        //error: adonde Spring manda las excepciones no previstas; sin esto salian como 401
+                        .requestMatchers("/api/auth/**", "/error").permitAll()
+                        //Dar de alta, de baja, restaurar o listar inmobiliarias: solo el admin
+                        .requestMatchers(HttpMethod.GET, "/api/agencies").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/agencies").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/agencies/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/agencies/*/restore").hasRole("ADMIN")
+                        //USER es el que se registra solo y no es de ninguna inmobiliaria: por ahora no ve nada
+                        .anyRequest().hasAnyRole("ADMIN", "AGENCY", "AGENT"));
 
         return http.build();
     }
