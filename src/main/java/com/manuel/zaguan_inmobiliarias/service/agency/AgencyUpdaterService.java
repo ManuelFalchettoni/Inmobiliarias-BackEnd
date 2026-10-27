@@ -7,6 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsExcep
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.agency.AgencyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AgencyUpdaterService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final AgencyMapper agencyMapper;
+    private final AgencyScopeService agencyScopeService;
 
     @Transactional
     public AgencyResponse update (Long id, AgencyUpdateRequest agencyUpdateRequest){
+        //Una inmobiliaria solo edita la suya
+        if (!agencyScopeService.canAccess(id)) {
+            throw new AgencyNotFoundException(id);
+        }
         Agency toUpdate = jpaAgencyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new AgencyNotFoundException(id));
 
