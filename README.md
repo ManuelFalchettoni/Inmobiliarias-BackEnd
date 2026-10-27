@@ -2,11 +2,8 @@
 
 Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 
-Hace falta MySQL corriendo en el 3306: no está en el `docker-compose.yml`, que levanta solo
-MinIO. La base no hay que crearla, el servidor sí tiene que estar levantado.
-
-MinIO lo levanta la app sola al arrancar (`spring-boot-docker-compose`): solo hace falta
-tener Docker Desktop abierto.
+MySQL y MinIO los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo hace
+falta tener Docker Desktop abierto.
 
 ```
 ./mvnw spring-boot:run
@@ -21,8 +18,9 @@ Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NA
 - `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
 - `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
 
-- MySQL: en el 3306, con `root` / `root`. La base la crea el driver con
-  `createDatabaseIfNotExist` y el esquema Hibernate con `ddl-auto=update`.
+- MySQL: contenedor en el 3307 (no 3306, para no chocar con un MySQL instalado), con `root` /
+  `root`. Con Docker, la app se conecta al contenedor e ignora las `DB_*`; sin Docker usa las
+  `DB_*`. El esquema lo crea Hibernate con `ddl-auto=update`.
 - MinIO: API en el puerto 9000, consola en `http://localhost:9001` (`admin` / `admin12345`).
 - MinIO no hace falta para arrancar: el bucket se prepara en la primera subida. Sin MinIO
   fallan solo el `POST` y el `DELETE` de fotos, con 500; los `GET` andan igual, porque la URL
