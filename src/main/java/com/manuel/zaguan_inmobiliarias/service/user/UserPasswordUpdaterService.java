@@ -29,6 +29,20 @@ public class UserPasswordUpdaterService {
             throw new UserNotFoundException(id);
         }
 
+        changePassword(user, userPasswordRequest);
+    }
+
+    //Sin control de inmobiliaria: es el propio usuario, y un USER todavia no tiene
+    @Transactional
+    public void updateMyPassword(UserPasswordRequest userPasswordRequest){
+        Long id = agencyScopeService.currentUserId();
+        User user = jpaUserRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        changePassword(user, userPasswordRequest);
+    }
+
+    private void changePassword(User user, UserPasswordRequest userPasswordRequest){
         //Se compara contra el hash guardado: la actual tiene que coincidir para poder cambiarla
         if (!passwordEncoder.matches(userPasswordRequest.getCurrentPassword(), user.getPassword())) {
             throw new InvalidCurrentPasswordException();

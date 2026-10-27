@@ -31,6 +31,14 @@ public class UserFinderService {
          return userMapper.toResponse(user);
     }
 
+    //Sin control de inmobiliaria: es el propio usuario, y un USER todavia no tiene
+    public UserResponse findMe(){
+        Long id = agencyScopeService.currentUserId();
+        User user = jpaUserRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(()-> new UserNotFoundException(id));
+        return userMapper.toResponse(user);
+    }
+
     public User find(Long id){
         return jpaUserRepository.findById(id)
                 .orElseThrow(()-> new UserNotFoundException(id));

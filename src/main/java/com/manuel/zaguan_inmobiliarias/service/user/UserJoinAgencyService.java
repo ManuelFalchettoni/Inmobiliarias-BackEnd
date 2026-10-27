@@ -54,6 +54,7 @@ public class UserJoinAgencyService {
         user.setAgencyId(agencyId);
         user.setRol(request.getRol());
 
-        return userMapper.toResponse(jpaUserRepository.save(user));
+        //updatedAt lo pone @UpdateTimestamp al flushear: sin el flush la respuesta saldria con la fecha vieja
+        return userMapper.toResponse(jpaUserRepository.saveAndFlush(user));
     }
 }

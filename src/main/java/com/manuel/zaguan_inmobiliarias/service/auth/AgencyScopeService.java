@@ -49,6 +49,11 @@ public class AgencyScopeService {
         return currentUser().getRol() == UserRol.ADMIN;
     }
 
+    //Para /api/users/me: el id sale del token, no de la URL
+    public Long currentUserId() {
+        return currentUser().getId();
+    }
+
     //Los canAccess de abajo dan false si el registro no existe, asi reemplazan a los existsById:
     //una propiedad de otra inmobiliaria responde 404, igual que una que no existe
 

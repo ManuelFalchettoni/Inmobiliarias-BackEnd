@@ -32,6 +32,22 @@ public class UserUpdaterService {
             throw new UserNotFoundException(id);
         }
 
+        return save(toUpdate, userUpdateRequest);
+    }
+
+    //Sin control de inmobiliaria: es el propio usuario, y un USER todavia no tiene
+    @Transactional
+    public UserResponse updateMe(UserUpdateRequest userUpdateRequest){
+        Long id = agencyScopeService.currentUserId();
+        User toUpdate = jpaUserRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(()-> new UserNotFoundException(id));
+
+        return save(toUpdate, userUpdateRequest);
+    }
+
+    private UserResponse save(User toUpdate, UserUpdateRequest userUpdateRequest){
+        Long id = toUpdate.getId();
+
         //Los controles van antes de los set: si el usuario ya tiene los datos nuevos, la consulta
         //exists haria flush y saltaria el error de la base antes que el nuestro
         if (jpaUserRepository.existsByEmailAndIdNot(userUpdateRequest.getEmail(), id)) {

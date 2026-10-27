@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/agencies/*/restore").hasRole("ADMIN")
                         //Sumar a la inmobiliaria a alguien registrado: la inmobiliaria o el admin, no un agente
                         .requestMatchers(HttpMethod.POST, "/api/users/join-agency").hasAnyRole("ADMIN", "AGENCY")
+                        //La cuenta propia: cualquiera logueado, tambien un USER sin inmobiliaria
+                        .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
                         //USER es el que se registra solo y no es de ninguna inmobiliaria: por ahora no ve nada
                         .anyRequest().hasAnyRole("ADMIN", "AGENCY", "AGENT"));
 
