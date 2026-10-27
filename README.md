@@ -116,8 +116,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ### 5. Agenda diaria del agente
 
-1. `GET /api/crm_alerts/upcoming?userId={id}`: sus alertas pendientes de la semana, de todos
-   sus leads.
+1. `GET /api/crm_alerts/upcoming?userId={id}`: sus alertas pendientes de todos sus leads, la
+   más próxima primero.
 2. `GET /api/crm_properties?userId={id}`: sus leads.
 3. Por cada alerta: `PUT` con `isRead: true`, `PUT` con otro `userId` para pasarla, o `DELETE`.
 4. `GET .../offers` de cada lead para repasar las pendientes.
@@ -1123,13 +1123,12 @@ El response trae además `id`, `crmPropertyId` y `createdAt`.
 
 `GET /api/crm_alerts/upcoming?days=7&userId=1`
 
-Las alertas sin leer de todos los leads de la inmobiliaria, desde las vencidas hasta dentro de
-`days` días, la más próxima primero. Un array sin paginar, con el mismo formato que el listado
-de alertas.
+Las alertas sin leer de todos los leads de la inmobiliaria, la más próxima primero, vencidas
+incluidas. Un array sin paginar, con el mismo formato que el listado de alertas.
 
 | Filtro | Cómo filtra |
 |---|---|
-| `days` | 7 por defecto |
+| `days` | solo las que vencen dentro de esos días; sin `days`, todas |
 | `userId` | las de un agente; tiene que ser de la misma inmobiliaria, si no, 404 |
 
 ### Códigos de ofertas, historial y alertas

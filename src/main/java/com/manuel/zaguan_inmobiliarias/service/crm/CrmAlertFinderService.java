@@ -39,13 +39,16 @@ public class CrmAlertFinderService {
     }
 
     //Las no leidas de aca a "days" dias, mas las vencidas sin leer: lo que el agente tiene pendiente.
-    //Sin paginar: son las pendientes, no el historial
-    public List<CrmAlertResponse> findUpcoming(int days, Long userId){
+    //Sin days, todas las no leidas. Sin paginar: son las pendientes, no el historial
+    public List<CrmAlertResponse> findUpcoming(Integer days, Long userId){
         if (userId != null && !agencyScopeService.canAccessActiveUser(userId)) {
             throw new UserNotFoundException(userId);
         }
         Long scopedAgencyId = agencyScopeService.resolveAgencyId(null);
-        LocalDateTime until = LocalDateTime.now().plusDays(days);
+        LocalDateTime until = null;
+        if (days != null) {
+            until = LocalDateTime.now().plusDays(days);
+        }
 
         return jpaCrmAlertRepository.findUpcoming(scopedAgencyId, userId, until)
                 .stream()

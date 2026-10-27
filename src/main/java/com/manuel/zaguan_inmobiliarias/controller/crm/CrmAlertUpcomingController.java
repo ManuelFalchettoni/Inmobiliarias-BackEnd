@@ -20,7 +20,7 @@ public class CrmAlertUpcomingController {
 
     @GetMapping("/upcoming")
     public ResponseEntity<List<CrmAlertResponse>> upcoming(
-            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(required = false) Integer days,
             @RequestParam(required = false) Long userId){
         return ResponseEntity.ok(crmAlertFinderService.findUpcoming(days, userId));
     }
