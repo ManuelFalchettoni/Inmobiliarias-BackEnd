@@ -77,7 +77,8 @@ Los pasos 1 a 3 los hace un admin; el 4 y el 5, el usuario de la inmobiliaria.
 1. `POST /api/agencies` con `status: "PENDING"`.
 2. `PUT /api/agencies/{id}` con `status: "VERIFY"` una vez revisados los datos.
 3. `POST /api/users` con `rol: "AGENCY"` y el `agencyId`: el usuario de la inmobiliaria.
-4. `POST /api/users` con `rol: "AGENT"` por cada agente, con `cuit` y `license` si los tiene.
+4. Cada agente se registra solo (`POST /api/auth/register`) y la inmobiliaria lo suma con
+   `POST /api/users/join-agency`. O lo crea directo con `POST /api/users` y `rol: "AGENT"`.
 5. `GET /api/users` para ver el equipo: sale solo el de su inmobiliaria.
 
 ### 2. Publicar una propiedad
@@ -115,8 +116,9 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ### 5. Agenda diaria del agente
 
-1. `GET /api/crm_properties?userId={id}`: sus leads.
-2. `GET .../alerts` de cada lead, la fecha más próxima primero.
+1. `GET /api/crm_alerts/upcoming?userId={id}`: sus alertas pendientes de la semana, de todos
+   sus leads.
+2. `GET /api/crm_properties?userId={id}`: sus leads.
 3. Por cada alerta: `PUT` con `isRead: true`, `PUT` con otro `userId` para pasarla, o `DELETE`.
 4. `GET .../offers` de cada lead para repasar las pendientes.
 
@@ -134,7 +136,7 @@ token en la cookie `token`; el front la manda sola en cada request si llama con
 |---|---|
 | `ADMIN` | todo, de todas las inmobiliarias |
 | `AGENCY`, `AGENT` | solo lo de su inmobiliaria |
-| `USER` | nada todavía: es el que se registra solo y no es de ninguna inmobiliaria; recibe 403 |
+| `USER` | solo su cuenta (`/api/users/me`): es el que se registra solo y todavía no es de ninguna inmobiliaria; el resto da 403 |
 
 La inmobiliaria sale del usuario logueado, no del request:
 
@@ -149,6 +151,8 @@ La inmobiliaria sale del usuario logueado, no del request:
 - **Inmobiliarias.** Darlas de alta, de baja, restaurarlas y listarlas es solo del admin (403 para
   el resto). Una inmobiliaria puede ver y editar la suya.
 - **Usuarios `ADMIN`.** Solo los crea otro admin; si lo intenta otro rol, 403.
+- **Sumar a alguien registrado.** `POST /api/users/join-agency` es de `ADMIN` y `AGENCY`; un
+  `AGENT` recibe 403.
 
 Contratos, dueños, partes de contratos y leads no tienen `agencyId` propio: toman el de su
 propiedad.
@@ -604,6 +608,10 @@ El 409 dice cuál es el campo repetido, dirección incluida
 | `PATCH /api/users/{id}/password` | cambiar la contraseña |
 | `DELETE /api/users/{id}` | dar de baja |
 | `PATCH /api/users/{id}/restore` | restaurar |
+| `POST /api/users/join-agency` | sumar a la inmobiliaria a alguien registrado |
+| `GET /api/users/me` | la cuenta propia |
+| `PUT /api/users/me` | editar la cuenta propia |
+| `PATCH /api/users/me/password` | cambiar la contraseña propia |
 
 Baja lógica, como propiedades e inmobiliarias. `GET /{id}`, `PUT`, `PATCH /password` y
 `DELETE` solo ven activos; `restore` busca sin ese filtro.
@@ -617,8 +625,8 @@ la suya, mande el `agencyId` que mande. Un usuario `ADMIN` solo lo puede crear o
 ### Request
 
 `POST` y `PUT` no llevan el mismo body: el `PUT` solo pisa nombre, email, teléfono, CUIT y
-matrícula, y mandar `password`, `rol` o `agencyId` da 400. El rol y la inmobiliaria no se pueden cambiar por API. `DELETE` y `PATCH /restore` no
-llevan body.
+matrícula, y mandar `password`, `rol` o `agencyId` da 400. El rol y la inmobiliaria solo
+cambian con `join-agency`. `DELETE` y `PATCH /restore` no llevan body.
 
 ```json
 {
@@ -690,12 +698,41 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 
 El 409 dice cuál es el campo repetido (`"Phone number already registered: 3415551234"`).
 
+### Cuenta propia
+
+`/api/users/me` es la cuenta del usuario logueado: sale del token, no de la URL. La puede usar
+cualquier rol, `USER` incluido. `GET`, `PUT` y `PATCH /password` llevan el mismo body y dan los
+mismos códigos que sus versiones con `/{id}`, sin el 404 por inmobiliaria.
+
+### Sumar a la inmobiliaria
+
+`POST /api/users/join-agency` pasa a un usuario registrado, que está como `USER` y sin
+inmobiliaria, a la inmobiliaria con el rol que se le da. El usuario le pasa su email a la
+inmobiliaria; no hay paso de aceptación. El rol nuevo vale desde su siguiente request.
+
+```json
+{ "email": "agente@mail.com", "rol": "AGENT", "agencyId": 1 }
+```
+
+| Campo | Tipo | Obligatorio | Reglas |
+|---|---|---|---|
+| `email` | string | sí | usuario existente y activo |
+| `rol` | enum `UserRol` | sí | `AGENT` o `AGENCY` |
+| `agencyId` | number | solo el admin | existente y activa; `AGENCY` suma siempre a la suya |
+
+Devuelve el usuario actualizado.
+
+| OK | Errores |
+|---|---|
+| 200 | 400 validación · 403 un `AGENT` · 403 `rol` que no es `AGENT` ni `AGENCY` · 404 email o inmobiliaria inexistente · 409 el usuario ya es de una inmobiliaria |
+
 ## Registro
 
 `POST /api/auth/register`
 
 Alta pública de un usuario, aparte de `POST /api/users`: entra con rol `USER` y sin
-inmobiliaria. Por ahora ese rol no tiene acceso a nada más que el login.
+inmobiliaria. Ese rol solo puede usar su cuenta (`/api/users/me`) hasta que una inmobiliaria
+lo sume con `join-agency`.
 
 ```json
 { "name": "Manuel", "email": "manuel@mail.com", "password": "unaClave123", "phoneNumber": "3415551234" }
@@ -1081,6 +1118,19 @@ El borrado es físico.
 | `isRead` | boolean | sí | `false` al crear |
 
 El response trae además `id`, `crmPropertyId` y `createdAt`.
+
+### Alertas próximas
+
+`GET /api/crm_alerts/upcoming?days=7&userId=1`
+
+Las alertas sin leer de todos los leads de la inmobiliaria, desde las vencidas hasta dentro de
+`days` días, la más próxima primero. Un array sin paginar, con el mismo formato que el listado
+de alertas.
+
+| Filtro | Cómo filtra |
+|---|---|
+| `days` | 7 por defecto |
+| `userId` | las de un agente; tiene que ser de la misma inmobiliaria, si no, 404 |
 
 ### Códigos de ofertas, historial y alertas
 
