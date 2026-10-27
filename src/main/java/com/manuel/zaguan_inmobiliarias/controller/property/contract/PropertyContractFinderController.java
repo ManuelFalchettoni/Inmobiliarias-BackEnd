@@ -39,12 +39,12 @@ public class PropertyContractFinderController {
         return ResponseEntity.ok(propertyContractsResponse);
     }
 
-    //agencyId obligatorio: cada inmobiliaria busca solo en sus contratos. El resto es opcional.
-    //Las fechas van como 2026-12-31 y los enums con el nombre de la constante. Ejemplo, los que
-    //vencen este año: /api/property_contracts/search?agencyId=1&endFrom=2026-01-01&endTo=2026-12-31
+    //Todos los filtros son opcionales. agencyId lo respeta solo el admin: una inmobiliaria busca
+    //siempre en sus contratos. Las fechas van como 2026-12-31 y los enums con el nombre de la
+    //constante. Ejemplo, los que vencen este año: /api/property_contracts/search?endFrom=2026-01-01&endTo=2026-12-31
     @GetMapping("/search")
     public ResponseEntity<Page<PropertyContractResponse>> search(
-            @RequestParam Long agencyId,
+            @RequestParam(required = false) Long agencyId,
             @RequestParam(required = false) Long propertyId,
             @RequestParam(required = false) ContractType type,
             @RequestParam(required = false) ContractStatus status,

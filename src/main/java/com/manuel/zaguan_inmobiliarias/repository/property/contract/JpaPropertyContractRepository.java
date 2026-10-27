@@ -17,13 +17,14 @@ import java.time.LocalDate;
 @Repository
 public interface JpaPropertyContractRepository extends JpaRepository<PropertyContract, Long> {
 
-    //Busqueda dentro de los contratos de una inmobiliaria: agencyId es obligatorio, asi una
-    //inmobiliaria no ve los contratos de otra. El contrato no tiene agencyId, asi que se busca
-    //por la propiedad. Los demas filtros son opcionales, el que llega en null no filtra.
+    //Busqueda con filtros opcionales, el que llega en null no filtra. agencyId en null es "todas":
+    //solo le puede llegar asi al admin, el resto busca siempre en su inmobiliaria (AgencyScopeService).
+    //El contrato no tiene agencyId, asi que se busca por la propiedad.
     //Las fechas son rangos: endFrom y endTo sirven para ver los contratos que vencen en un periodo
     @Query("""
             SELECT c FROM PropertyContract c
-            WHERE c.propertyId IN (SELECT p.id FROM Property p WHERE p.agencyId = :agencyId)
+            WHERE (:agencyId IS NULL OR c.propertyId IN
+                      (SELECT p.id FROM Property p WHERE p.agencyId = :agencyId))
               AND (:propertyId IS NULL OR c.propertyId = :propertyId)
               AND (:type IS NULL OR c.type = :type)
               AND (:status IS NULL OR c.status = :status)
