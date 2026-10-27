@@ -11,12 +11,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JpaPeopleRepository extends JpaRepository<People, Long> {
 
-    //Busqueda dentro de la cartera de una inmobiliaria: agencyId es obligatorio, asi una
-    //inmobiliaria no ve las personas de otra. Los demas filtros son opcionales, el que llega
-    //en null no filtra. Todos con LIKE: "garc" encuentra "Garcia", "3012" un DNI que lo contenga
+    //Busqueda con filtros opcionales, el que llega en null no filtra. agencyId en null es "todas":
+    //solo le puede llegar asi al admin, el resto busca siempre en su inmobiliaria (AgencyScopeService).
+    //Todos con LIKE: "garc" encuentra "Garcia", "3012" un DNI que lo contenga
     @Query("""
             SELECT p FROM People p
-            WHERE p.agencyId = :agencyId
+            WHERE (:agencyId IS NULL OR p.agencyId = :agencyId)
               AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
               AND (:email IS NULL OR LOWER(p.email) LIKE LOWER(CONCAT('%', :email, '%')))
               AND (:phone IS NULL OR p.phone LIKE CONCAT('%', :phone, '%'))

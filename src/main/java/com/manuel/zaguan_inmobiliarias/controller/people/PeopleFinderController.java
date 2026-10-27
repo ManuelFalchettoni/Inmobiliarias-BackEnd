@@ -33,10 +33,10 @@ public class PeopleFinderController {
         return ResponseEntity.ok(peoplesResponse);
     }
 
-    //agencyId obligatorio: cada inmobiliaria busca solo en su cartera. El resto es opcional.
-    //Ejemplo: /api/people/search?agencyId=1&name=garcia
+    //Todos los filtros son opcionales. agencyId lo respeta solo el admin: una inmobiliaria busca
+    //siempre en su cartera. Ejemplo: /api/people/search?name=garcia
     @GetMapping("/search")
-    public ResponseEntity<Page<PeopleResponse>> search(@RequestParam Long agencyId,
+    public ResponseEntity<Page<PeopleResponse>> search(@RequestParam(required = false) Long agencyId,
                                                        @RequestParam(required = false) String name,
                                                        @RequestParam(required = false) String email,
                                                        @RequestParam(required = false) String phone,
