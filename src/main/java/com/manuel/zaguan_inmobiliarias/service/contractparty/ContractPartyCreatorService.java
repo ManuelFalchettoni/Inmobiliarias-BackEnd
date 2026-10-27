@@ -7,8 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.contractparty.ContractPartyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.contractparty.JpaContractPartyRepository;
-import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
-import com.manuel.zaguan_inmobiliarias.repository.property.contract.JpaPropertyContractRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +15,16 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class ContractPartyCreatorService {
     private final JpaContractPartyRepository jpaContractPartyRepository;
-    private final JpaPeopleRepository jpaPeopleRepository;
     private final ContractPartyMapper contractPartyMapper;
-    private final JpaPropertyContractRepository jpaPropertyContractRepository;
+    private final AgencyScopeService agencyScopeService;
 
     public ContractPartyResponse create(ContractPartyRequest contractPartyRequest){
-        if (!jpaPeopleRepository.existsById(contractPartyRequest.getPeopleId())){
+        //La persona y el contrato tienen que existir y ser de la inmobiliaria del usuario
+        if (!agencyScopeService.canAccessPeople(contractPartyRequest.getPeopleId())){
             throw new PeopleNotFoundException(contractPartyRequest.getPeopleId());
         }
 
-        if (!jpaPropertyContractRepository.existsById(contractPartyRequest.getContractId())){
+        if (!agencyScopeService.canAccessContract(contractPartyRequest.getContractId())){
             throw new PropertyContractNotFoundException(contractPartyRequest.getContractId());
         }
 
