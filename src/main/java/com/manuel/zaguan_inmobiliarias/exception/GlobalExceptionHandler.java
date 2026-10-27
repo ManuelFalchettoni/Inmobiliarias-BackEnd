@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsExcep
 import com.manuel.zaguan_inmobiliarias.exception.auth.ForbiddenActionException;
 import com.manuel.zaguan_inmobiliarias.exception.auth.InvalidCredentialsException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.agency.UserAlreadyHasAgencyException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmAlertNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmHistoryNotFoundException;
@@ -129,6 +130,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AgencyAlreadyExistsException.class)
     public ResponseEntity<ApiErrorResponse> handleAgencyAlreadyExists(AgencyAlreadyExistsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(UserAlreadyHasAgencyException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserAlreadyHasAgency(UserAlreadyHasAgencyException e, HttpServletRequest request){
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
