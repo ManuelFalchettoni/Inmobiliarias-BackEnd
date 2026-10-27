@@ -36,7 +36,9 @@ controller y un service por operación.
 
 Las entidades no entran ni salen por la API: entra un `XRequest`, sale un `XResponse`, traduce
 el mapper. Los errores los unifica `GlobalExceptionHandler` con `@RestControllerAdvice`.
-`SecurityConfig` deja la API abierta, sin sesión, y define el `PasswordEncoder` (BCrypt).
+`SecurityConfig` pide login en toda la API salvo `/api/auth/**`, sin sesión, y define el
+`PasswordEncoder` (BCrypt). `JwtFilter` lee la cookie del login y carga el usuario de cada
+request; `AgencyScopeService` decide qué ve de cada inmobiliaria.
 Las excepciones siguen el mismo corte por entidad; la única compartida por dos entidades,
 `InvalidCurrentPasswordException`, vive en la raíz de `exception`.
 
@@ -72,11 +74,13 @@ Enums:
 
 ### 1. Alta de una inmobiliaria y sus agentes
 
+Los pasos 1 a 3 los hace un admin; el 4 y el 5, el usuario de la inmobiliaria.
+
 1. `POST /api/agencies` con `status: "PENDING"`.
 2. `PUT /api/agencies/{id}` con `status: "VERIFY"` una vez revisados los datos.
 3. `POST /api/users` con `rol: "AGENCY"` y el `agencyId`: el usuario de la inmobiliaria.
 4. `POST /api/users` con `rol: "AGENT"` por cada agente, con `cuit` y `license` si los tiene.
-5. `GET /api/users?agencyId={id}` para ver el equipo.
+5. `GET /api/users` para ver el equipo: sale solo el de su inmobiliaria.
 
 ### 2. Publicar una propiedad
 
@@ -122,6 +126,35 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 # Reglas de toda la API
 
+## Login y permisos
+
+Todo pide login salvo `POST /api/auth/login` y `POST /api/auth/register`. El login deja el
+token en la cookie `token`; el front la manda sola en cada request si llama con
+`credentials: "include"`. Sin cookie o con un token inválido, 401.
+
+| Rol | Qué ve |
+|---|---|
+| `ADMIN` | todo, de todas las inmobiliarias |
+| `AGENCY`, `AGENT` | solo lo de su inmobiliaria |
+| `USER` | nada todavía: es el que se registra solo y no es de ninguna inmobiliaria; recibe 403 |
+
+La inmobiliaria sale del usuario logueado, no del request:
+
+- **Listados y búsquedas.** El `agencyId` lo respeta solo el admin; sin `agencyId`, el admin ve
+  todas. Para `AGENCY` y `AGENT` se ignora: ven siempre lo suyo.
+- **Altas.** En lo que lleva `agencyId` (propiedades, usuarios, personas) se carga siempre en la
+  inmobiliaria del usuario, mande el valor que mande. El campo sigue siendo obligatorio por
+  validación.
+- **Detalle, edición y baja.** Algo de otra inmobiliaria responde 404, igual que algo que no
+  existe. Vale también para lo que cuelga de otra cosa: fotos y precios de una propiedad, un
+  contrato o un lead de una propiedad ajena, o un vínculo con una persona de otra inmobiliaria.
+- **Inmobiliarias.** Darlas de alta, de baja, restaurarlas y listarlas es solo del admin (403 para
+  el resto). Una inmobiliaria puede ver y editar la suya.
+- **Usuarios `ADMIN`.** Solo los crea otro admin; si lo intenta otro rol, 403.
+
+Contratos, dueños, partes de contratos y leads no tienen `agencyId` propio: toman el de su
+propiedad.
+
 ## CORS
 
 Configurado en `SecurityConfig`, aplica a `/api/**`.
@@ -156,10 +189,12 @@ Los errores que pasan por `GlobalExceptionHandler` tienen todos el mismo formato
 | JSON roto, enum inexistente o campo desconocido | 400 | `"Malformed or invalid request body"` |
 | Path variable del tipo equivocado | 400 | `"Invalid value for id"` |
 | Único repetido que no se controla antes | 409 | `"Some of the values are already registered"` |
+| Un rol que no es admin crea un usuario `ADMIN` | 403 | `"Only an admin can create admin users"` |
 
 Lo que no llega al handler sale con el formato default de Spring: el mismo JSON pero **sin
 `message`**. Son tres casos: una ruta que no existe, un `multipart` con el nombre de parte
-equivocado y cualquier excepción no prevista.
+equivocado y cualquier excepción no prevista. El 401 sin login y el 403 por rol tampoco pasan
+por el handler: los corta `SecurityConfig` antes de llegar al controller.
 
 ## Listados
 
@@ -185,10 +220,10 @@ además `active` para elegir entre lo vigente y lo dado de baja (true por defect
 
 | Recurso | `size` default | Orden default | Filtros extra |
 |---|---|---|---|
-| `/api/properties` | 20 | `createdAt` desc | `active`, `agencyId` |
-| `/api/agencies` | 20 | `createdAt` desc | `active` |
-| `/api/users` | 20 | `createdAt` desc | `active`, `agencyId` |
-| `/api/crm_properties` | 20 | `createdAt` desc | `userId` |
+| `/api/properties` | 20 | `createdAt` desc | `active`, `agencyId` (solo admin) |
+| `/api/agencies` | 20 | `createdAt` desc | `active`; el listado es solo del admin |
+| `/api/users` | 20 | `createdAt` desc | `active`, `agencyId` (solo admin) |
+| `/api/crm_properties` | 20 | `createdAt` desc | `userId`, un agente de la misma inmobiliaria |
 
 `/api/people`, `/api/property_owners`, `/api/property_contracts` y `/api/contract_parties`
 aceptan solo `page` y `size`, con 5 por defecto, sin `sort` ni tope.
@@ -229,7 +264,8 @@ común, sin paginar.
 Baja lógica: `DELETE` pone `active` en false, la fila queda. `GET /{id}`, `PUT` y `DELETE`
 solo ven activas; `restore` busca sin ese filtro.
 
-Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
+Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
+la suya, mande el `agencyId` que mande.
 
 ### Búsqueda
 
@@ -239,6 +275,7 @@ Solo trae activas. Todos los filtros son opcionales.
 
 | Filtro | Cómo filtra |
 |---|---|
+| `agencyId` | exacto; solo lo usa el admin |
 | `province`, `county`, `city` | texto parcial |
 | `type`, `condition`, `occupancy` | enum exacto |
 | `rooms` | exacto |
@@ -277,7 +314,7 @@ Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
 | `city` | string | sí | no vacío, máx 100 |
 | `latitude` | number | no | entre -90 y 90 |
 | `longitude` | number | no | entre -180 y 180 |
-| `agencyId` | number | sí | existente y activa; en el `PUT`, el mismo que ya tiene |
+| `agencyId` | number | sí | existente y activa; en el alta solo lo usa el admin; en el `PUT`, el mismo que ya tiene |
 | `year` | number | no | entre 1800 y 2100 |
 | `rooms` | number | sí | entero >= 0 |
 | `size` | number | sí | entero > 0 |
@@ -481,6 +518,9 @@ busca sin ese filtro.
 La inmobiliaria no tiene contraseña: se entra con un usuario de rol `AGENCY` vinculado por
 `agencyId` (`POST /api/users`).
 
+`POST`, `GET` listado, `DELETE` y `PATCH /restore` son solo del admin. `GET /{id}` y `PUT` los
+puede usar también la inmobiliaria, pero solo sobre la suya.
+
 `active` y `status` son cosas distintas: `status` es el circuito de verificación y no se toca
 al dar de baja.
 
@@ -543,12 +583,12 @@ hay que restaurar la que está.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 409 CUIT, razón social, email o teléfono repetidos · 409 dirección repetida |
-| `GET` listado | 200 | — |
+| `POST` | 201 | 400 validación · 403 no es admin · 409 CUIT, razón social, email o teléfono repetidos · 409 dirección repetida |
+| `GET` listado | 200 | 403 no es admin |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
-| `DELETE /{id}` | 204 sin body | 404 |
-| `PATCH /{id}/restore` | 200 | 404 |
+| `DELETE /{id}` | 204 sin body | 403 no es admin · 404 |
+| `PATCH /{id}/restore` | 200 | 403 no es admin · 404 |
 
 El 409 dice cuál es el campo repetido, dirección incluida
 (`"Email already registered: contacto@zaguan.com"`).
@@ -573,7 +613,8 @@ Baja lógica, como propiedades e inmobiliarias. `GET /{id}`, `PUT`, `PATCH /pass
 El email y el teléfono siguen ocupados por los dados de baja: no se puede crear otro usuario
 con el mismo email, hay que restaurar el que está.
 
-Al crear, la inmobiliaria del `agencyId` tiene que existir y estar activa.
+Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
+la suya, mande el `agencyId` que mande. Un usuario `ADMIN` solo lo puede crear otro admin.
 
 ### Request
 
@@ -641,7 +682,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
+| `POST` | 201 | 400 validación · 403 crear un `ADMIN` sin ser admin · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `agencyId` · 404 · 409 email o teléfono de otro usuario |
@@ -656,7 +697,7 @@ El 409 dice cuál es el campo repetido (`"Phone number already registered: 34155
 `POST /api/auth/register`
 
 Alta pública de un usuario, aparte de `POST /api/users`: entra con rol `USER` y sin
-inmobiliaria.
+inmobiliaria. Por ahora ese rol no tiene acceso a nada más que el login.
 
 ```json
 { "name": "Manuel", "email": "manuel@mail.com", "password": "unaClave123", "phoneNumber": "3415551234" }
@@ -684,7 +725,9 @@ Las reglas de los campos son las mismas que en `POST /api/users`. Devuelve el us
 | `remember` | boolean | no | `true` hace que la cookie dure 24 horas; sin él, dura lo que la sesión del navegador |
 
 El token JWT no viaja en el body: va en la cookie `token`, `HttpOnly` y con path `/`. El body
-trae el usuario con `id`, `name`, `email` y `rol`.
+trae el usuario con `id`, `name`, `email` y `rol`. Con esa cookie el backend sabe en cada
+request quién es el usuario y de qué inmobiliaria; un usuario dado de baja deja de entrar
+aunque su token siga vigente.
 
 Email inexistente, usuario dado de baja y contraseña incorrecta dan el mismo 401, para no
 revelar qué emails están registrados.
@@ -710,11 +753,11 @@ inmobiliarias, pero no dos veces en la misma: el DNI y el CUIT son únicos por i
 
 ### Búsqueda
 
-`GET /api/people/search?agencyId=1&name=garcia`
+`GET /api/people/search?name=garcia`
 
-`agencyId` es obligatorio: cada inmobiliaria busca solo en su cartera, y sin él da 400. Los
-demás filtros son opcionales y todos de texto parcial: `name`, `email`, `phone`, `address`,
-`dni`, `cuit`. Ordena por nombre.
+Cada inmobiliaria busca solo en su cartera; `agencyId` lo usa solo el admin. Los demás filtros
+son opcionales y todos de texto parcial: `name`, `email`, `phone`, `address`, `dni`, `cuit`.
+Ordena por nombre.
 
 ### Request
 
@@ -735,7 +778,7 @@ inmobiliaria.
 
 | Campo | Tipo | Obligatorio | Reglas |
 |---|---|---|---|
-| `agencyId` | number | sí | |
+| `agencyId` | number | sí | en el alta solo lo usa el admin |
 | `name` | string | sí | 3 a 100 |
 | `email` | string | sí | formato email, máx 100 |
 | `phone` | string | sí | 8 a 15 |
@@ -779,7 +822,8 @@ Mismo body para `POST` y `PUT`.
 { "propertyId": 7, "peopleId": 3, "comments": "50% de la propiedad" }
 ```
 
-Los tres campos son obligatorios. `propertyId` y `peopleId` tienen que existir.
+Los tres campos son obligatorios. `propertyId` y `peopleId` tienen que existir y ser de la
+inmobiliaria del usuario.
 
 ### Response
 
@@ -813,14 +857,14 @@ el `GET /{id}`.
 
 ### Búsqueda
 
-`GET /api/property_contracts/search?agencyId=1&endFrom=2026-01-01&endTo=2026-12-31`
+`GET /api/property_contracts/search?endFrom=2026-01-01&endTo=2026-12-31`
 
-`agencyId` es obligatorio, sin él da 400. El contrato no tiene inmobiliaria propia: se busca
-por la de su propiedad. Los demás filtros son opcionales. Ordena por `startDate`, el más nuevo
-primero.
+Cada inmobiliaria busca solo en sus contratos: los de sus propiedades. Todos los filtros son
+opcionales. Ordena por `startDate`, el más nuevo primero.
 
 | Filtro | Cómo filtra |
 |---|---|
+| `agencyId` | exacto; solo lo usa el admin |
 | `propertyId` | exacto |
 | `type`, `status`, `currency` | enum exacto |
 | `minAmount`, `maxAmount` | rango de `amount` |
@@ -864,7 +908,7 @@ Los mismos campos con `id`, `createdAt` y `updatedAt`.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación |
+| `POST` | 201 | 400 validación · 404 propiedad inexistente o de otra inmobiliaria |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 404 |
@@ -894,8 +938,8 @@ Mismo body para `POST` y `PUT`.
 
 | Campo | Tipo | Obligatorio | Reglas |
 |---|---|---|---|
-| `contractId` | number | sí | contrato existente |
-| `peopleId` | number | sí | persona existente |
+| `contractId` | number | sí | contrato existente, de la inmobiliaria del usuario |
+| `peopleId` | number | sí | persona existente, de la inmobiliaria del usuario |
 | `role` | enum `ContractRole` | sí | `OWNER`, `TENANT`, `BUYER`, `GUARANTOR` |
 | `comments` | string | no | |
 
@@ -944,9 +988,9 @@ Mismo body para `POST` y `PUT`.
 
 | Campo | Tipo | Obligatorio | Reglas |
 |---|---|---|---|
-| `propertyId` | number | sí | propiedad existente y activa |
-| `peopleId` | number | sí | persona existente |
-| `userId` | number | sí | agente existente y activo |
+| `propertyId` | number | sí | propiedad existente y activa, de la inmobiliaria del usuario |
+| `peopleId` | number | sí | persona existente, de la inmobiliaria del usuario |
+| `userId` | number | sí | agente existente y activo, de la misma inmobiliaria |
 | `stage` | enum `CrmStage` | sí | `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST` |
 
 ### Response
