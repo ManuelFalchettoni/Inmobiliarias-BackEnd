@@ -9,9 +9,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundExcept
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.crm.CrmPropertyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
-import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
-import com.manuel.zaguan_inmobiliarias.repository.user.JpaUserRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,24 +19,27 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class CrmPropertyUpdaterService {
     private final JpaCrmPropertyRepository jpaCrmPropertyRepository;
-    private final JpaPropertyRepository jpaPropertyRepository;
-    private final JpaPeopleRepository jpaPeopleRepository;
-    private final JpaUserRepository jpaUserRepository;
     private final CrmPropertyMapper crmPropertyMapper;
+    private final AgencyScopeService agencyScopeService;
 
     @Transactional
     public CrmPropertyResponse update(Long id, CrmPropertyRequest request){
         CrmProperty toUpdate = jpaCrmPropertyRepository.findById(id)
                 .orElseThrow(() -> new CrmPropertyNotFoundException(id));
 
+        //Un lead de otra inmobiliaria responde 404, igual que uno que no existe
+        if (!agencyScopeService.canAccessProperty(toUpdate.getPropertyId())) {
+            throw new CrmPropertyNotFoundException(id);
+        }
+
         //Los mismos controles que en el alta: el PUT puede reasignar el lead a otro agente
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(request.getPropertyId())) {
+        if (!agencyScopeService.canAccessActiveProperty(request.getPropertyId())) {
             throw new PropertyNotFoundException(request.getPropertyId());
         }
-        if (!jpaPeopleRepository.existsById(request.getPeopleId())) {
+        if (!agencyScopeService.canAccessPeople(request.getPeopleId())) {
             throw new PeopleNotFoundException(request.getPeopleId());
         }
-        if (!jpaUserRepository.existsByIdAndActiveTrue(request.getUserId())) {
+        if (!agencyScopeService.canAccessActiveUser(request.getUserId())) {
             throw new UserNotFoundException(request.getUserId());
         }
 

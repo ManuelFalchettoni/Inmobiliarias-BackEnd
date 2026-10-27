@@ -5,7 +5,7 @@ import com.manuel.zaguan_inmobiliarias.exception.crm.CrmHistoryNotFoundException
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.crm.CrmHistoryMapper;
 import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmHistoryRepository;
-import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +17,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CrmHistoryFinderService {
     private final JpaCrmHistoryRepository jpaCrmHistoryRepository;
-    private final JpaCrmPropertyRepository jpaCrmPropertyRepository;
     private final CrmHistoryMapper crmHistoryMapper;
+    private final AgencyScopeService agencyScopeService;
 
     //Sin paginar, como las ofertas: es la linea de tiempo de un solo lead
     public List<CrmHistoryResponse> findByCrmProperty(Long crmPropertyId){
@@ -37,7 +37,7 @@ public class CrmHistoryFinderService {
     }
 
     private void requireCrmProperty(Long crmPropertyId){
-        if (!jpaCrmPropertyRepository.existsById(crmPropertyId)) {
+        if (!agencyScopeService.canAccessCrmProperty(crmPropertyId)) {
             throw new CrmPropertyNotFoundException(crmPropertyId);
         }
     }

@@ -3,8 +3,8 @@ package com.manuel.zaguan_inmobiliarias.service.crm;
 import com.manuel.zaguan_inmobiliarias.entity.crm.Offer;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.OfferNotFoundException;
-import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.repository.crm.JpaOfferRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class OfferDeleterService {
     private final JpaOfferRepository jpaOfferRepository;
-    private final JpaCrmPropertyRepository jpaCrmPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
 
     @Transactional
     public void delete(Long crmPropertyId, Long offerId){
-        if (!jpaCrmPropertyRepository.existsById(crmPropertyId)) {
+        if (!agencyScopeService.canAccessCrmProperty(crmPropertyId)) {
             throw new CrmPropertyNotFoundException(crmPropertyId);
         }
 

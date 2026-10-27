@@ -4,7 +4,7 @@ import com.manuel.zaguan_inmobiliarias.entity.crm.CrmAlert;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmAlertNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmAlertRepository;
-import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,11 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class CrmAlertDeleterService {
     private final JpaCrmAlertRepository jpaCrmAlertRepository;
-    private final JpaCrmPropertyRepository jpaCrmPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
 
     @Transactional
     public void delete(Long crmPropertyId, Long alertId){
-        if (!jpaCrmPropertyRepository.existsById(crmPropertyId)) {
+        if (!agencyScopeService.canAccessCrmProperty(crmPropertyId)) {
             throw new CrmPropertyNotFoundException(crmPropertyId);
         }
 
