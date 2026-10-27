@@ -8,6 +8,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoExce
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PhotoLimitExceededException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.photo.PropertyPhotoMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.photo.JpaPropertyPhotoRepository;
 import com.manuel.zaguan_inmobiliarias.storage.PhotoStorage;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +24,18 @@ public class PropertyPhotoCreatorService {
     private final JpaPropertyRepository jpaPropertyRepository;
     private final PhotoStorage photoStorage;
     private final PropertyPhotoMapper propertyPhotoMapper;
+    private final AgencyScopeService agencyScopeService;
 
     private static final int MAX_PHOTOS = 20;
 
-    public PropertyPhotoCreatorService(JpaPropertyPhotoRepository jpaPropertyPhotoRepository, JpaPropertyRepository jpaPropertyRepository, PhotoStorage photoStorage, PropertyPhotoMapper propertyPhotoMapper) {
+    public PropertyPhotoCreatorService(JpaPropertyPhotoRepository jpaPropertyPhotoRepository, JpaPropertyRepository jpaPropertyRepository, PhotoStorage photoStorage, PropertyPhotoMapper propertyPhotoMapper,
+                                       AgencyScopeService agencyScopeService) {
 
         this.jpaPropertyPhotoRepository = jpaPropertyPhotoRepository;
         this.jpaPropertyRepository = jpaPropertyRepository;
         this.photoStorage = photoStorage;
         this.propertyPhotoMapper = propertyPhotoMapper;
+        this.agencyScopeService = agencyScopeService;
     }
 
     @Transactional
@@ -42,6 +46,11 @@ public class PropertyPhotoCreatorService {
 
         Property property = jpaPropertyRepository.findByIdAndActiveTrue(propertyId)
                 .orElseThrow(() -> new PropertyNotFoundException(propertyId));
+
+        //Una de otra inmobiliaria responde 404, igual que una que no existe
+        if (!agencyScopeService.canAccess(property.getAgencyId())) {
+            throw new PropertyNotFoundException(propertyId);
+        }
 
         int countPhotos =jpaPropertyPhotoRepository.countByPropertyId(propertyId);
         if ((countPhotos + files.size()) > MAX_PHOTOS){

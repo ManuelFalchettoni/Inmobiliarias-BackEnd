@@ -4,7 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.property.photo.PropertyPhoto
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.photo.PropertyPhotoMapper;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.photo.JpaPropertyPhotoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,14 +16,14 @@ import java.util.List;
 public class PropertyPhotoFinderService {
 
     private final JpaPropertyPhotoRepository jpaPropertyPhotoRepository;
-    private final JpaPropertyRepository jpaPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
     private final PropertyPhotoMapper propertyPhotoMapper;
 
     public PropertyPhotoFinderService(JpaPropertyPhotoRepository jpaPropertyPhotoRepository,
-                                      JpaPropertyRepository jpaPropertyRepository,
+                                      AgencyScopeService agencyScopeService,
                                       PropertyPhotoMapper propertyPhotoMapper) {
         this.jpaPropertyPhotoRepository = jpaPropertyPhotoRepository;
-        this.jpaPropertyRepository = jpaPropertyRepository;
+        this.agencyScopeService = agencyScopeService;
         this.propertyPhotoMapper = propertyPhotoMapper;
     }
 
@@ -45,7 +45,7 @@ public class PropertyPhotoFinderService {
     }
 
     private void requireProperty(Long propertyId) {
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(propertyId)) {
+        if (!agencyScopeService.canAccessActiveProperty(propertyId)) {
             throw new PropertyNotFoundException(propertyId);
         }
     }

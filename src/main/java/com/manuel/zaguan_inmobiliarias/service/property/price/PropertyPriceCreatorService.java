@@ -7,6 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundExcept
 import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.price.PropertyPriceMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.price.JpaPropertyPriceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,18 +18,21 @@ public class PropertyPriceCreatorService {
     private final JpaPropertyPriceRepository jpaPropertyPriceRepository;
     private final JpaPropertyRepository jpaPropertyRepository;
     private final PropertyPriceMapper propertyPriceMapper;
+    private final AgencyScopeService agencyScopeService;
 
     public PropertyPriceCreatorService(JpaPropertyPriceRepository jpaPropertyPriceRepository,
                                        JpaPropertyRepository jpaPropertyRepository,
-                                       PropertyPriceMapper propertyPriceMapper) {
+                                       PropertyPriceMapper propertyPriceMapper,
+                                       AgencyScopeService agencyScopeService) {
         this.jpaPropertyPriceRepository = jpaPropertyPriceRepository;
         this.jpaPropertyRepository = jpaPropertyRepository;
         this.propertyPriceMapper = propertyPriceMapper;
+        this.agencyScopeService = agencyScopeService;
     }
 
     @Transactional
     public PropertyPriceResponse create(Long propertyId, PropertyPriceRequest request) {
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(propertyId)) {
+        if (!agencyScopeService.canAccessActiveProperty(propertyId)) {
             throw new PropertyNotFoundException(propertyId);
         }
         if (jpaPropertyPriceRepository.existsByPropertyIdAndOperationType(propertyId, request.getOperationType())) {
@@ -36,7 +40,7 @@ public class PropertyPriceCreatorService {
         }
 
         PropertyPrice price = propertyPriceMapper.toEntity(request);
-        //getReferenceById no consulta la base: ya sabemos que la propiedad existe
+        //getReferenceById no consulta la base: ya sabemos que la propiedad existe y es de la inmobiliaria
         price.setProperty(jpaPropertyRepository.getReferenceById(propertyId));
 
         return propertyPriceMapper.toResponse(jpaPropertyPriceRepository.save(price));

@@ -7,7 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundExcept
 import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.price.PropertyPriceMapper;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.price.JpaPropertyPriceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,20 +16,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class PropertyPriceUpdaterService {
 
     private final JpaPropertyPriceRepository jpaPropertyPriceRepository;
-    private final JpaPropertyRepository jpaPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
     private final PropertyPriceMapper propertyPriceMapper;
 
     public PropertyPriceUpdaterService(JpaPropertyPriceRepository jpaPropertyPriceRepository,
-                                       JpaPropertyRepository jpaPropertyRepository,
+                                       AgencyScopeService agencyScopeService,
                                        PropertyPriceMapper propertyPriceMapper) {
         this.jpaPropertyPriceRepository = jpaPropertyPriceRepository;
-        this.jpaPropertyRepository = jpaPropertyRepository;
+        this.agencyScopeService = agencyScopeService;
         this.propertyPriceMapper = propertyPriceMapper;
     }
 
     @Transactional
     public PropertyPriceResponse update(Long propertyId, Long priceId, PropertyPriceRequest request) {
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(propertyId)) {
+        if (!agencyScopeService.canAccessActiveProperty(propertyId)) {
             throw new PropertyNotFoundException(propertyId);
         }
 

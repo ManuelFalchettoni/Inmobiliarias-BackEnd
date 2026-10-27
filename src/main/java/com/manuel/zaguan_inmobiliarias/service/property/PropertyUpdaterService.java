@@ -7,6 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatch
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.PropertyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,16 +17,24 @@ import java.util.Objects;
 public class PropertyUpdaterService {
     private final JpaPropertyRepository jpaPropertyRepository;
     private final PropertyMapper propertyMapper;
+    private final AgencyScopeService agencyScopeService;
 
-    public PropertyUpdaterService (JpaPropertyRepository jpaPropertyRepository, PropertyMapper propertyMapper){
+    public PropertyUpdaterService (JpaPropertyRepository jpaPropertyRepository, PropertyMapper propertyMapper,
+                                   AgencyScopeService agencyScopeService){
         this.jpaPropertyRepository = jpaPropertyRepository;
         this.propertyMapper = propertyMapper;
+        this.agencyScopeService = agencyScopeService;
     }
 
     @Transactional
     public PropertyResponse update(Long id, PropertyRequest request){
         Property property = jpaPropertyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new PropertyNotFoundException(id));
+
+        //Una de otra inmobiliaria responde 404, igual que una que no existe
+        if (!agencyScopeService.canAccess(property.getAgencyId())) {
+            throw new PropertyNotFoundException(id);
+        }
 
         //El PropertyMapper no copia agencyId, asi que antes el campo se descartaba en silencio:
         //el cliente mandaba otra inmobiliaria, recibia 200 y la propiedad no se movia.

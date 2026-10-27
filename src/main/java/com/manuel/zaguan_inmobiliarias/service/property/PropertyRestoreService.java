@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.entity.property.Property;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.PropertyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,10 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class PropertyRestoreService {
     private final JpaPropertyRepository jpaPropertyRepository;
     private final PropertyMapper propertyMapper;
+    private final AgencyScopeService agencyScopeService;
 
-    public PropertyRestoreService (JpaPropertyRepository jpaPropertyRepository, PropertyMapper propertyMapper){
+    public PropertyRestoreService (JpaPropertyRepository jpaPropertyRepository, PropertyMapper propertyMapper,
+                                   AgencyScopeService agencyScopeService){
         this.jpaPropertyRepository = jpaPropertyRepository;
         this.propertyMapper = propertyMapper;
+        this.agencyScopeService = agencyScopeService;
     }
 
     @Transactional
@@ -24,6 +28,10 @@ public class PropertyRestoreService {
         //y devuelve 200 igual
         Property property = jpaPropertyRepository.findById(id)
                 .orElseThrow(() -> new PropertyNotFoundException(id));
+
+        if (!agencyScopeService.canAccess(property.getAgencyId())) {
+            throw new PropertyNotFoundException(id);
+        }
 
         property.setActive(true);
 

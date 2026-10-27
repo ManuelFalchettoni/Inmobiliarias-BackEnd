@@ -33,17 +33,16 @@ public class PropertyFinderController {
             @RequestParam(required = false) Long agencyId,
             @RequestParam(defaultValue = "true") Boolean active,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
-            Page<PropertyResponse> properties = (agencyId == null)
-                    ? propertyFinderService.findAll(active, pageable)
-                    : propertyFinderService.findByAgency(agencyId, active, pageable);
-
-            return ResponseEntity.ok(properties);
+            //agencyId lo respeta solo el admin: una inmobiliaria ve siempre las suyas
+            return ResponseEntity.ok(propertyFinderService.findAll(agencyId, active, pageable));
     }
 
     //Todos los filtros son opcionales. Los enums van con el nombre de la constante, por
     //ejemplo type=HOUSE. Ejemplo: /api/properties/search?city=cordoba&rooms=3
+    //agencyId lo respeta solo el admin (AgencyScopeService): una inmobiliaria busca siempre en la suya
     @GetMapping("/search")
     public ResponseEntity<Page<PropertyResponse>> search(
+            @RequestParam(required = false) Long agencyId,
             @RequestParam(required = false) PropertyType type,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String county,
@@ -56,8 +55,8 @@ public class PropertyFinderController {
             @RequestParam(required = false) Integer minYear,
             @RequestParam(required = false) Integer maxYear,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
-        Page<PropertyResponse> properties = propertyFinderService.search(type, province, county, city, rooms,
-                condition, occupancy, minSize, maxSize, minYear, maxYear, pageable);
+        Page<PropertyResponse> properties = propertyFinderService.search(agencyId, type, province, county,
+                city, rooms, condition, occupancy, minSize, maxSize, minYear, maxYear, pageable);
 
         return ResponseEntity.ok(properties);
     }

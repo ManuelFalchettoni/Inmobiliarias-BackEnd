@@ -38,6 +38,7 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
     @Query("""
             SELECT p FROM Property p
             WHERE p.active = true
+              AND (:agencyId IS NULL OR p.agencyId = :agencyId)
               AND (:type IS NULL OR p.type = :type)
               AND (:province IS NULL OR LOWER(p.province) LIKE LOWER(CONCAT('%', :province, '%')))
               AND (:county IS NULL OR LOWER(p.county) LIKE LOWER(CONCAT('%', :county, '%')))
@@ -50,7 +51,8 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
               AND (:minYear IS NULL OR p.year >= :minYear)
               AND (:maxYear IS NULL OR p.year <= :maxYear)
             """)
-    Page<Property> search(@Param("type") PropertyType type,
+    Page<Property> search(@Param("agencyId") Long agencyId,
+                          @Param("type") PropertyType type,
                           @Param("province") String province,
                           @Param("county") String county,
                           @Param("city") String city,

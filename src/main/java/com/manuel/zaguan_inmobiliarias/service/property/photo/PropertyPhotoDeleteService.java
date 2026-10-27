@@ -3,7 +3,7 @@ package com.manuel.zaguan_inmobiliarias.service.property.photo;
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.PropertyPhotoNotFoundException;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.photo.JpaPropertyPhotoRepository;
 import com.manuel.zaguan_inmobiliarias.storage.PhotoStorage;
 import org.springframework.stereotype.Service;
@@ -13,20 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class PropertyPhotoDeleteService {
 
     private final JpaPropertyPhotoRepository jpaPropertyPhotoRepository;
-    private final JpaPropertyRepository jpaPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
     private final PhotoStorage photoStorage;
 
     public PropertyPhotoDeleteService(JpaPropertyPhotoRepository jpaPropertyPhotoRepository,
-                                      JpaPropertyRepository jpaPropertyRepository,
+                                      AgencyScopeService agencyScopeService,
                                       PhotoStorage photoStorage) {
         this.jpaPropertyPhotoRepository = jpaPropertyPhotoRepository;
-        this.jpaPropertyRepository = jpaPropertyRepository;
+        this.agencyScopeService = agencyScopeService;
         this.photoStorage = photoStorage;
     }
 
     @Transactional
     public void delete(Long propertyId, Long photoId) {
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(propertyId)) {
+        if (!agencyScopeService.canAccessActiveProperty(propertyId)) {
             throw new PropertyNotFoundException(propertyId);
         }
 

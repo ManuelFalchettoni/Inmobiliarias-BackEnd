@@ -3,7 +3,7 @@ package com.manuel.zaguan_inmobiliarias.service.property.price;
 import com.manuel.zaguan_inmobiliarias.entity.property.price.PropertyPrice;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.price.PropertyPriceNotFoundException;
-import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.repository.property.price.JpaPropertyPriceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,17 +13,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class PropertyPriceDeleteService {
 
     private final JpaPropertyPriceRepository jpaPropertyPriceRepository;
-    private final JpaPropertyRepository jpaPropertyRepository;
+    private final AgencyScopeService agencyScopeService;
 
     public PropertyPriceDeleteService(JpaPropertyPriceRepository jpaPropertyPriceRepository,
-                                      JpaPropertyRepository jpaPropertyRepository) {
+                                      AgencyScopeService agencyScopeService) {
         this.jpaPropertyPriceRepository = jpaPropertyPriceRepository;
-        this.jpaPropertyRepository = jpaPropertyRepository;
+        this.agencyScopeService = agencyScopeService;
     }
 
     @Transactional
     public void delete(Long propertyId, Long priceId) {
-        if (!jpaPropertyRepository.existsByIdAndActiveTrue(propertyId)) {
+        if (!agencyScopeService.canAccessActiveProperty(propertyId)) {
             throw new PropertyNotFoundException(propertyId);
         }
 
