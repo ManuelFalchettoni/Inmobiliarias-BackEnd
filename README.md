@@ -128,7 +128,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ## Login y permisos
 
-Todo pide login salvo `POST /api/auth/login` y `POST /api/auth/register`. El login deja el
+Todo pide login salvo `POST /api/auth/login`, `POST /api/auth/register` y
+`POST /api/auth/logout`. El login deja el
 token en la cookie `token`; el front la manda sola en cada request si llama con
 `credentials: "include"`. Sin cookie o con un token inválido, 401.
 
@@ -770,6 +771,11 @@ revelar qué emails están registrados.
 | OK | Errores |
 |---|---|
 | 200 | 400 validación · 401 `"Invalid email or password"` |
+
+## Logout
+
+`POST /api/auth/logout`, sin body. Borra la cookie `token`: como es `HttpOnly`, el front no la
+puede borrar y la tiene que pisar el backend. Responde 204 aunque no haya sesión.
 
 ## Personas
 
