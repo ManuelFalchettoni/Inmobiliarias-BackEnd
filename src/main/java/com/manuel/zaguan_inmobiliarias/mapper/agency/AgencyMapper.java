@@ -4,11 +4,19 @@ import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.request.agency.AgencyUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.agency.AgencyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
+import com.manuel.zaguan_inmobiliarias.storage.PhotoStorage;
 import org.springframework.stereotype.Component;
 
 
 @Component
 public class AgencyMapper {
+
+    private final PhotoStorage photoStorage;
+
+    public AgencyMapper(PhotoStorage photoStorage) {
+        this.photoStorage = photoStorage;
+    }
+
     public Agency toEntity(AgencyRequest agencyRequest){
         Agency agency = new Agency();
         agency.setCuit(agencyRequest.getCuit());
@@ -25,7 +33,7 @@ public class AgencyMapper {
         return agency;
     }
 
-    //active no se toca al editar: se maneja con DELETE y restore
+    //active no se toca al editar: se maneja con DELETE y restore.
     public void updateEntity(AgencyUpdateRequest agencyUpdateRequest, Agency agency){
         agency.setCuit(agencyUpdateRequest.getCuit());
         agency.setEmail(agencyUpdateRequest.getEmail());
@@ -49,6 +57,9 @@ public class AgencyMapper {
         agencyResponse.setSocials(agency.getSocials());
         agencyResponse.setPhoneNumber(agency.getPhoneNumber());
         agencyResponse.setWebURL(agency.getWebURL());
+        if (agency.getIcon() != null) {
+            agencyResponse.setIconUrl(photoStorage.urlOf(agency.getIcon()));
+        }
         agencyResponse.setStatus(agency.getStatus());
         agencyResponse.setActive(agency.getActive());
         agencyResponse.setCreatedAt(agency.getCreatedAt());
