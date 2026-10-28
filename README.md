@@ -64,7 +64,8 @@ Enums:
 - `OperationType` / `ContractType`: `SALE`, `RENT`
 - `ContractStatus`: `ACTIVE`, `FINISHED`, `CANCELLED`
 - `ContractRole`: `OWNER`, `TENANT`, `BUYER`, `GUARANTOR`
-- `CrmStage`: `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST`
+- `CrmStage`: `NEW`, `CONTACTED`, `VISIT_SCHEDULED`, `VISITED`, `NEGOTIATING`, `CLOSED`, `DISCARDED`
+- `CrmAlertStatus`: `PENDING`, `DONE`
 - `CrmEventType`: `NOTE`, `CALL`, `VISIT`, `OFFER`, `STAGE_CHANGE`
 - `OfferStatus`: `PENDING`, `ACCEPTED`, `REJECTED`
 
@@ -98,16 +99,15 @@ Para sacarla del mercado, `DELETE /api/properties/{id}`; vuelve con `PATCH /{id}
 2. `POST /api/crm_properties` con la propiedad, la persona, el agente y `stage: "NEW"`.
 3. Después de cada contacto, `POST .../history` con el evento (`CALL`, `VISIT`, `NOTE`) y
    `PUT /api/crm_properties/{id}` con la etapa nueva, más su evento `STAGE_CHANGE`.
-4. `POST .../alerts` para agendar la visita; `PUT .../alerts/{id}` con `isRead: true` al
-   cumplirla.
+4. `POST .../alerts` para agendar la visita; `PATCH .../alerts/{id}/complete` al cumplirla.
 5. `GET .../history` para ver la línea de tiempo del lead.
 
 ### 4. Negociación y cierre con contrato
 
 1. `POST .../offers` con `status: "PENDING"`, su evento `OFFER` en el historial y el lead en
-   `NEGOTIATION`.
+   `NEGOTIATING`.
 2. Ante una contraoferta, `PUT .../offers/{id}` con `REJECTED` y un `POST .../offers` nuevo.
-3. Al aceptar, la oferta pasa a `ACCEPTED` y el lead a `WON`.
+3. Al aceptar, la oferta pasa a `ACCEPTED` y el lead a `CLOSED`.
 4. `POST /api/property_contracts` con tipo, monto, moneda, fechas y documento.
 5. `POST /api/contract_parties` por cada persona: `OWNER`, `TENANT` o `BUYER`, y `GUARANTOR` si
    es alquiler.
@@ -119,7 +119,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 1. `GET /api/crm_alerts/upcoming?userId={id}`: sus alertas pendientes de todos sus leads, la
    más próxima primero.
 2. `GET /api/crm_properties?userId={id}`: sus leads.
-3. Por cada alerta: `PUT` con `isRead: true`, `PUT` con otro `userId` para pasarla, o `DELETE`.
+3. Por cada alerta: `PATCH .../complete` al cumplirla, `PUT` con otro `userId` para pasarla, o
+   `DELETE`.
 4. `GET .../offers` de cada lead para repasar las pendientes.
 
 ---
@@ -1017,7 +1018,7 @@ y los precios cuelgan de la propiedad: solo se ven o se tocan desde la URL de su
 | `GET /{id}` | traer uno |
 | `PUT /{id}` | editar: cambiar la etapa o reasignar el agente |
 
-No hay `DELETE`: un lead que no avanza pasa a `LOST`.
+No hay `DELETE`: un lead que no avanza pasa a `DISCARDED`.
 
 ### Request
 
@@ -1032,7 +1033,7 @@ Mismo body para `POST` y `PUT`.
 | `propertyId` | number | sí | propiedad existente y activa, de la inmobiliaria del usuario |
 | `peopleId` | number | sí | persona existente, de la inmobiliaria del usuario |
 | `userId` | number | sí | agente existente y activo, de la misma inmobiliaria |
-| `stage` | enum `CrmStage` | sí | `NEW`, `CONTACTED`, `VISIT`, `NEGOTIATION`, `WON`, `LOST` |
+| `stage` | enum `CrmStage` | sí | `NEW`, `CONTACTED`, `VISIT_SCHEDULED`, `VISITED`, `NEGOTIATING`, `CLOSED`, `DISCARDED` |
 
 ### Response
 
@@ -1107,13 +1108,14 @@ El response trae además `id`, `crmPropertyId` y `createdAt`.
 | `POST` | crear |
 | `GET` | listar las del lead, la fecha más próxima primero |
 | `GET /{alertId}` | traer una |
-| `PUT /{alertId}` | editar: marcar como leída o pasarla a otro agente |
+| `PUT /{alertId}` | editar el mensaje, la fecha o pasarla a otro agente |
+| `PATCH /{alertId}/complete` | darla por terminada: pasa a `DONE` |
 | `DELETE /{alertId}` | borrar |
 
 El borrado es físico.
 
 ```json
-{ "userId": 1, "message": "Llamar para confirmar la visita", "alertDate": "2026-10-10T10:00:00", "isRead": false }
+{ "userId": 1, "message": "Llamar para confirmar la visita", "alertDate": "2026-10-10T10:00:00" }
 ```
 
 | Campo | Tipo | Obligatorio | Reglas |
@@ -1121,15 +1123,15 @@ El borrado es físico.
 | `userId` | number | sí | el agente al que le llega, existente y activo |
 | `message` | string | sí | no vacío |
 | `alertDate` | fecha y hora | sí | `yyyy-MM-ddTHH:mm:ss` |
-| `isRead` | boolean | sí | `false` al crear |
 
-El response trae además `id`, `crmPropertyId` y `createdAt`.
+Se crea en `PENDING`. El response trae además `id`, `crmPropertyId`, `status`, `expired` y
+`createdAt`. `expired` es `true` si está `PENDING` y su fecha ya pasó.
 
 ### Alertas próximas
 
 `GET /api/crm_alerts/upcoming?days=7&userId=1`
 
-Las alertas sin leer de todos los leads de la inmobiliaria, la más próxima primero, vencidas
+Las alertas `PENDING` de todos los leads de la inmobiliaria, la más próxima primero, vencidas
 incluidas. Un array sin paginar, con el mismo formato que el listado de alertas.
 
 | Filtro | Cómo filtra |
@@ -1145,4 +1147,5 @@ incluidas. Un array sin paginar, con el mismo formato que el listado de alertas.
 | `GET` listado | 200 | 404 lead inexistente |
 | `GET /{id}` | 200 | 404 lead o registro inexistente · 404 el registro es de otro lead |
 | `PUT /{id}` | 200 | 400 validación · 404 igual que arriba |
+| `PATCH /{id}/complete` (alertas) | 200 | 404 igual que arriba |
 | `DELETE /{id}` | 204 sin body | 404 igual que arriba |
