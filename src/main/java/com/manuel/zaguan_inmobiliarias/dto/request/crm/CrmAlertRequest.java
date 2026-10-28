@@ -25,7 +25,5 @@ public class CrmAlertRequest {
     @NotNull
     private LocalDateTime alertDate;
 
-    //Boolean y no boolean: con el primitivo Lombok arma isRead() y el JSON sale como "read"
-    @NotNull
-    private Boolean isRead;
+    //Sin status: se crea en PENDING y se termina con PATCH /{alertId}/complete
 }

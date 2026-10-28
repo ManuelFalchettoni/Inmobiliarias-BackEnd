@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.entity.crm;
 
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,9 +32,11 @@ public class CrmAlert {
     @Column(nullable = false)
     private LocalDateTime alertDate;
 
-    //isRead y no read: READ es palabra reservada en MySQL
-    @Column(nullable = false)
-    private Boolean isRead;
+    //PENDING hasta que el agente la da por terminada. Vencida no se guarda: depende de la hora,
+    //se calcula en CrmAlertMapper. varchar y no ENUM nativo, por lo mismo que en CrmProperty
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(30)")
+    private CrmAlertStatus status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -6,6 +6,7 @@ import com.manuel.zaguan_inmobiliarias.service.crm.CrmAlertUpdaterService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,5 +24,12 @@ public class CrmAlertUpdaterController {
                                                    @PathVariable Long alertId,
                                                    @Valid @RequestBody CrmAlertRequest request){
         return ResponseEntity.ok(crmAlertUpdaterService.update(crmPropertyId, alertId, request));
+    }
+
+    //Sin body: solo la pasa a DONE
+    @PatchMapping("/{alertId}/complete")
+    public ResponseEntity<CrmAlertResponse> complete(@PathVariable Long crmPropertyId,
+                                                     @PathVariable Long alertId){
+        return ResponseEntity.ok(crmAlertUpdaterService.complete(crmPropertyId, alertId));
     }
 }

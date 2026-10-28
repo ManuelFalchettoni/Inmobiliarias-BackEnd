@@ -3,6 +3,7 @@ package com.manuel.zaguan_inmobiliarias.service.crm;
 import com.manuel.zaguan_inmobiliarias.dto.request.crm.CrmAlertRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.crm.CrmAlertResponse;
 import com.manuel.zaguan_inmobiliarias.entity.crm.CrmAlert;
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.crm.CrmAlertMapper;
@@ -31,6 +32,7 @@ public class CrmAlertCreatorService {
 
         CrmAlert alert = crmAlertMapper.toEntity(request);
         alert.setCrmPropertyId(crmPropertyId);
+        alert.setStatus(CrmAlertStatus.PENDING);
         return crmAlertMapper.toResponse(jpaCrmAlertRepository.save(alert));
     }
 }

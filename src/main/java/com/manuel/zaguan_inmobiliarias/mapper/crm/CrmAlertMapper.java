@@ -3,7 +3,10 @@ package com.manuel.zaguan_inmobiliarias.mapper.crm;
 import com.manuel.zaguan_inmobiliarias.dto.request.crm.CrmAlertRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.crm.CrmAlertResponse;
 import com.manuel.zaguan_inmobiliarias.entity.crm.CrmAlert;
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 public class CrmAlertMapper {
@@ -15,11 +18,11 @@ public class CrmAlertMapper {
         return alert;
     }
 
+    //El status no se toca: se cambia solo con el endpoint de completar
     public void updateEntity(CrmAlertRequest request, CrmAlert alert){
         alert.setUserId(request.getUserId());
         alert.setMessage(request.getMessage());
         alert.setAlertDate(request.getAlertDate());
-        alert.setIsRead(request.getIsRead());
     }
 
     public CrmAlertResponse toResponse(CrmAlert alert){
@@ -29,7 +32,9 @@ public class CrmAlertMapper {
         response.setUserId(alert.getUserId());
         response.setMessage(alert.getMessage());
         response.setAlertDate(alert.getAlertDate());
-        response.setIsRead(alert.getIsRead());
+        response.setStatus(alert.getStatus());
+        response.setExpired(alert.getStatus() == CrmAlertStatus.PENDING
+                && alert.getAlertDate().isBefore(LocalDateTime.now()));
         response.setCreatedAt(alert.getCreatedAt());
         return response;
     }

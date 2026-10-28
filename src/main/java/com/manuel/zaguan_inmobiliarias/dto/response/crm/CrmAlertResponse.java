@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.crm;
 
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,8 @@ public class CrmAlertResponse {
     private Long userId;
     private String message;
     private LocalDateTime alertDate;
-    private Boolean isRead;
+    private CrmAlertStatus status;
+    //Pendiente y con la fecha pasada. Lo calcula el back para no depender de la hora del navegador
+    private Boolean expired;
     private LocalDateTime createdAt;
 }

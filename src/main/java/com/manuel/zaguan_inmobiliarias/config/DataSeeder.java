@@ -15,6 +15,7 @@ import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.enums.Currency;
 import com.manuel.zaguan_inmobiliarias.enums.agency.AgencyStatus;
 import com.manuel.zaguan_inmobiliarias.enums.contractparty.ContractRole;
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus;
 import com.manuel.zaguan_inmobiliarias.enums.crm.CrmEventType;
 import com.manuel.zaguan_inmobiliarias.enums.crm.CrmStage;
 import com.manuel.zaguan_inmobiliarias.enums.crm.OfferStatus;
@@ -179,26 +180,27 @@ public class DataSeeder implements CommandLineRunner {
         party(alquilerCasa, valeria, ContractRole.TENANT, null);
 
         // ---------- CRM ----------
-        CrmProperty leadDepto = crm(depto, lucia, zaguanAgent, CrmStage.NEGOTIATION);
+        CrmProperty leadDepto = crm(depto, lucia, zaguanAgent, CrmStage.NEGOTIATING);
         history(leadDepto, zaguanAgent, CrmEventType.CALL, "Consulta por WhatsApp, pide visita");
         history(leadDepto, zaguanAgent, CrmEventType.VISIT, "Le gusto, pregunta por expensas");
         history(leadDepto, zaguanOwner, CrmEventType.OFFER, "Ofrece USD 135.000");
-        history(leadDepto, zaguanAgent, CrmEventType.STAGE_CHANGE, "VISIT -> NEGOTIATION");
+        history(leadDepto, zaguanAgent, CrmEventType.STAGE_CHANGE, "VISITED -> NEGOTIATING");
         offer(leadDepto, "135000", Currency.USD, OfferStatus.REJECTED);
         offer(leadDepto, "140000", Currency.USD, OfferStatus.PENDING);
-        alert(leadDepto, zaguanAgent, "Responder contraoferta de Lucia", LocalDateTime.now().plusDays(1), false);
+        alert(leadDepto, zaguanAgent, "Responder contraoferta de Lucia", LocalDateTime.now().plusDays(1), CrmAlertStatus.PENDING);
 
         CrmProperty leadPh = crm(ph, julian, zaguanAgent, CrmStage.CONTACTED);
         history(leadPh, zaguanAgent, CrmEventType.NOTE, "Busca PH con patio para alquilar");
-        alert(leadPh, zaguanAgent, "Coordinar visita al PH", LocalDateTime.now().plusDays(3), false);
+        alert(leadPh, zaguanAgent, "Coordinar visita al PH", LocalDateTime.now().plusDays(3), CrmAlertStatus.PENDING);
+        alert(leadPh, zaguanAgent, "Mandar fotos del patio", LocalDateTime.now().minusDays(1), CrmAlertStatus.PENDING);
 
-        CrmProperty leadCasa = crm(casa, valeria, delSurAgent, CrmStage.WON);
+        CrmProperty leadCasa = crm(casa, valeria, delSurAgent, CrmStage.CLOSED);
         history(leadCasa, delSurAgent, CrmEventType.VISIT, null);
-        history(leadCasa, delSurOwner, CrmEventType.STAGE_CHANGE, "NEGOTIATION -> WON");
+        history(leadCasa, delSurOwner, CrmEventType.STAGE_CHANGE, "NEGOTIATING -> CLOSED");
         offer(leadCasa, "250000", Currency.USD, OfferStatus.ACCEPTED);
-        alert(leadCasa, delSurOwner, "Pedir documentacion para escritura", LocalDateTime.now().minusDays(2), true);
+        alert(leadCasa, delSurOwner, "Pedir documentacion para escritura", LocalDateTime.now().minusDays(2), CrmAlertStatus.DONE);
 
-        CrmProperty leadLote = crm(lote, valeria, delSurAgent, CrmStage.LOST);
+        CrmProperty leadLote = crm(lote, valeria, delSurAgent, CrmStage.DISCARDED);
         history(leadLote, delSurAgent, CrmEventType.NOTE, "No le sirve, queda lejos");
 
         crm(depto, julian, zaguanOwner, CrmStage.NEW);
@@ -341,13 +343,13 @@ public class DataSeeder implements CommandLineRunner {
         jpaOfferRepository.save(offer);
     }
 
-    private void alert(CrmProperty crmProperty, User user, String message, LocalDateTime alertDate, Boolean isRead) {
+    private void alert(CrmProperty crmProperty, User user, String message, LocalDateTime alertDate, CrmAlertStatus status) {
         CrmAlert alert = new CrmAlert();
         alert.setCrmPropertyId(crmProperty.getId());
         alert.setUserId(user.getId());
         alert.setMessage(message);
         alert.setAlertDate(alertDate);
-        alert.setIsRead(isRead);
+        alert.setStatus(status);
         jpaCrmAlertRepository.save(alert);
     }
 }

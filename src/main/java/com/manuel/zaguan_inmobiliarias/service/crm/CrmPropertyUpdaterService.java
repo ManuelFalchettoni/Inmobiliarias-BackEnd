@@ -14,7 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//No hay baja: un lead que no avanza pasa a la etapa LOST desde aca
+//No hay baja: un lead que no avanza pasa a la etapa DISCARDED desde aca
 @Service
 @AllArgsConstructor
 public class CrmPropertyUpdaterService {
