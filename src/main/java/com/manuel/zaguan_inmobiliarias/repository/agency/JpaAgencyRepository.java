@@ -5,13 +5,18 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface JpaAgencyRepository extends JpaRepository<Agency, Long> {
+public interface JpaAgencyRepository extends JpaRepository<Agency, Long>, JpaSpecificationExecutor<Agency> {
     Optional<Agency> findAgencyByEmail(String email);
+
+    Optional<Agency> findByPublicName(String publicName);
 
     Optional<Agency> findByCompanyName(String companyName);
 
@@ -43,4 +48,8 @@ public interface JpaAgencyRepository extends JpaRepository<Agency, Long> {
     boolean existsByPhoneNumberAndIdNot(@NonNull String phoneNumber, @NonNull Long id);
 
     boolean existsByAddressAndIdNot(@NonNull String address, @NonNull Long id);
+
+    //Solo el objectKey del logo, para UserMapper. Vacio si la inmobiliaria no existe o no tiene logo
+    @Query("select a.icon from Agency a where a.id = :id")
+    Optional<String> findIconById(@Param("id") Long id);
 }
