@@ -1149,3 +1149,50 @@ incluidas. Un array sin paginar, con el mismo formato que el listado de alertas.
 | `PUT /{id}` | 200 | 400 validación · 404 igual que arriba |
 | `PATCH /{id}/complete` (alertas) | 200 | 404 igual que arriba |
 | `DELETE /{id}` | 204 sin body | 404 igual que arriba |
+
+# Analítica
+
+`GET /api/analytics/summary?agencyId=2`
+
+Los números de la pantalla de Analítica, ya contados, en un solo response. Cada uno ve los de
+su inmobiliaria; el admin ve todas o filtra con `agencyId`, que para el resto se ignora.
+
+```json
+{
+  "properties": {
+    "active": 5, "inactive": 1,
+    "byType": { "HOUSE": 1, "APARTMENT": 2, "PH": 1, "LAND": 1, "OFFICE": 0, ... },
+    "byOperation": { "SALE": 4, "RENT": 2 }
+  },
+  "crm": {
+    "totalLeads": 5,
+    "leadsByStage": { "NEW": 1, "CONTACTED": 1, "VISIT_SCHEDULED": 0, "VISITED": 0, "NEGOTIATING": 1, "CLOSED": 1, "DISCARDED": 1 },
+    "closeRate": 50.0,
+    "offersByStatus": { "PENDING": 1, "ACCEPTED": 1, "REJECTED": 1 },
+    "pendingAlerts": 3, "expiredAlerts": 1
+  },
+  "contracts": {
+    "total": 2,
+    "byStatus": { "ACTIVE": 1, "FINISHED": 1, "CANCELLED": 0 },
+    "byType": { "SALE": 0, "RENT": 2 },
+    "activeAmountByCurrency": { "ARS": 600000.00, "USD": 0 }
+  },
+  "agents": [
+    { "userId": 3, "name": "Martin", "leads": 2, "closedLeads": 0, "expiredAlerts": 1 }
+  ]
+}
+```
+
+| Campo | Qué cuenta |
+|---|---|
+| `properties.byType`, `byOperation` | solo las activas; una con precio de venta y de alquiler cuenta en las dos |
+| `crm.closeRate` | porcentaje de `CLOSED` sobre `CLOSED` + `DISCARDED`, con un decimal; 0 si no hay |
+| `crm.pendingAlerts`, `expiredAlerts` | alertas `PENDING`; las vencidas son las que ya pasaron su fecha |
+| `contracts.activeAmountByCurrency` | suma de los montos de los contratos `ACTIVE`, por moneda |
+| `agents` | un renglón por agente con leads o alertas pendientes |
+
+Los mapas traen siempre todas las constantes del enum, en 0 las que no tienen nada.
+
+| OK | Errores |
+|---|---|
+| 200 | 403 usuario sin inmobiliaria |
