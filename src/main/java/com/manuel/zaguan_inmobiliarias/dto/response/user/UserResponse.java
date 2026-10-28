@@ -27,6 +27,8 @@ public class UserResponse {
 
     private Long agencyId;
 
+    private String agencyIconUrl;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
