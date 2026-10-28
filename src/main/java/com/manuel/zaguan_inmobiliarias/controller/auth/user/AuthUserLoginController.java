@@ -2,8 +2,10 @@ package com.manuel.zaguan_inmobiliarias.controller.auth.user;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.auth.user.AuthUserLoginRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
+import com.manuel.zaguan_inmobiliarias.mapper.user.UserMapper;
 import com.manuel.zaguan_inmobiliarias.service.auth.user.AuthUserLoginService;
 import com.manuel.zaguan_inmobiliarias.service.jwt.JwtService;
+import com.manuel.zaguan_inmobiliarias.service.user.UserFinderService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthUserLoginController {
     private final AuthUserLoginService authUserLoginService;
     private final JwtService jwtService;
+    private final UserFinderService userFinderService;
+    private final UserMapper userMapper;
 
     @PostMapping()
     public ResponseEntity<UserResponse> login(@Valid @RequestBody AuthUserLoginRequest loginRequest,
@@ -32,7 +36,10 @@ public class AuthUserLoginController {
         if(Boolean.TRUE.equals(loginRequest.getRemember())) cookie.setMaxAge(86400);
         response.addCookie(cookie);
 
-        UserResponse userResponse = jwtService.getUserResponse(token);
+        //El usuario completo y no solo lo que trae el token: asi el front recibe agencyId y el
+        //logo de la inmobiliaria (agencyIconUrl) apenas se loguea
+        Long userId = jwtService.getUserIdFromToken(token);
+        UserResponse userResponse = userMapper.toResponse(userFinderService.find(userId));
         return ResponseEntity.ok(userResponse);
     }
 
