@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,6 +31,13 @@ public interface JpaPropertyRepository  extends JpaRepository<Property, Long> {
     Page<Property> findAllByAgencyIdAndActive(Long agencyId, Boolean active, Pageable pageable);
 
     boolean existsByIdAndActiveTrue(Long id);
+
+    //Para Analitica: activas y dadas de baja, sin paginar. agencyId en null (solo el admin) trae todas
+    @Query("""
+            SELECT p FROM Property p
+            WHERE (:agencyId IS NULL OR p.agencyId = :agencyId)
+            """)
+    List<Property> findAllForAnalytics(@Param("agencyId") Long agencyId);
 
     //Busqueda con filtros opcionales: el que llega en null no filtra, asi una sola consulta
     //sirve para cualquier combinacion. Solo trae vigentes.

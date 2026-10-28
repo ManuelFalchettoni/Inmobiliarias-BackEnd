@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface JpaCrmPropertyRepository extends JpaRepository<CrmProperty, Long> {
     //Los leads de un agente
@@ -20,4 +22,12 @@ public interface JpaCrmPropertyRepository extends JpaRepository<CrmProperty, Lon
                       (SELECT p.id FROM Property p WHERE p.agencyId = :agencyId))
             """)
     Page<CrmProperty> findAllByAgency(@Param("agencyId") Long agencyId, Pageable pageable);
+
+    //Para Analitica: la misma consulta, sin paginar
+    @Query("""
+            SELECT l FROM CrmProperty l
+            WHERE (:agencyId IS NULL OR l.propertyId IN
+                      (SELECT p.id FROM Property p WHERE p.agencyId = :agencyId))
+            """)
+    List<CrmProperty> findAllForAnalytics(@Param("agencyId") Long agencyId);
 }

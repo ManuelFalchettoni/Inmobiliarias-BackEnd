@@ -13,9 +13,18 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface JpaPropertyContractRepository extends JpaRepository<PropertyContract, Long> {
+
+    //Para Analitica: todos los contratos de la inmobiliaria, sin paginar ni filtros
+    @Query("""
+            SELECT c FROM PropertyContract c
+            WHERE (:agencyId IS NULL OR c.propertyId IN
+                      (SELECT p.id FROM Property p WHERE p.agencyId = :agencyId))
+            """)
+    List<PropertyContract> findAllForAnalytics(@Param("agencyId") Long agencyId);
 
     //Busqueda con filtros opcionales, el que llega en null no filtra. agencyId en null es "todas":
     //solo le puede llegar asi al admin, el resto busca siempre en su inmobiliaria (AgencyScopeService).
