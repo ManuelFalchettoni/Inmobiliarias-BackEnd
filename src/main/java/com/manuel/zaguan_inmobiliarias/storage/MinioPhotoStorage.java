@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
@@ -80,6 +81,23 @@ public class MinioPhotoStorage implements PhotoStorage {
         }
 
         //7 El objectKey que se guarda en la base
+        return fileName;
+    }
+
+    @Override
+    public String store(byte[] content, String extension, String contentType) {
+        String fileName = UUID.randomUUID() + "." + extension;
+        ensureBucket();
+        try (InputStream input = new ByteArrayInputStream(content)) {
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(bucket)
+                    .object(fileName)
+                    .stream(input, (long) content.length, -1L)
+                    .contentType(contentType)
+                    .build());
+        } catch (IOException | MinioException e) {
+            throw new PhotoStorageException("File could not be saved", e);
+        }
         return fileName;
     }
 

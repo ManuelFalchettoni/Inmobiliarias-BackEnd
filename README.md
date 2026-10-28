@@ -13,10 +13,31 @@ Queda en `http://localhost:8080`.
 
 Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NAME`,
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
-`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `SEED_ENABLED`.
+`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `SEED_ENABLED`, `SEED_PROPERTIES`,
+`SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
 
 - `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
 - `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
+
+## Datos de prueba
+
+`DataSeeder` carga dos cosas: los datos fijos (usuarios para el login, todos con
+`Password123`, y casos puntuales del CRM) y un lote generado de propiedades, personas,
+dueños, contratos y leads (`SEED_PROPERTIES`, por defecto 150, y `SEED_PEOPLE`, por defecto 200).
+Lo generado usa una semilla fija: en todas las compus salen los mismos datos.
+
+Las fotos salen de `src/main/resources/seed-photos/<categoria>/` (`exterior`, `interior`,
+`office`) y se suben a MinIO; cada propiedad recibe su propia copia. Para sumar fotos alcanza
+con agregarlas a esas carpetas (jpg de ~1000 px de ancho, comprimidas). Son CC0, de StockSnap
+vía Openverse.
+
+Para volver a cargar todo desde cero (borra la base y las fotos de MinIO):
+
+```
+docker compose down -v
+```
+
+y después arrancar la app de nuevo.
 
 - MySQL: contenedor en el 3307 (no 3306, para no chocar con un MySQL instalado), con `root` /
   `root`. Con Docker, la app se conecta al contenedor e ignora las `DB_*`; sin Docker usa las
