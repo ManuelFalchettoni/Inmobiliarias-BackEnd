@@ -6,10 +6,21 @@ import com.manuel.zaguan_inmobiliarias.dto.request.user.UserUpdateRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.user.UserResponse;
 import com.manuel.zaguan_inmobiliarias.entity.user.User;
 import com.manuel.zaguan_inmobiliarias.enums.user.UserRol;
+import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
+import com.manuel.zaguan_inmobiliarias.storage.PhotoStorage;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
+
+    private final JpaAgencyRepository jpaAgencyRepository;
+    private final PhotoStorage photoStorage;
+
+    public UserMapper(JpaAgencyRepository jpaAgencyRepository, PhotoStorage photoStorage) {
+        this.jpaAgencyRepository = jpaAgencyRepository;
+        this.photoStorage = photoStorage;
+    }
+
     public User toEntity(UserRequest userRequest){
         User user = new User();
 
@@ -58,8 +69,10 @@ public class UserMapper {
         userResponse.setName(user.getName());
         userResponse.setEmail(user.getEmail());
         userResponse.setPhoneNumber(user.getPhoneNumber());
-        userResponse.setRol(user.getRol().name());
+        //UserResponse.rol es String: se manda el nombre del enum, igual que JwtService
+        userResponse.setRol(user.getRol() != null ? user.getRol().name() : null);
         userResponse.setAgencyId(user.getAgencyId());
+        userResponse.setAgencyIconUrl(agencyIconUrlOf(user.getAgencyId()));
         userResponse.setCuit(user.getCuit());
         userResponse.setLicense(user.getLicense());
         userResponse.setActive(user.getActive());
@@ -67,6 +80,17 @@ public class UserMapper {
         userResponse.setUpdatedAt(user.getUpdatedAt());
 
         return userResponse;
+    }
+
+    //El logo es de la inmobiliaria: cada usuario muestra el de su agencyId. Se consulta solo la
+    //columna icon, sin traer la Agency entera. Null si no tiene inmobiliaria o si no tiene logo
+    private String agencyIconUrlOf(Long agencyId) {
+        if (agencyId == null) {
+            return null;
+        }
+        return jpaAgencyRepository.findIconById(agencyId)
+                .map(photoStorage::urlOf)
+                .orElse(null);
     }
 
 }

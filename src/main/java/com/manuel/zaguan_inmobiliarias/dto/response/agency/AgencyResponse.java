@@ -32,6 +32,9 @@ public class AgencyResponse {
 
     private String socials;
 
+    //URL publica del logo en MinIO. No sale en el JSON si la inmobiliaria no tiene logo
+    private String iconUrl;
+
     private Boolean active;
 
     private AgencyStatus status;
