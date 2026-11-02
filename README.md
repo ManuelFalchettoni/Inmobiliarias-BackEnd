@@ -602,10 +602,27 @@ hay que restaurar la que está.
   "socials": "@zaguan",
   "active": true,
   "status": "PENDING",
+  "iconUrl": "http://localhost:9000/photos/3f2a9c1e-7b4d-4e8a-9f61-2c5d8b0a1e47.png",
   "createdAt": "2025-09-15T18:22:41.1234",
   "updatedAt": "2025-09-15T18:22:41.1234"
 }
 ```
+
+`iconUrl` viene `null` si no tiene logo.
+
+### Logo
+
+| | |
+|---|---|
+| `PUT /api/agencies/{id}/icon` | subir o reemplazar |
+| `DELETE /api/agencies/{id}/icon` | quitar |
+
+`PUT` va como `multipart/form-data` con un solo archivo en el campo **`file`**. Mismas reglas
+que las fotos de propiedades: `jpg`, `jpeg`, `png` o `webp`, máx 5MB, `Content-Type` de imagen.
+Responde la inmobiliaria con el `iconUrl` nuevo; el logo anterior se borra de MinIO.
+
+Lo puede cambiar el admin o la inmobiliaria, solo el suyo. Los usuarios de la inmobiliaria lo
+reciben en `agencyIconUrl`.
 
 ### Códigos
 
@@ -617,6 +634,8 @@ hay que restaurar la que está.
 | `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
 | `DELETE /{id}` | 204 sin body | 403 no es admin · 404 |
 | `PATCH /{id}/restore` | 200 | 403 no es admin · 404 |
+| `PUT /{id}/icon` | 200 | 400 sin archivo, archivo vacío, extensión no permitida o no es imagen · 404 inexistente, dada de baja o ajena · 413 archivo > 5MB |
+| `DELETE /{id}/icon` | 204 sin body, también si no tenía logo | 404 inexistente, dada de baja o ajena |
 
 El 409 dice cuál es el campo repetido, dirección incluida
 (`"Email already registered: contacto@zaguan.com"`).
