@@ -1,9 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.controller.property;
 
+import com.manuel.zaguan_inmobiliarias.dto.request.property.PropertySearchFilter;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertyResponse;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import com.manuel.zaguan_inmobiliarias.service.property.PropertyFinderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,26 +35,14 @@ public class PropertyFinderController {
             return ResponseEntity.ok(propertyFinderService.findAll(agencyId, active, pageable));
     }
 
-    //Todos los filtros son opcionales. Los enums van con el nombre de la constante, por
-    //ejemplo type=HOUSE. Ejemplo: /api/properties/search?city=cordoba&rooms=3
-    //agencyId lo respeta solo el admin (AgencyScopeService): una inmobiliaria busca siempre en la suya
+    //Todos los filtros son opcionales; la lista esta en PropertySearchFilter. Los enums van con el
+    //nombre de la constante y aceptan varios: type=HOUSE,PH. Ejemplo: /api/properties/search?city=cordoba&minRooms=3
+    //El precio necesita currency: /api/properties/search?operationType=SALE&currency=USD&maxPrice=100000&sort=price,asc
     @GetMapping("/search")
     public ResponseEntity<Page<PropertyResponse>> search(
-            @RequestParam(required = false) Long agencyId,
-            @RequestParam(required = false) PropertyType type,
-            @RequestParam(required = false) String province,
-            @RequestParam(required = false) String county,
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) Integer rooms,
-            @RequestParam(required = false) PropertyCondition condition,
-            @RequestParam(required = false) PropertyOccupancy occupancy,
-            @RequestParam(required = false) Integer minSize,
-            @RequestParam(required = false) Integer maxSize,
-            @RequestParam(required = false) Integer minYear,
-            @RequestParam(required = false) Integer maxYear,
+            PropertySearchFilter filter,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
-        Page<PropertyResponse> properties = propertyFinderService.search(agencyId, type, province, county,
-                city, rooms, condition, occupancy, minSize, maxSize, minYear, maxYear, pageable);
+        Page<PropertyResponse> properties = propertyFinderService.search(filter, pageable);
 
         return ResponseEntity.ok(properties);
     }
