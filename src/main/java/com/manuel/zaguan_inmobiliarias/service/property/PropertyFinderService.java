@@ -1,23 +1,20 @@
 package com.manuel.zaguan_inmobiliarias.service.property;
 
+import com.manuel.zaguan_inmobiliarias.dto.request.property.PropertySearchFilter;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.Property;
-import com.manuel.zaguan_inmobiliarias.enums.Currency;
-import com.manuel.zaguan_inmobiliarias.enums.property.OperationType;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyCondition;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyOccupancy;
-import com.manuel.zaguan_inmobiliarias.enums.property.PropertyType;
 import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.property.PropertyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import com.manuel.zaguan_inmobiliarias.repository.property.PropertySpecifications;
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 
 @Service
 @Transactional(readOnly = true)
@@ -55,38 +52,49 @@ public class PropertyFinderService {
         return properties.map(propertyMapper::toResponse);
     }
 
-    public Page<PropertyResponse> search(Long agencyId, PropertyType type, String province, String county,
-                                         String city, Integer minRooms, Integer maxRooms,
-                                         PropertyCondition condition, PropertyOccupancy occupancy,
-                                         Integer minSize, Integer maxSize, Integer minYear, Integer maxYear,
-                                         OperationType operationType, Currency currency,
-                                         BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
-        checkRange("rooms", minRooms, maxRooms);
-        checkRange("size", minSize, maxSize);
-        checkRange("year", minYear, maxYear);
-        checkRange("price", minPrice, maxPrice);
+    //sort=price ordena por el precio de la operacion y moneda del filtro, por eso exige las dos
+    public Page<PropertyResponse> search(PropertySearchFilter filter, Pageable pageable) {
+        validate(filter, pageable);
+
+        Long scopedAgencyId = agencyScopeService.resolveAgencyId(filter.getAgencyId());
+        Specification<Property> spec = PropertySpecifications.search(filter, scopedAgencyId);
+
+        Page<Property> properties;
+        if (pageable.getSort().getOrderFor(PropertySpecifications.PRICE_SORT) == null) {
+            properties = jpaPropertyRepository.findAll(spec, pageable);
+        } else {
+            //El orden lo arma la Specification; el Pageable va sin sort para que Spring no lo pise.
+            //El count usa la spec sin el join
+            Pageable unsorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            properties = jpaPropertyRepository.findAll(
+                    PropertySpecifications.sortedByPrice(spec, filter, pageable.getSort()), spec, unsorted);
+        }
+        return properties.map(propertyMapper::toResponse);
+    }
+
+    private void validate(PropertySearchFilter filter, Pageable pageable) {
+        checkRange("Rooms", filter.getMinRooms(), filter.getMaxRooms());
+        checkRange("Size", filter.getMinSize(), filter.getMaxSize());
+        checkRange("Year", filter.getMinYear(), filter.getMaxYear());
+        checkRange("Floor", filter.getMinFloor(), filter.getMaxFloor());
+        checkRange("Lat", filter.getMinLat(), filter.getMaxLat());
+        checkRange("Lng", filter.getMinLng(), filter.getMaxLng());
+        checkRange("Price", filter.getMinPrice(), filter.getMaxPrice());
 
         //Sin moneda el rango mezclaria pesos con dolares
-        if ((minPrice != null || maxPrice != null) && currency == null) {
+        if ((filter.getMinPrice() != null || filter.getMaxPrice() != null) && filter.getCurrency() == null) {
             throw new InvalidSearchFilterException("currency is required when filtering by price");
         }
 
-        Long scopedAgencyId = agencyScopeService.resolveAgencyId(agencyId);
-
-        return jpaPropertyRepository.search(scopedAgencyId, type, province, county, city, minRooms, maxRooms,
-                        condition, occupancy, minSize, maxSize, minYear, maxYear, operationType, currency,
-                        minPrice, maxPrice, pageable)
-                .map(propertyMapper::toResponse);
-    }
-
-    private <T extends Comparable<T>> void checkRange(String field, T min, T max) {
-        if (min != null && max != null && min.compareTo(max) > 0) {
-            throw new InvalidSearchFilterException("min" + capitalize(field) + " cannot be greater than max"
-                    + capitalize(field));
+        boolean sortByPrice = pageable.getSort().getOrderFor(PropertySpecifications.PRICE_SORT) != null;
+        if (sortByPrice && (filter.getOperationType() == null || filter.getCurrency() == null)) {
+            throw new InvalidSearchFilterException("operationType and currency are required to sort by price");
         }
     }
 
-    private String capitalize(String field) {
-        return Character.toUpperCase(field.charAt(0)) + field.substring(1);
+    private <T extends Comparable<? super T>> void checkRange(String field, T min, T max) {
+        if (min != null && max != null && min.compareTo(max) > 0) {
+            throw new InvalidSearchFilterException("min" + field + " cannot be greater than max" + field);
+        }
     }
 }

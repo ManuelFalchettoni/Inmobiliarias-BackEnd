@@ -61,6 +61,25 @@ request; `AgencyScopeService` decide qué ve de cada inmobiliaria.
 Las excepciones siguen el mismo corte por entidad; la única compartida por dos entidades,
 `InvalidCurrentPasswordException`, vive en la raíz de `exception`.
 
+### Consultas: `@Query` o `Specification`
+
+Por defecto las búsquedas son un `@Query` en JPQL con filtros opcionales
+(`:x IS NULL OR campo = :x`): una sola consulta fija, fácil de leer junto al repositorio. Así
+están personas y contratos.
+
+La búsqueda de propiedades usa una `Specification` (Criteria API), armada en
+`repository/property/PropertySpecifications` y ejecutada con `JpaSpecificationExecutor`.
+Pasó a eso por dos cosas que una consulta fija no resuelve:
+
+- **Filtros con varios valores** (`type=HOUSE,PH`): en Hibernate, `:lista IS NULL` falla cuando
+  la lista trae más de un valor. Con Criteria, un filtro vacío directamente no se agrega.
+- **Orden por precio**: el precio vive en otra tabla, así que hay que sumar un join y el orden
+  solo cuando lo piden, y dejarlo afuera del `count` de la paginación.
+
+Regla: `@Query` mientras los filtros sean valores sueltos; `Specification` cuando la consulta
+cambia de forma según lo que llega (listas, joins u orden condicionales). Con muchos filtros,
+los parámetros van en un objeto (`PropertySearchFilter`) en vez de un `@RequestParam` por filtro.
+
 ## Modelo de datos
 
 | Dominio | Entidad | Qué guarda |
@@ -212,7 +231,9 @@ Los errores que pasan por `GlobalExceptionHandler` tienen todos el mismo formato
 |---|---|---|
 | Validación de `@Valid` | 400 | los campos que fallaron, separados por coma: `"address: must not be blank, size: must be greater than 0"` |
 | JSON roto, enum inexistente o campo desconocido | 400 | `"Malformed or invalid request body"` |
-| Path variable del tipo equivocado | 400 | `"Invalid value for id"` |
+| Path variable o query param del tipo equivocado | 400 | `"Invalid value for id"`, `"Invalid value for type"` |
+| `sort` por un campo que no existe | 400 | `"Invalid sort property: foo"` |
+| Filtro de búsqueda inválido (rango invertido, precio sin moneda) | 400 | `"minFloor cannot be greater than maxFloor"` |
 | Único repetido que no se controla antes | 409 | `"Some of the values are already registered"` |
 | Un rol que no es admin crea un usuario `ADMIN` | 403 | `"Only an admin can create admin users"` |
 
@@ -240,7 +261,8 @@ Devuelven un `Page` de Spring, no un array:
 }
 ```
 
-Aceptan `page`, `size` y `sort`, con tope de 100 por página. Los que tienen baja lógica aceptan
+Aceptan `page`, `size` y `sort`, con tope de 100 por página; un `sort` por un campo que no
+existe da 400. Los que tienen baja lógica aceptan
 además `active` para elegir entre lo vigente y lo dado de baja (true por defecto).
 
 | Recurso | `size` default | Orden default | Filtros extra |
@@ -296,28 +318,36 @@ la suya, mande el `agencyId` que mande.
 
 ### Búsqueda
 
-`GET /api/properties/search?city=cordoba&type=HOUSE&minRooms=3&minSize=80`
+`GET /api/properties/search?city=cordoba&type=HOUSE,PH&minRooms=3&minSize=80`
 
-`GET /api/properties/search?operationType=SALE&currency=USD&maxPrice=100000`
+`GET /api/properties/search?operationType=SALE&currency=USD&maxPrice=100000&sort=price,asc`
 
 Solo trae activas. Todos los filtros son opcionales.
 
 | Filtro | Cómo filtra |
 |---|---|
 | `agencyId` | exacto; solo lo usa el admin |
-| `province`, `county`, `city` | texto parcial |
-| `type`, `condition`, `occupancy` | enum exacto |
+| `address`, `province`, `county`, `city` | texto parcial |
+| `type`, `condition`, `occupancy` | enum exacto, acepta varios: `type=HOUSE,PH` o `type=HOUSE&type=PH` |
 | `minRooms`, `maxRooms` | rango de `rooms`; `minRooms=3` es "3 o más" |
 | `minSize`, `maxSize` | rango de `size` |
 | `minYear`, `maxYear` | rango de `year` |
+| `minFloor`, `maxFloor` | rango de `floorNumber`; deja afuera las que no tienen piso |
+| `minLat`, `maxLat`, `minLng`, `maxLng` | recuadro del mapa; deja afuera las que no tienen coordenadas |
 | `operationType` | enum exacto (`SALE`, `RENT`) |
 | `currency` | enum exacto (`ARS`, `USD`) |
 | `minPrice`, `maxPrice` | rango de `amount`; exige `currency` |
 
 Los rangos incluyen los extremos. Los filtros de precio aplican todos sobre el mismo precio:
 `operationType=SALE&currency=USD&maxPrice=100000` es "en venta, en dólares, hasta 100000", y
-no matchea una propiedad cuyo alquiler cumpla el rango. Un mínimo mayor al máximo, o
-`minPrice`/`maxPrice` sin `currency`, da 400.
+no matchea una propiedad cuyo alquiler cumpla el rango.
+
+Además de los campos de la propiedad, `sort` acepta `price` (`sort=price,asc`): ordena por el
+precio de la `operationType` y `currency` del filtro, así que exige las dos. Se combina con
+otros: `sort=price,asc&sort=createdAt,desc`.
+
+Da 400 un mínimo mayor al máximo, `minPrice`/`maxPrice` sin `currency` y `sort=price` sin
+`operationType` y `currency`.
 
 ### Request
 
@@ -411,7 +441,8 @@ endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precio
 | Endpoint | OK | Errores |
 |---|---|---|
 | `POST` | 201 | 400 validación · 404 inmobiliaria inexistente o dada de baja |
-| `GET` listado | 200 | — |
+| `GET` listado | 200 | 400 `sort` inválido |
+| `GET /search` | 200 | 400 filtro o `sort` inválido |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 `agencyId` distinto al actual · 404 |
 | `PATCH /{id}/archive` | 200 | 404 |

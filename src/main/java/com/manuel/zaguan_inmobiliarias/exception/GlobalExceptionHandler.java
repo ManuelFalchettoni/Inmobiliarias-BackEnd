@@ -28,6 +28,7 @@ import com.manuel.zaguan_inmobiliarias.exception.user.UserAlreadyExistsException
 import com.manuel.zaguan_inmobiliarias.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -200,12 +201,16 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, "Some of the values are already registered", request);
     }
 
-    //Los @Valid que fallan: junta los mensajes campo por campo en uno solo
+    //Los @Valid que fallan: junta los mensajes campo por campo en uno solo.
+    //Tambien llegan aca los query params que no se pueden convertir al armar un objeto de filtros
+    //(type=CASA en PropertySearchFilter); ahi el mensaje de Spring es una traza, se resume
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request){
         List<String> messages = new ArrayList<>();
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()){
-            messages.add(fieldError.getField() + ": " + fieldError.getDefaultMessage());
+            messages.add(fieldError.isBindingFailure()
+                    ? "Invalid value for " + fieldError.getField()
+                    : fieldError.getField() + ": " + fieldError.getDefaultMessage());
         }
 
         return build(HttpStatus.BAD_REQUEST, String.join(", ", messages), request);
@@ -224,6 +229,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e, HttpServletRequest request){
         return build(HttpStatus.BAD_REQUEST, "Invalid value for " + e.getName(), request);
+    }
+
+    //sort por un campo que la entidad no tiene: /api/properties?sort=foo. Sin esto era un 500
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidSort(PropertyReferenceException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, "Invalid sort property: " + e.getPropertyName(), request);
     }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, HttpServletRequest request){
