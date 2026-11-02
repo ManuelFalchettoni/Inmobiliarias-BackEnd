@@ -5,6 +5,7 @@ import com.manuel.zaguan_inmobiliarias.entity.agency.Agency;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.agency.AgencyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.agency.JpaAgencyRepository;
+import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import com.manuel.zaguan_inmobiliarias.storage.PhotoStorage;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,16 @@ public class AgencyIconUpdaterService {
     private final JpaAgencyRepository jpaAgencyRepository;
     private final PhotoStorage photoStorage;
     private final AgencyMapper agencyMapper;
+    private final AgencyScopeService agencyScopeService;
 
     //Sube el logo y reemplaza el anterior si habia. Los usuarios de la inmobiliaria lo ven
     //solos: UserMapper lo busca por agencyId
     @Transactional
     public AgencyResponse update(Long id, MultipartFile file) {
+        //Una inmobiliaria solo cambia el suyo. Va antes de subir nada a MinIO
+        if (!agencyScopeService.canAccess(id)) {
+            throw new AgencyNotFoundException(id);
+        }
         Agency agency = jpaAgencyRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new AgencyNotFoundException(id));
 
