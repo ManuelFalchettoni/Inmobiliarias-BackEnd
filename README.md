@@ -112,7 +112,7 @@ Los pasos 1 a 3 los hace un admin; el 4 y el 5, el usuario de la inmobiliaria.
    vincularlo.
 5. `GET /api/properties/{id}`: trae fotos y precios embebidos.
 
-Para sacarla del mercado, `DELETE /api/properties/{id}`; vuelve con `PATCH /{id}/restore`.
+Para sacarla del mercado, `PATCH /api/properties/{id}/archive`; vuelve con `PATCH /{id}/restore`.
 
 ### 3. Seguimiento de un interesado
 
@@ -283,11 +283,13 @@ común, sin paginar.
 | `GET /api/properties/search` | buscar con filtros, paginado |
 | `GET /api/properties/{id}` | traer una |
 | `PUT /api/properties/{id}` | editar |
-| `DELETE /api/properties/{id}` | dar de baja |
+| `PATCH /api/properties/{id}/archive` | archivar |
+| `DELETE /api/properties/{id}` | archivar, sin body en la respuesta |
 | `PATCH /api/properties/{id}/restore` | restaurar |
 
-Baja lógica: `DELETE` pone `active` en false, la fila queda. `GET /{id}`, `PUT` y `DELETE`
-solo ven activas; `restore` busca sin ese filtro.
+Baja lógica: `archive` y `DELETE` ponen `active` en false, la fila queda. `GET /{id}`, `PUT` y
+`DELETE` solo ven activas; `archive` y `restore` buscan sin ese filtro, así que repetirlos da 200.
+Las archivadas se listan con `GET /api/properties?active=false`.
 
 Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
 la suya, mande el `agencyId` que mande.
@@ -309,7 +311,7 @@ Solo trae activas. Todos los filtros son opcionales.
 
 ### Request
 
-Mismo body para `POST` y `PUT`. `DELETE` y `PATCH /restore` no llevan body.
+Mismo body para `POST` y `PUT`. `DELETE`, `PATCH /archive` y `PATCH /restore` no llevan body.
 
 ```json
 {
@@ -402,6 +404,7 @@ endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precio
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 `agencyId` distinto al actual · 404 |
+| `PATCH /{id}/archive` | 200 | 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 | `PATCH /{id}/restore` | 200 | 404 |
 
