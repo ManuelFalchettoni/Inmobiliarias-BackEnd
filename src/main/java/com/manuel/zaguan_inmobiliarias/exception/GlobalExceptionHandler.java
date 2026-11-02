@@ -12,6 +12,7 @@ import com.manuel.zaguan_inmobiliarias.exception.crm.CrmHistoryNotFoundException
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.OfferNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
@@ -53,6 +54,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PropertyAgencyMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handlePropertyAgencyMismatch(PropertyAgencyMismatchException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidSearchFilterException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidSearchFilter(InvalidSearchFilterException e, HttpServletRequest request){
         return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
     //------------------Password (usuarios e inmobiliarias)-------------

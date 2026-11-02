@@ -296,7 +296,9 @@ la suya, mande el `agencyId` que mande.
 
 ### Búsqueda
 
-`GET /api/properties/search?city=cordoba&type=HOUSE&rooms=3&minSize=80`
+`GET /api/properties/search?city=cordoba&type=HOUSE&minRooms=3&minSize=80`
+
+`GET /api/properties/search?operationType=SALE&currency=USD&maxPrice=100000`
 
 Solo trae activas. Todos los filtros son opcionales.
 
@@ -305,9 +307,17 @@ Solo trae activas. Todos los filtros son opcionales.
 | `agencyId` | exacto; solo lo usa el admin |
 | `province`, `county`, `city` | texto parcial |
 | `type`, `condition`, `occupancy` | enum exacto |
-| `rooms` | exacto |
+| `minRooms`, `maxRooms` | rango de `rooms`; `minRooms=3` es "3 o más" |
 | `minSize`, `maxSize` | rango de `size` |
 | `minYear`, `maxYear` | rango de `year` |
+| `operationType` | enum exacto (`SALE`, `RENT`) |
+| `currency` | enum exacto (`ARS`, `USD`) |
+| `minPrice`, `maxPrice` | rango de `amount`; exige `currency` |
+
+Los rangos incluyen los extremos. Los filtros de precio aplican todos sobre el mismo precio:
+`operationType=SALE&currency=USD&maxPrice=100000` es "en venta, en dólares, hasta 100000", y
+no matchea una propiedad cuyo alquiler cumpla el rango. Un mínimo mayor al máximo, o
+`minPrice`/`maxPrice` sin `currency`, da 400.
 
 ### Request
 
