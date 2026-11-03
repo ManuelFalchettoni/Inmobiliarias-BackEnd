@@ -49,6 +49,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users/join-agency").hasAnyRole("ADMIN", "AGENCY")
                         //La cuenta propia: cualquiera logueado, tambien un USER sin inmobiliaria
                         .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
+                        //Manejar usuarios ajenos y los datos o el logo de la inmobiliaria: la inmobiliaria o
+                        //el admin. Un agente solo ve usuarios; si no, podria crearse un AGENCY o dar de baja
+                        //al dueño. Van despues de /api/users/me: las reglas se leen en orden y "me" tambien
+                        //entra en /api/users/*
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/restore", "/api/users/*/password").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.PUT, "/api/agencies/*", "/api/agencies/*/icon").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers(HttpMethod.DELETE, "/api/agencies/*/icon").hasAnyRole("ADMIN", "AGENCY")
                         //USER es el que se registra solo y no es de ninguna inmobiliaria: por ahora no ve nada
                         .anyRequest().hasAnyRole("ADMIN", "AGENCY", "AGENT"));
 

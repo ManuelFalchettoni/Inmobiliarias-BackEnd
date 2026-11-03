@@ -191,7 +191,11 @@ La inmobiliaria sale del usuario logueado, no del request:
   existe. Vale también para lo que cuelga de otra cosa: fotos y precios de una propiedad, un
   contrato o un lead de una propiedad ajena, o un vínculo con una persona de otra inmobiliaria.
 - **Inmobiliarias.** Darlas de alta, de baja, restaurarlas y listarlas es solo del admin (403 para
-  el resto). Una inmobiliaria puede ver y editar la suya.
+  el resto). Una inmobiliaria puede ver la suya; editarla o cambiarle el logo es de `ADMIN` y
+  `AGENCY` (un `AGENT` recibe 403).
+- **Manejar usuarios.** Crear, editar, cambiar la contraseña, dar de baja y restaurar
+  (`/api/users` y `/api/users/{id}/...`) es de `ADMIN` y `AGENCY`. Un `AGENT` solo puede
+  listarlos y verlos; el resto le da 403. Su propia cuenta la maneja por `/api/users/me`.
 - **Usuarios `ADMIN`.** Solo los crea otro admin; si lo intenta otro rol, 403.
 - **Sumar a alguien registrado.** `POST /api/users/join-agency` es de `ADMIN` y `AGENCY`; un
   `AGENT` recibe 403.
@@ -672,11 +676,11 @@ reciben en `agencyIconUrl`.
 | `POST` | 201 | 400 validación · 403 no es admin · 409 CUIT, razón social, email o teléfono repetidos · 409 dirección repetida |
 | `GET` listado | 200 | 403 no es admin |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
+| `PUT /{id}` | 200 | 400 validación · 403 un `AGENT` · 404 · 409 igual que el `POST` |
 | `DELETE /{id}` | 204 sin body | 403 no es admin · 404 |
 | `PATCH /{id}/restore` | 200 | 403 no es admin · 404 |
-| `PUT /{id}/icon` | 200 | 400 sin archivo, archivo vacío, extensión no permitida o no es imagen · 404 inexistente, dada de baja o ajena · 413 archivo > 5MB |
-| `DELETE /{id}/icon` | 204 sin body, también si no tenía logo | 404 inexistente, dada de baja o ajena |
+| `PUT /{id}/icon` | 200 | 400 sin archivo, archivo vacío, extensión no permitida o no es imagen · 403 un `AGENT` · 404 inexistente, dada de baja o ajena · 413 archivo > 5MB |
+| `DELETE /{id}/icon` | 204 sin body, también si no tenía logo | 403 un `AGENT` · 404 inexistente, dada de baja o ajena |
 
 El 409 dice cuál es el campo repetido, dirección incluida
 (`"Email already registered: contacto@zaguan.com"`).
@@ -707,6 +711,9 @@ con el mismo email, hay que restaurar el que está.
 
 Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
 la suya, mande el `agencyId` que mande. Un usuario `ADMIN` solo lo puede crear otro admin.
+
+Crear, editar, cambiar la contraseña, dar de baja y restaurar usuarios es de `ADMIN` y
+`AGENCY`. Un `AGENT` solo lista y ve (`GET`); para su propia cuenta usa `/api/users/me`.
 
 ### Request
 
@@ -774,13 +781,13 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 403 crear un `ADMIN` sin ser admin · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
+| `POST` | 201 | 400 validación · 403 un `AGENT` · 403 crear un `ADMIN` sin ser admin · 404 inmobiliaria inexistente o dada de baja · 409 email o teléfono repetidos |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `agencyId` · 404 · 409 email o teléfono de otro usuario |
-| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 404 |
-| `DELETE /{id}` | 204 sin body | 404 |
-| `PATCH /{id}/restore` | 200 | 404 |
+| `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `agencyId` · 403 un `AGENT` · 404 · 409 email o teléfono de otro usuario |
+| `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 403 un `AGENT` · 404 |
+| `DELETE /{id}` | 204 sin body | 403 un `AGENT` · 404 |
+| `PATCH /{id}/restore` | 200 | 403 un `AGENT` · 404 |
 
 El 409 dice cuál es el campo repetido (`"Phone number already registered: 3415551234"`).
 
