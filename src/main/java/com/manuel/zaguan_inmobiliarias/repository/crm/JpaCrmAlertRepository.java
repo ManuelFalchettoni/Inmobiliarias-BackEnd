@@ -2,9 +2,11 @@ package com.manuel.zaguan_inmobiliarias.repository.crm;
 
 import com.manuel.zaguan_inmobiliarias.entity.crm.CrmAlert;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,4 +37,21 @@ public interface JpaCrmAlertRepository extends JpaRepository<CrmAlert, Long> {
     List<CrmAlert> findUpcoming(@Param("agencyId") Long agencyId,
                                 @Param("userId") Long userId,
                                 @Param("until") LocalDateTime until);
+
+    //Las que estan por vencer y todavia no se avisaron. Las ya vencidas no salen: el primer
+    //deploy no tiene que mandar un mail por cada alerta vieja
+    @Query("""
+            SELECT a FROM CrmAlert a
+            WHERE a.status = com.manuel.zaguan_inmobiliarias.enums.crm.CrmAlertStatus.PENDING
+              AND a.notifiedAt IS NULL
+              AND a.alertDate > :now AND a.alertDate <= :until
+            ORDER BY a.alertDate ASC
+            """)
+    List<CrmAlert> findToNotify(@Param("now") LocalDateTime now, @Param("until") LocalDateTime until);
+
+    //UPDATE puntual y no save: no pisa una edicion hecha mientras se mandaba el mail
+    @Transactional
+    @Modifying
+    @Query("UPDATE CrmAlert a SET a.notifiedAt = :notifiedAt WHERE a.id = :id")
+    void markNotified(@Param("id") Long id, @Param("notifiedAt") LocalDateTime notifiedAt);
 }
