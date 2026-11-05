@@ -156,9 +156,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ### 5. Agenda diaria del agente
 
-1. `GET /api/crm_alerts/upcoming?userId={id}`: sus alertas pendientes de todos sus leads, la
-   más próxima primero.
-2. `GET /api/crm_properties?userId={id}`: sus leads.
+1. `GET /api/crm_alerts/agenda/summary?userId={id}`: cuántos leads tiene en cada tramo.
+2. `GET /api/crm_alerts/agenda?userId={id}`: sus leads con el aviso que toca, vencidos primero.
 3. Por cada alerta: `PATCH .../complete` al cumplirla, `PUT` con otro `userId` para pasarla, o
    `DELETE`.
 4. `GET .../offers` de cada lead para repasar las pendientes.
@@ -993,7 +992,14 @@ el `GET /{id}`.
 `GET /api/property_contracts/search?endFrom=2026-01-01&endTo=2026-12-31`
 
 Cada inmobiliaria busca solo en sus contratos: los de sus propiedades. Todos los filtros son
-opcionales. Ordena por `startDate`, el más nuevo primero.
+opcionales.
+
+`orden` elige el orden, de una lista cerrada. Otro valor responde 400.
+
+| `orden` | Ordena por |
+|---|---|
+| `inicio` (default) | `startDate`, el más nuevo primero |
+| `vencimiento` | `endDate`, el que vence antes primero; los que no tienen (ventas) al final |
 
 | Filtro | Cómo filtra |
 |---|---|
@@ -1229,6 +1235,48 @@ incluidas. Un array sin paginar, con el mismo formato que el listado de alertas.
 |---|---|
 | `days` | solo las que vencen dentro de esos días; sin `days`, todas |
 | `userId` | las de un agente; tiene que ser de la misma inmobiliaria, si no, 404 |
+
+### Agenda
+
+`GET /api/crm_alerts/agenda?bucket=day&page=0&size=20`
+
+Una fila por lead de la inmobiliaria, paginada, con el aviso que toca mostrar: el vencido más
+atrasado o, si no tiene, el próximo pendiente. Solo cuentan los `PENDING`. Todos los parámetros
+son opcionales.
+
+| Parámetro | Default | Qué hace |
+|---|---|---|
+| `userId` | | los leads de un agente; tiene que ser de la misma inmobiliaria, si no, 404 |
+| `includeOverdue` | `true` | con `false` se ignoran los vencidos; un lead con solo vencidos no sale |
+| `includeWithoutAlerts` | `false` | suma al final los leads sin avisos pendientes |
+| `bucket` | | `overdue`, `hour` (menos de 1 h), `day` (1 a 24 h), `week` (24 h a 7 días), `later` (más de 7 días) |
+| `sort` | `proximo` | `proximo` o `lejano`; solo reordena los no vencidos |
+| `page`, `size` | `0`, `20` | |
+
+Orden: vencidos primero, el más atrasado arriba; después el resto según `sort`; al final los sin
+aviso. Con `bucket` no salen los sin aviso. Un `bucket` o `sort` desconocido responde 400.
+
+```json
+{
+  "id": 12, "peopleId": 4, "propertyId": 7, "userId": 3, "stage": "VISIT_SCHEDULED",
+  "personName": "Ana García", "personPhone": "1155550000", "propertyAddress": "Av. Siempreviva 742",
+  "nextAlert": { "id": 30, "crmPropertyId": 12, "userId": 3, "message": "Llamar",
+                 "alertDate": "2026-11-04T10:00:00", "status": "PENDING", "expired": true,
+                 "createdAt": "2026-11-01T09:00:00" },
+  "pendingCount": 2,
+  "overdue": true,
+  "bucket": "overdue"
+}
+```
+
+`id` es el del lead. Sin avisos, `nextAlert` y `bucket` vienen en `null`.
+
+`GET /api/crm_alerts/agenda/summary?userId=1&includeOverdue=true` devuelve cuántos leads hay en
+cada tramo:
+
+```json
+{ "overdue": 2, "hour": 1, "day": 3, "week": 5, "later": 4, "withoutAlerts": 6 }
+```
 
 ### Códigos de ofertas, historial y alertas
 
