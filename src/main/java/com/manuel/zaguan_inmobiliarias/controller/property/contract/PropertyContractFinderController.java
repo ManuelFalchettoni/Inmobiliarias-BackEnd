@@ -4,6 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.property.contract.PropertyCo
 import com.manuel.zaguan_inmobiliarias.enums.Currency;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractStatus;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractType;
+import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterException;
 import com.manuel.zaguan_inmobiliarias.service.property.contract.PropertyContractFinderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,8 @@ public class PropertyContractFinderController {
     //Todos los filtros son opcionales. agencyId lo respeta solo el admin: una inmobiliaria busca
     //siempre en sus contratos. Las fechas van como 2026-12-31 y los enums con el nombre de la
     //constante. Ejemplo, los que vencen este año: /api/property_contracts/search?endFrom=2026-01-01&endTo=2026-12-31
+    //orden: inicio (el mas nuevo primero) o vencimiento (el que vence antes primero, las ventas
+    //sin endDate al final). Lista cerrada y no un sort libre: un campo que no existe seria un 500
     @GetMapping("/search")
     public ResponseEntity<Page<PropertyContractResponse>> search(
             @RequestParam(required = false) Long agencyId,
@@ -55,9 +58,18 @@ public class PropertyContractFinderController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startTo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endTo,
+            @RequestParam(defaultValue = "inicio") String orden,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+        Sort sort;
+        if (orden.equals("inicio")) {
+            sort = Sort.by(Sort.Direction.DESC, "startDate");
+        } else if (orden.equals("vencimiento")) {
+            sort = Sort.by(Sort.Order.asc("endDate").nullsLast());
+        } else {
+            throw new InvalidSearchFilterException("Invalid orden: " + orden + ". Allowed values: inicio, vencimiento");
+        }
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PropertyContractResponse> propertyContractsResponse = propertyContractFinderService.search(agencyId,
                 propertyId, type, status, currency, minAmount, maxAmount, startFrom, startTo, endFrom, endTo, pageable);
