@@ -23,7 +23,7 @@ public interface JpaCrmPropertyRepository extends JpaRepository<CrmProperty, Lon
             """)
     Page<CrmProperty> findAllByAgency(@Param("agencyId") Long agencyId, Pageable pageable);
 
-    //Para Analitica: la misma consulta, sin paginar
+    //Para Analitica y la agenda de avisos: la misma consulta, sin paginar
     @Query("""
             SELECT l FROM CrmProperty l
             WHERE (:agencyId IS NULL OR l.propertyId IN
