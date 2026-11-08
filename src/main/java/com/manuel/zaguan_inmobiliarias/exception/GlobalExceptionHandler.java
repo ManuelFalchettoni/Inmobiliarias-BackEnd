@@ -4,6 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.error.ApiErrorResponse;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.auth.ForbiddenActionException;
 import com.manuel.zaguan_inmobiliarias.exception.auth.InvalidCredentialsException;
+import com.manuel.zaguan_inmobiliarias.exception.auth.InvalidPasswordResetTokenException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.UserAlreadyHasAgencyException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
@@ -74,6 +75,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException e, HttpServletRequest request){
         return build(HttpStatus.UNAUTHORIZED, e.getMessage(), request);
+    }
+
+    //400: el link de recuperacion no existe, ya se uso o vencio
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidPasswordResetToken(InvalidPasswordResetTokenException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
 
     @ExceptionHandler(ForbiddenActionException.class)
