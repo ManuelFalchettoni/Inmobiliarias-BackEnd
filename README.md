@@ -2,8 +2,9 @@
 
 Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 
-MySQL y MinIO los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo hace
-falta tener Docker Desktop abierto.
+MySQL, MinIO y Mailpit los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo
+hace falta tener Docker Desktop abierto. Mailpit atrapa los mails de desarrollo y los muestra en
+`http://localhost:8025`.
 
 ```
 ./mvnw spring-boot:run
@@ -13,8 +14,9 @@ Queda en `http://localhost:8080`.
 
 Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NAME`,
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
-`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `SEED_ENABLED`, `SEED_PROPERTIES`,
-`SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
+`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`,
+`MAIL_PASSWORD`, `MAIL_FROM`, `CRM_ALERT_REMINDER_HOURS`, `CRM_ALERT_CHECK_INTERVAL_MS`,
+`SEED_ENABLED`, `SEED_PROPERTIES`, `SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
 
 - `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
 - `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
@@ -1277,6 +1279,17 @@ cada tramo:
 ```json
 { "overdue": 2, "hour": 1, "day": 3, "week": 5, "later": 4, "withoutAlerts": 6 }
 ```
+
+### Recordatorios por email
+
+Cada 5 minutos (`CRM_ALERT_CHECK_INTERVAL_MS`) se le manda un email al agente de cada alerta
+`PENDING` que vence dentro de las próximas 24 horas (`CRM_ALERT_REMINDER_HOURS`).
+
+- Se avisa una sola vez por alerta. Si un `PUT` le cambia la fecha o el agente, se vuelve a avisar.
+- Si el envío falla, se reintenta en la próxima corrida mientras no haya vencido.
+- Las alertas ya vencidas y las de agentes dados de baja no se avisan.
+- El texto sale de la plantilla `CRM_ALERT_REMINDER` de la tabla `email_templates`. Se crea sola
+  al arrancar si no existe, y después se puede editar en la base.
 
 ### Códigos de ofertas, historial y alertas
 

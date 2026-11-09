@@ -1,0 +1,14 @@
+package com.manuel.zaguan_inmobiliarias.dto.request.email;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+import java.util.List;
+
+public record EmailRequest(
+        @NotBlank @Email String to,
+        List<String> cc,
+        @NotBlank String subject,
+        @NotBlank String body,
+        boolean isHtml
+) {}
