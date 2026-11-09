@@ -20,8 +20,9 @@ public class PropertyContractCreatorService {
     private final AgencyScopeService agencyScopeService;
 
     public PropertyContractResponse create(PropertyContractRequest propertyContractRequest){
-        //propertyId es un id suelto, sin FK: la propiedad tiene que existir y ser de la inmobiliaria
-        if (!agencyScopeService.canAccessProperty(propertyContractRequest.getPropertyId())) {
+        //propertyId es un id suelto, sin FK: la propiedad tiene que existir, estar activa y ser de la inmobiliaria.
+        //Una archivada responde 404, igual que en precios y CRM
+        if (!agencyScopeService.canAccessActiveProperty(propertyContractRequest.getPropertyId())) {
             throw new PropertyNotFoundException(propertyContractRequest.getPropertyId());
         }
 
