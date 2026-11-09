@@ -7,6 +7,7 @@ import com.manuel.zaguan_inmobiliarias.exception.auth.InvalidCredentialsExceptio
 import com.manuel.zaguan_inmobiliarias.exception.agency.AgencyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.agency.UserAlreadyHasAgencyException;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotOwnerException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmAlertNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmHistoryNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.crm.CrmPropertyNotFoundException;
@@ -178,6 +179,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ContractPartyNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleContractPartyNotFound(ContractPartyNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(ContractPartyNotOwnerException.class)
+    public ResponseEntity<ApiErrorResponse> handleContractPartyNotOwner(ContractPartyNotOwnerException e, HttpServletRequest request){
+        return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
     //---------------------------------CRM------------------------------
     @ExceptionHandler(CrmPropertyNotFoundException.class)

@@ -3,11 +3,16 @@ package com.manuel.zaguan_inmobiliarias.service.contractparty;
 import com.manuel.zaguan_inmobiliarias.dto.request.contractparty.ContractPartyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.contractparty.ContractPartyResponse;
 import com.manuel.zaguan_inmobiliarias.entity.contractparty.ContractParty;
+import com.manuel.zaguan_inmobiliarias.entity.property.contract.PropertyContract;
+import com.manuel.zaguan_inmobiliarias.enums.contractparty.ContractRole;
 import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.contractparty.ContractPartyNotOwnerException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
 import com.manuel.zaguan_inmobiliarias.mapper.contractparty.ContractPartyMapper;
 import com.manuel.zaguan_inmobiliarias.repository.contractparty.JpaContractPartyRepository;
+import com.manuel.zaguan_inmobiliarias.repository.property.contract.JpaPropertyContractRepository;
+import com.manuel.zaguan_inmobiliarias.repository.property.owner.JpaPropertyOwnerRepository;
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class ContractPartyUpdaterService {
     private final JpaContractPartyRepository jpaContractPartyRepository;
+    private final JpaPropertyContractRepository jpaPropertyContractRepository;
+    private final JpaPropertyOwnerRepository jpaPropertyOwnerRepository;
     private final ContractPartyMapper contractPartyMapper;
     private final AgencyScopeService agencyScopeService;
 
@@ -35,6 +42,16 @@ public class ContractPartyUpdaterService {
 
         if (!agencyScopeService.canAccessContract(contractPartyRequest.getContractId())){
             throw new PropertyContractNotFoundException(contractPartyRequest.getContractId());
+        }
+
+        //Mismo control que en el alta: el PUT puede cambiar el rol a OWNER, la persona o el contrato
+        if (contractPartyRequest.getRole() == ContractRole.OWNER) {
+            PropertyContract contract = jpaPropertyContractRepository.findById(contractPartyRequest.getContractId())
+                    .orElseThrow(() -> new PropertyContractNotFoundException(contractPartyRequest.getContractId()));
+            if (!jpaPropertyOwnerRepository.existsByPropertyIdAndPeopleId(contract.getPropertyId(),
+                    contractPartyRequest.getPeopleId())) {
+                throw new ContractPartyNotOwnerException(contractPartyRequest.getPeopleId(), contract.getPropertyId());
+            }
         }
 
         toUpdate.setContractId(contractPartyRequest.getContractId());
