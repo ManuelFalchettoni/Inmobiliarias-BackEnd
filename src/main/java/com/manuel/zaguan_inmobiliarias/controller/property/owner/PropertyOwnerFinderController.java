@@ -4,7 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.property.owner.PropertyOwner
 import com.manuel.zaguan_inmobiliarias.service.property.owner.PropertyOwnerFinderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import com.manuel.zaguan_inmobiliarias.util.PageRequests;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ public class PropertyOwnerFinderController {
     @GetMapping
     public ResponseEntity<Page<PropertyOwnerResponse>> findAll(@RequestParam(defaultValue = "0") int page,
                                                                @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequests.of(page, size);
         Page<PropertyOwnerResponse> propertyOwnerResponses = propertyOwnerFinderService.findAll(pageable);
 
         return ResponseEntity.ok(propertyOwnerResponses);

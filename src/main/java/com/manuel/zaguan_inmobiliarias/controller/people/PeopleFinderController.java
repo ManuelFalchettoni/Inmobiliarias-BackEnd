@@ -4,7 +4,7 @@ import com.manuel.zaguan_inmobiliarias.dto.response.people.PeopleResponse;
 import com.manuel.zaguan_inmobiliarias.service.people.PeopleFinderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import com.manuel.zaguan_inmobiliarias.util.PageRequests;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,7 @@ public class PeopleFinderController {
     @GetMapping
     public ResponseEntity<Page<PeopleResponse>> findAll(@RequestParam(defaultValue = "0") int page,
                                                         @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequests.of(page, size);
 
         Page<PeopleResponse> peoplesResponse = peopleFinderService.findAll(pageable);
 
@@ -45,7 +45,7 @@ public class PeopleFinderController {
                                                        @RequestParam(required = false) String cuit,
                                                        @RequestParam(defaultValue = "0") int page,
                                                        @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
+        Pageable pageable = PageRequests.of(page, size, Sort.by("name"));
 
         Page<PeopleResponse> peoplesResponse = peopleFinderService.search(agencyId, name, email, phone,
                 address, dni, cuit, pageable);

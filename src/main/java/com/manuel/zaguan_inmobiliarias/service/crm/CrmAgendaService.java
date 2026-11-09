@@ -14,6 +14,7 @@ import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.repository.people.JpaPeopleRepository;
 import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
+import com.manuel.zaguan_inmobiliarias.util.PageRequests;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -54,6 +55,8 @@ public class CrmAgendaService {
         if (!sort.equals("proximo") && !sort.equals("lejano")) {
             throw new InvalidSearchFilterException("Invalid sort: " + sort + ". Allowed values: proximo, lejano");
         }
+        //Arriba de todo para que un page o size invalido corte antes de cargar los leads
+        PageRequest pageRequest = PageRequests.of(page, size);
 
         List<CrmAgendaResponse> overdueRows = new ArrayList<>();
         List<CrmAgendaResponse> upcomingRows = new ArrayList<>();
@@ -91,7 +94,6 @@ public class CrmAgendaService {
         rows.addAll(upcomingRows);
         rows.addAll(withoutAlertRows);
 
-        PageRequest pageRequest = PageRequest.of(page, size);
         int from = (int) Math.min(pageRequest.getOffset(), rows.size());
         int to = Math.min(from + size, rows.size());
         List<CrmAgendaResponse> pageRows = rows.subList(from, to);

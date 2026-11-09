@@ -8,7 +8,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterExc
 import com.manuel.zaguan_inmobiliarias.service.property.contract.PropertyContractFinderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import com.manuel.zaguan_inmobiliarias.util.PageRequests;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,7 +34,7 @@ public class PropertyContractFinderController {
     @GetMapping
     public ResponseEntity<Page<PropertyContractResponse>> findAll(@RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequests.of(page, size);
         Page<PropertyContractResponse> propertyContractsResponse = propertyContractFinderService.findAll(pageable);
 
         return ResponseEntity.ok(propertyContractsResponse);
@@ -69,7 +69,7 @@ public class PropertyContractFinderController {
         } else {
             throw new InvalidSearchFilterException("Invalid orden: " + orden + ". Allowed values: inicio, vencimiento");
         }
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequests.of(page, size, sort);
 
         Page<PropertyContractResponse> propertyContractsResponse = propertyContractFinderService.search(agencyId,
                 propertyId, type, status, currency, minAmount, maxAmount, startFrom, startTo, endFrom, endTo, pageable);
