@@ -9,6 +9,7 @@ import com.manuel.zaguan_inmobiliarias.repository.crm.JpaCrmPropertyRepository;
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +36,7 @@ public class CrmPropertyFinderService {
     //Sin agencyId por parametro: el admin ve todos, una inmobiliaria los de sus propiedades
     public Page<CrmPropertyResponse> findAll(Pageable pageable){
         Long scopedAgencyId = agencyScopeService.resolveAgencyId(null);
-        return jpaCrmPropertyRepository.findAllByAgency(scopedAgencyId, pageable)
-                .map(crmPropertyMapper::toResponse);
+        return toResponsePage(jpaCrmPropertyRepository.findAllByAgency(scopedAgencyId, pageable));
     }
 
     //Los leads de un agente: el agente tiene que ser de la inmobiliaria del usuario
@@ -44,7 +44,13 @@ public class CrmPropertyFinderService {
         if (!agencyScopeService.canAccessActiveUser(userId)) {
             throw new UserNotFoundException(userId);
         }
-        return jpaCrmPropertyRepository.findAllByUserId(userId, pageable)
-                .map(crmPropertyMapper::toResponse);
+        return toResponsePage(jpaCrmPropertyRepository.findAllByUserId(userId, pageable));
+    }
+
+    //toResponses y no map(toResponse): asi propiedades, personas y agentes de la pagina se traen
+    //con una consulta cada uno, en vez de una por lead
+    private Page<CrmPropertyResponse> toResponsePage(Page<CrmProperty> crmProperties){
+        return new PageImpl<>(crmPropertyMapper.toResponses(crmProperties.getContent()),
+                crmProperties.getPageable(), crmProperties.getTotalElements());
     }
 }

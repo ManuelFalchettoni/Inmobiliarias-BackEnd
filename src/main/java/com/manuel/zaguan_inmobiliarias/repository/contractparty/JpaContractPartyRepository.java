@@ -8,8 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface JpaContractPartyRepository extends JpaRepository<ContractParty, Long> {
+
+    //Las partes de varios contratos de una vez, para armar una pagina de contratos con una sola consulta
+    List<ContractParty> findAllByContractIdIn(List<Long> contractIds);
 
     //La parte no tiene agencyId: es el de la propiedad de su contrato. agencyId en null (solo el
     //admin) trae todas

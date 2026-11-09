@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.mapper.people;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.people.PeopleRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.people.PeopleResponse;
+import com.manuel.zaguan_inmobiliarias.dto.response.people.PeopleSummaryResponse;
 import com.manuel.zaguan_inmobiliarias.entity.people.People;
 import org.springframework.stereotype.Component;
 
@@ -35,5 +36,17 @@ public class PeopleMapper {
         peopleResponse.setUpdatedAt(people.getUpdatedAt());
 
         return peopleResponse;
+    }
+
+    //Para mostrar la persona dentro de un lead o de una parte de contrato
+    public PeopleSummaryResponse toSummary(People people){
+        PeopleSummaryResponse summary = new PeopleSummaryResponse();
+        summary.setId(people.getId());
+        summary.setName(people.getName());
+        summary.setPhone(people.getPhone());
+        summary.setEmail(people.getEmail());
+        summary.setDni(people.getDni());
+
+        return summary;
     }
 }

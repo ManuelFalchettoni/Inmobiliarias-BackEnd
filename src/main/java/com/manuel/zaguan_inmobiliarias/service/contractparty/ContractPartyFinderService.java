@@ -8,6 +8,7 @@ import com.manuel.zaguan_inmobiliarias.repository.contractparty.JpaContractParty
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +35,8 @@ public class ContractPartyFinderService {
         Long scopedAgencyId = agencyScopeService.resolveAgencyId(null);
         Page<ContractParty> contractParties = jpaContractPartyRepository.findAllByAgency(scopedAgencyId, pageable);
 
-        return  contractParties.map(
-                contractPartyMapper :: toResponse
-        );
+        //toResponses y no map(toResponse): asi las personas de la pagina se traen en una sola consulta
+        return new PageImpl<>(contractPartyMapper.toResponses(contractParties.getContent()),
+                contractParties.getPageable(), contractParties.getTotalElements());
     }
 }

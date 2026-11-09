@@ -11,6 +11,7 @@ import com.manuel.zaguan_inmobiliarias.repository.property.contract.JpaPropertyC
 import com.manuel.zaguan_inmobiliarias.service.auth.AgencyScopeService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -51,8 +52,9 @@ public class PropertyContractFinderService {
         Page<PropertyContract> propertyContracts = jpaPropertyContractRepository.search(scopedAgencyId, propertyId,
                 type, status, currency, minAmount, maxAmount, startFrom, startTo, endFrom, endTo, pageable);
 
-        return propertyContracts.map(
-                propertyContractMapper :: toResponse
-        );
+        //toResponses y no map(toResponse): asi propiedades, partes y personas de la pagina se traen
+        //con una consulta cada una, en vez de una por contrato
+        return new PageImpl<>(propertyContractMapper.toResponses(propertyContracts.getContent()),
+                propertyContracts.getPageable(), propertyContracts.getTotalElements());
     }
 }
