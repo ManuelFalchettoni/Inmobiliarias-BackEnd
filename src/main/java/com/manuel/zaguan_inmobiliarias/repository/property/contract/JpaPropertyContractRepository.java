@@ -18,6 +18,9 @@ import java.util.List;
 @Repository
 public interface JpaPropertyContractRepository extends JpaRepository<PropertyContract, Long> {
 
+    //Para no archivar una propiedad con contratos vigentes
+    boolean existsByPropertyIdAndStatus(Long propertyId, ContractStatus status);
+
     //Para Analitica: todos los contratos de la inmobiliaria, sin paginar ni filtros
     @Query("""
             SELECT c FROM PropertyContract c

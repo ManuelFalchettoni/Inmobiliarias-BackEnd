@@ -15,6 +15,8 @@ import com.manuel.zaguan_inmobiliarias.exception.crm.OfferNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.people.PeopleNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
+import com.manuel.zaguan_inmobiliarias.exception.property.PropertyHasActiveContractsException;
+import com.manuel.zaguan_inmobiliarias.exception.property.PropertyHasOpenLeadsException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractOverlapException;
@@ -58,6 +60,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PropertyAgencyMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handlePropertyAgencyMismatch(PropertyAgencyMismatchException e, HttpServletRequest request){
         return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyHasActiveContractsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyHasActiveContracts(PropertyHasActiveContractsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyHasOpenLeadsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyHasOpenLeads(PropertyHasOpenLeadsException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
     @ExceptionHandler(InvalidSearchFilterException.class)

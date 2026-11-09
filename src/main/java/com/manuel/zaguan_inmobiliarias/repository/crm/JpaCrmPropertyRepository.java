@@ -1,6 +1,7 @@
 package com.manuel.zaguan_inmobiliarias.repository.crm;
 
 import com.manuel.zaguan_inmobiliarias.entity.crm.CrmProperty;
+import com.manuel.zaguan_inmobiliarias.enums.crm.CrmStage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,9 @@ import java.util.List;
 public interface JpaCrmPropertyRepository extends JpaRepository<CrmProperty, Long> {
     //Los leads de un agente
     Page<CrmProperty> findAllByUserId(Long userId, Pageable pageable);
+
+    //Para no archivar una propiedad con leads abiertos: los que no estan en ninguna de esas etapas
+    boolean existsByPropertyIdAndStageNotIn(Long propertyId, List<CrmStage> stages);
 
     //El lead no tiene agencyId: es el de su propiedad. agencyId en null (solo el admin) trae todos
     @Query("""
