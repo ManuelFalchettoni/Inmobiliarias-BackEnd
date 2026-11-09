@@ -16,6 +16,7 @@ import com.manuel.zaguan_inmobiliarias.exception.property.InvalidSearchFilterExc
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyAgencyMismatchException;
 import com.manuel.zaguan_inmobiliarias.exception.property.PropertyNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractNotFoundException;
+import com.manuel.zaguan_inmobiliarias.exception.property.contract.PropertyContractOverlapException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerAlreadyExistsException;
 import com.manuel.zaguan_inmobiliarias.exception.property.owner.PropertyOwnerNotFoundException;
 import com.manuel.zaguan_inmobiliarias.exception.property.photo.InvalidPhotoException;
@@ -166,6 +167,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PropertyContractNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePropertyContractNotFound(PropertyContractNotFoundException e, HttpServletRequest request){
         return build(HttpStatus.NOT_FOUND, e.getMessage(), request);
+    }
+
+    @ExceptionHandler(PropertyContractOverlapException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyContractOverlap(PropertyContractOverlapException e, HttpServletRequest request){
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 
     //-----------------------------Contract Party------------------------

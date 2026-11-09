@@ -26,6 +26,24 @@ public interface JpaPropertyContractRepository extends JpaRepository<PropertyCon
             """)
     List<PropertyContract> findAllForAnalytics(@Param("agencyId") Long agencyId);
 
+    //Hay superposicion si otro contrato ACTIVE del mismo tipo en la misma propiedad empieza antes de que
+    //termine el nuevo y termina despues de que empiece. endDate en null es "sin fin" (ventas).
+    //excludeId es el contrato que se esta editando, para que no choque consigo mismo; en el alta va null
+    @Query("""
+            SELECT COUNT(c) > 0 FROM PropertyContract c
+            WHERE c.propertyId = :propertyId
+              AND c.type = :type
+              AND c.status = com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractStatus.ACTIVE
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+              AND (:endDate IS NULL OR c.startDate <= :endDate)
+              AND (c.endDate IS NULL OR c.endDate >= :startDate)
+            """)
+    boolean existsOverlappingActive(@Param("propertyId") Long propertyId,
+                                    @Param("type") ContractType type,
+                                    @Param("startDate") LocalDate startDate,
+                                    @Param("endDate") LocalDate endDate,
+                                    @Param("excludeId") Long excludeId);
+
     //Busqueda con filtros opcionales, el que llega en null no filtra. agencyId en null es "todas":
     //solo le puede llegar asi al admin, el resto busca siempre en su inmobiliaria (AgencyScopeService).
     //El contrato no tiene agencyId, asi que se busca por la propiedad.
