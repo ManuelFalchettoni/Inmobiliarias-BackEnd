@@ -735,7 +735,7 @@ cambian con `join-agency`. `DELETE` y `PATCH /restore` no llevan body.
 
 | Campo | Tipo | Obligatorio | En el `PUT` | Reglas |
 |---|---|---|---|---|
-| `name` | string | sí | sí | 3 a 20 |
+| `name` | string | sí | sí | 3 a 100 |
 | `email` | string | sí | sí | formato email, máx 100, único |
 | `password` | string | sí | **no** | 8 a 20 |
 | `phoneNumber` | string | sí | sí | 8 a 15, único |

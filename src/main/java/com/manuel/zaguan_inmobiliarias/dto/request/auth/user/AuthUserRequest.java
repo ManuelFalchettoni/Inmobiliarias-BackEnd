@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AuthUserRequest {
     @NotBlank
-    @Size(min = 3, max = 20, message = "Name must be between 3 and 20 characters.")
+    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters.")
     private String name;
 
     @NotBlank
