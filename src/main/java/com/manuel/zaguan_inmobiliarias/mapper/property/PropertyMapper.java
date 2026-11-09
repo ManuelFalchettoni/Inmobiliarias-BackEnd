@@ -2,6 +2,7 @@ package com.manuel.zaguan_inmobiliarias.mapper.property;
 
 import com.manuel.zaguan_inmobiliarias.dto.request.property.PropertyRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertyResponse;
+import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertySummaryResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.Property;
 import com.manuel.zaguan_inmobiliarias.entity.property.photo.PropertyPhoto;
 import com.manuel.zaguan_inmobiliarias.entity.property.price.PropertyPrice;
@@ -67,6 +68,20 @@ public class PropertyMapper {
         }
 
         return response;
+    }
+
+    //Para mostrar la propiedad dentro de un contrato o un lead
+    public PropertySummaryResponse toSummary(Property property) {
+        PropertySummaryResponse summary = new PropertySummaryResponse();
+
+        summary.setId(property.getId());
+        summary.setAddress(property.getAddress());
+        summary.setCity(property.getCity());
+        summary.setCounty(property.getCounty());
+        summary.setProvince(property.getProvince());
+        summary.setActive(property.getActive());
+
+        return summary;
     }
 
     private void copyFields(PropertyRequest request, Property property) {

@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.crm;
 
+import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertySummaryResponse;
 import com.manuel.zaguan_inmobiliarias.enums.crm.CrmStage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
 public class CrmPropertyResponse {
     private Long id;
     private Long propertyId;
+    //En null solo si la propiedad ya no existe en la base
+    private PropertySummaryResponse property;
     private Long peopleId;
     private Long userId;
     private CrmStage stage;

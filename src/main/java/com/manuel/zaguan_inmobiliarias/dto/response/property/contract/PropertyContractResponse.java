@@ -1,5 +1,6 @@
 package com.manuel.zaguan_inmobiliarias.dto.response.property.contract;
 
+import com.manuel.zaguan_inmobiliarias.dto.response.property.PropertySummaryResponse;
 import com.manuel.zaguan_inmobiliarias.enums.Currency;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractStatus;
 import com.manuel.zaguan_inmobiliarias.enums.property.contract.ContractType;
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 public class PropertyContractResponse {
     private Long id;
     private Long propertyId;
+    //En null solo si la propiedad ya no existe en la base
+    private PropertySummaryResponse property;
     private ContractType type;
     private ContractStatus status;
     private BigDecimal amount;

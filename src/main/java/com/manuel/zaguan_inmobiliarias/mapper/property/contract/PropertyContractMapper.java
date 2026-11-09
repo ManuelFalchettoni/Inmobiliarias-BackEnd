@@ -3,10 +3,16 @@ package com.manuel.zaguan_inmobiliarias.mapper.property.contract;
 import com.manuel.zaguan_inmobiliarias.dto.request.property.contract.PropertyContractRequest;
 import com.manuel.zaguan_inmobiliarias.dto.response.property.contract.PropertyContractResponse;
 import com.manuel.zaguan_inmobiliarias.entity.property.contract.PropertyContract;
+import com.manuel.zaguan_inmobiliarias.mapper.property.PropertyMapper;
+import com.manuel.zaguan_inmobiliarias.repository.property.JpaPropertyRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class PropertyContractMapper {
+    private final JpaPropertyRepository jpaPropertyRepository;
+    private final PropertyMapper propertyMapper;
 
     public PropertyContract toEntity(PropertyContractRequest propertyContractRequest){
         PropertyContract propertyContract = new PropertyContract();
@@ -28,6 +34,10 @@ public class PropertyContractMapper {
 
         propertyContractResponse.setId(propertyContract.getId());
         propertyContractResponse.setPropertyId(propertyContract.getPropertyId());
+        //findById y no findByIdAndActiveTrue: la propiedad archivada se sigue mostrando en sus contratos
+        propertyContractResponse.setProperty(jpaPropertyRepository.findById(propertyContract.getPropertyId())
+                .map(propertyMapper::toSummary)
+                .orElse(null));
         propertyContractResponse.setType(propertyContract.getType());
         propertyContractResponse.setStatus(propertyContract.getStatus());
         propertyContractResponse.setAmount(propertyContract.getAmount());
