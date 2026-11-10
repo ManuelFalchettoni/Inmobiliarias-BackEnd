@@ -181,14 +181,14 @@ public class DataSeeder implements CommandLineRunner {
         jpaPropertyRepository.save(casa);
 
         Property lote = property("Ruta 11 km 520", PropertyType.LAND, "Buenos Aires", "General Pueyrredon",
-                "Mar del Plata", null, null, delSur.getId(), null, 0, 600, PropertyCondition.BRAND_NEW,
+                "Mar del Plata", -37.9300, -57.5350, delSur.getId(), null, 0, 600, PropertyCondition.BRAND_NEW,
                 PropertyOccupancy.VACANT, null);
         price(lote, OperationType.SALE, Currency.USD, "45000");
         jpaPropertyRepository.save(lote);
 
         //Una dada de baja, para probar el restore
         Property baja = property("Juramento 2100", PropertyType.GARAGE, "CABA", null, "Buenos Aires",
-                null, null, zaguan.getId(), 1990, 0, 12, PropertyCondition.GOOD,
+                -34.5608, -58.4542, zaguan.getId(), 1990, 0, 12, PropertyCondition.GOOD,
                 PropertyOccupancy.VACANT, -1);
         baja.setActive(false);
         jpaPropertyRepository.save(baja);
@@ -370,13 +370,9 @@ public class DataSeeder implements CommandLineRunner {
                 ? PropertyOccupancy.VACANT
                 : weighted(PropertyOccupancy.values(), 45, 30, 25);
 
-        //Coordenadas cerca del centro de la zona. Algunas sin punto en el mapa, como pasa en el front
-        Double latitude = null;
-        Double longitude = null;
-        if (chance(90)) {
-            latitude = round(zone.latitude() + (random.nextDouble() * 2 - 1) * zone.spread(), 6);
-            longitude = round(zone.longitude() + (random.nextDouble() * 2 - 1) * zone.spread(), 6);
-        }
+        //Coordenadas cerca del centro de la zona, asi coinciden con la ciudad y las calles de la propiedad
+        double latitude = round(zone.latitude() + (random.nextDouble() * 2 - 1) * zone.spread(), 6);
+        double longitude = round(zone.longitude() + (random.nextDouble() * 2 - 1) * zone.spread(), 6);
 
         Property property = property(address, type, zone.province(), zone.county(), zone.city(),
                 latitude, longitude, agency.getId(), year, rooms, size, condition, occupancy, floor);
