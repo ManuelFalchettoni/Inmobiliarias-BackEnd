@@ -4,7 +4,8 @@ Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 
 MySQL, MinIO y Mailpit los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo
 hace falta tener Docker Desktop abierto. Mailpit atrapa los mails de desarrollo y los muestra en
-`http://localhost:8025`.
+`http://localhost:8025`. Si MySQL y MinIO ya estaban corriendo de antes, Spring no levanta
+servicios nuevos: Mailpit se arranca una vez con `docker compose up -d mailpit`.
 
 ```
 ./mvnw spring-boot:run
@@ -16,7 +17,8 @@ Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NA
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
 `CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`,
 `MAIL_PASSWORD`, `MAIL_FROM`, `CRM_ALERT_REMINDER_HOURS`, `CRM_ALERT_CHECK_INTERVAL_MS`,
-`SEED_ENABLED`, `SEED_PROPERTIES`, `SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
+`FRONTEND_URL`, `PASSWORD_RESET_EXPIRATION_MINUTES`, `SEED_ENABLED`, `SEED_PROPERTIES`,
+`SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
 
 - `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
 - `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
@@ -48,6 +50,8 @@ y después arrancar la app de nuevo.
 - MinIO no hace falta para arrancar: el bucket se prepara en la primera subida. Sin MinIO
   fallan solo el `POST` y el `DELETE` de fotos, con 500; los `GET` andan igual, porque la URL
   se arma con `minio.url` sin consultar nada.
+- Mailpit: SMTP en el puerto 1025, bandeja en `http://localhost:8025`. Para mandar mails de
+  verdad se apuntan las `MAIL_*` a otro SMTP.
 
 ## Estructura
 
@@ -88,6 +92,8 @@ los parámetros van en un objeto (`PropertySearchFilter`) en vez de un `@Request
 |---|---|---|
 | Core | `Agency` | la inmobiliaria |
 | Core | `User` | usuarios y agentes de una inmobiliaria |
+| Core | `PasswordResetToken` | pedidos de recuperación de contraseña: hash del token, vencimiento y uso |
+| Core | `EmailTemplate` | asunto y cuerpo de cada mail, por clave (`EmailTemplateKeysEnum`) |
 | Propiedades | `Property` | el inmueble |
 | Propiedades | `PropertyPhoto` | fotos, con su `position` |
 | Propiedades | `PropertyPrice` | precio por operación (`SALE`, `RENT`) y moneda |
@@ -98,7 +104,7 @@ los parámetros van en un objeto (`PropertySearchFilter`) en vez de un `@Request
 | CRM | `CrmProperty` | un cliente interesado en una propiedad, con el agente y la etapa (`CrmStage`) |
 | CRM | `CrmHistory` | eventos del lead: nota, llamada, visita, oferta, cambio de etapa |
 | CRM | `Offer` | ofertas del lead, con monto, moneda y estado |
-| CRM | `CrmAlert` | recordatorios para un agente sobre un lead |
+| CRM | `CrmAlert` | recordatorios para un agente sobre un lead, con `notifiedAt` cuando salió su mail |
 
 Enums:
 
@@ -134,6 +140,7 @@ Los pasos 1 a 3 los hace un admin; el 4 y el 5, el usuario de la inmobiliaria.
 5. `GET /api/properties/{id}`: trae fotos y precios embebidos.
 
 Para sacarla del mercado, `PATCH /api/properties/{id}/archive`; vuelve con `PATCH /{id}/restore`.
+Antes hay que terminar sus contratos vigentes y cerrar o descartar sus leads.
 
 ### 3. Seguimiento de un interesado
 
@@ -150,9 +157,10 @@ Para sacarla del mercado, `PATCH /api/properties/{id}/archive`; vuelve con `PATC
    `NEGOTIATING`.
 2. Ante una contraoferta, `PUT .../offers/{id}` con `REJECTED` y un `POST .../offers` nuevo.
 3. Al aceptar, la oferta pasa a `ACCEPTED` y el lead a `CLOSED`.
-4. `POST /api/property_contracts` con tipo, monto, moneda, fechas y documento.
+4. `POST /api/property_contracts` con tipo, monto, moneda, fechas y documento. La propiedad
+   tiene que estar activa y sin otro contrato `ACTIVE` del mismo tipo en esas fechas.
 5. `POST /api/contract_parties` por cada persona: `OWNER`, `TENANT` o `BUYER`, y `GUARANTOR` si
-   es alquiler.
+   es alquiler. Como `OWNER` solo entra un dueño de la propiedad (`/api/property_owners`).
 
 Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLED`.
 
@@ -170,8 +178,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ## Login y permisos
 
-Todo pide login salvo `POST /api/auth/login`, `POST /api/auth/register` y
-`POST /api/auth/logout`. El login deja el
+Todo pide login salvo lo de `/api/auth` (login, registro, logout y recuperar la contraseña).
+El login deja el
 token en la cookie `token`; el front la manda sola en cada request si llama con
 `credentials: "include"`. Sin cookie o con un token inválido, 401.
 
@@ -197,6 +205,7 @@ La inmobiliaria sale del usuario logueado, no del request:
 - **Manejar usuarios.** Crear, editar, cambiar la contraseña, dar de baja y restaurar
   (`/api/users` y `/api/users/{id}/...`) es de `ADMIN` y `AGENCY`. Un `AGENT` solo puede
   listarlos y verlos; el resto le da 403. Su propia cuenta la maneja por `/api/users/me`.
+  Nadie se da de baja a sí mismo: 403.
 - **Usuarios `ADMIN`.** Solo los crea otro admin; si lo intenta otro rol, 403.
 - **Sumar a alguien registrado.** `POST /api/users/join-agency` es de `ADMIN` y `AGENCY`; un
   `AGENT` recibe 403.
@@ -239,6 +248,7 @@ Los errores que pasan por `GlobalExceptionHandler` tienen todos el mismo formato
 | Path variable o query param del tipo equivocado | 400 | `"Invalid value for id"`, `"Invalid value for type"` |
 | `sort` por un campo que no existe | 400 | `"Invalid sort property: foo"` |
 | Filtro de búsqueda inválido (rango invertido, precio sin moneda) | 400 | `"minFloor cannot be greater than maxFloor"` |
+| `page` negativo o `size` menor a 1 | 400 | `"page cannot be negative"`, `"size must be at least 1"` |
 | Único repetido que no se controla antes | 409 | `"Some of the values are already registered"` |
 | Un rol que no es admin crea un usuario `ADMIN` | 403 | `"Only an admin can create admin users"` |
 
@@ -278,7 +288,8 @@ además `active` para elegir entre lo vigente y lo dado de baja (true por defect
 | `/api/crm_properties` | 20 | `createdAt` desc | `userId`, un agente de la misma inmobiliaria |
 
 `/api/people`, `/api/property_owners`, `/api/property_contracts` y `/api/contract_parties`
-aceptan solo `page` y `size`, con 5 por defecto, sin `sort` ni tope.
+aceptan solo `page` y `size`, con 5 por defecto, sin `sort` ni tope. En estos y en la agenda del
+CRM, un `page` negativo o un `size` menor a 1 da 400; en los demás, Spring los corrige solo.
 
 Propiedades, personas y contratos tienen además un `GET /search` con filtros combinables,
 paginado igual que su listado. Los filtros que no se mandan no filtran; los de texto son
@@ -317,6 +328,9 @@ común, sin paginar.
 Baja lógica: `archive` y `DELETE` ponen `active` en false, la fila queda. `GET /{id}`, `PUT` y
 `DELETE` solo ven activas; `archive` y `restore` buscan sin ese filtro, así que repetirlos da 200.
 Las archivadas se listan con `GET /api/properties?active=false`.
+
+No se archiva una propiedad con contratos `ACTIVE` ni con leads que no estén `CLOSED` o
+`DISCARDED`: `archive` y `DELETE` responden 409. Si ya estaba archivada no se controla.
 
 Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
 la suya, mande el `agencyId` que mande.
@@ -450,8 +464,8 @@ endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precio
 | `GET /search` | 200 | 400 filtro o `sort` inválido |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 `agencyId` distinto al actual · 404 |
-| `PATCH /{id}/archive` | 200 | 404 |
-| `DELETE /{id}` | 204 sin body | 404 |
+| `PATCH /{id}/archive` | 200 | 404 · 409 contratos vigentes o leads abiertos |
+| `DELETE /{id}` | 204 sin body | 404 · 409 contratos vigentes o leads abiertos |
 | `PATCH /{id}/restore` | 200 | 404 |
 
 ## Fotos de propiedades
@@ -715,6 +729,7 @@ la suya, mande el `agencyId` que mande. Un usuario `ADMIN` solo lo puede crear o
 
 Crear, editar, cambiar la contraseña, dar de baja y restaurar usuarios es de `ADMIN` y
 `AGENCY`. Un `AGENT` solo lista y ve (`GET`); para su propia cuenta usa `/api/users/me`.
+Nadie se puede dar de baja a sí mismo: el `DELETE` sobre el propio id da 403.
 
 ### Request
 
@@ -787,7 +802,7 @@ La contraseña nunca sale. `PATCH /password` no devuelve body.
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 si mandás `password`, `rol` o `agencyId` · 403 un `AGENT` · 404 · 409 email o teléfono de otro usuario |
 | `PATCH /{id}/password` | 204 sin body | 400 validación · 400 `currentPassword` incorrecta · 403 un `AGENT` · 404 |
-| `DELETE /{id}` | 204 sin body | 403 un `AGENT` · 404 |
+| `DELETE /{id}` | 204 sin body | 403 un `AGENT` · 403 es el propio usuario · 404 |
 | `PATCH /{id}/restore` | 200 | 403 un `AGENT` · 404 |
 
 El 409 dice cuál es el campo repetido (`"Phone number already registered: 3415551234"`).
@@ -869,6 +884,26 @@ revelar qué emails están registrados.
 
 `POST /api/auth/logout`, sin body. Borra la cookie `token`: como es `HttpOnly`, el front no la
 puede borrar y la tiene que pisar el backend. Responde 204 aunque no haya sesión.
+
+## Recuperar la contraseña
+
+Dos pasos, sin sesión:
+
+1. `POST /api/auth/password/forgot` con `{ "email": "ana@mail.com" }`. Responde 204 siempre,
+   exista la cuenta o no. Si el email es de un usuario activo, le manda un mail (plantilla
+   `PASSWORD_RESET`) con un link a `{FRONTEND_URL}/restablecer-contrasena?token=...`. Otro pedido
+   dentro del mismo minuto no manda otro mail.
+2. `POST /api/auth/password/reset` con `{ "token": "...", "password": "nueva1234" }` (8 a 20
+   caracteres). Responde 204.
+
+El link vence a los 60 minutos (`PASSWORD_RESET_EXPIRATION_MINUTES`) y sirve una sola vez; pedir
+otro invalida el anterior. En la base (`password_reset_tokens`) se guarda solo el hash SHA-256 del
+token.
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST /forgot` | 204 | 400 validación |
+| `POST /reset` | 204 | 400 validación · 400 `"The password reset link is invalid or has expired"` |
 
 ## Personas
 
@@ -989,6 +1024,10 @@ Los mismos campos con su `id`.
 El `DELETE` no borra la fila: pasa el contrato a `CANCELLED`. Sigue saliendo en el listado y en
 el `GET /{id}`.
 
+Una propiedad no puede tener dos contratos `ACTIVE` del mismo tipo con fechas que se pisen: el
+`POST` y el `PUT` responden 409. Sin `endDate` (una venta) cuenta como sin fin. Los `FINISHED` y
+`CANCELLED` no se controlan.
+
 ### Búsqueda
 
 `GET /api/property_contracts/search?endFrom=2026-01-01&endTo=2026-12-31`
@@ -1032,7 +1071,7 @@ propiedad.
 
 | Campo | Tipo | Obligatorio | Reglas |
 |---|---|---|---|
-| `propertyId` | number | sí | |
+| `propertyId` | number | sí | propiedad existente y activa, de la inmobiliaria del usuario |
 | `type` | enum `ContractType` | sí | `SALE`, `RENT` |
 | `status` | enum `ContractStatus` | sí | `ACTIVE`, `FINISHED`, `CANCELLED` |
 | `amount` | number | sí | > 0, hasta 15 enteros y 2 decimales |
@@ -1043,16 +1082,36 @@ propiedad.
 
 ### Response
 
-Los mismos campos con `id`, `createdAt` y `updatedAt`.
+Los mismos campos con `id`, `createdAt` y `updatedAt`, más la propiedad y las partes embebidas:
+
+```json
+{
+  "id": 4,
+  "propertyId": 7,
+  "property": { "id": 7, "address": "Av. Siempre Viva 742", "city": "Rosario", "county": "Rosario",
+                "province": "Santa Fe", "active": true },
+  "parties": [
+    { "id": 9, "contractId": 4, "peopleId": 3, "role": "TENANT", "comments": "Titular",
+      "person": { "id": 3, "name": "Juan Pérez", "phone": "3415559876", "email": "juan@mail.com",
+                  "dni": "30123456" } }
+  ],
+  "type": "RENT",
+  "status": "ACTIVE"
+}
+```
+
+`property` viene aunque la propiedad esté archivada (`active: false`): `GET /api/properties/{id}`
+daría 404. Sin partes, `parties` viene `[]`.
 
 ### Códigos
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 404 propiedad inexistente o de otra inmobiliaria |
+| `POST` | 201 | 400 validación · 404 propiedad inexistente, archivada o de otra inmobiliaria · 409 se pisa con otro contrato `ACTIVE` del mismo tipo |
 | `GET` listado | 200 | — |
+| `GET /search` | 200 | 400 `orden` inválido |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 404 |
+| `PUT /{id}` | 200 | 400 validación · 404 · 409 igual que el `POST` |
 | `DELETE /{id}` | 204 sin body | 404 |
 
 ## Partes de contratos
@@ -1067,7 +1126,8 @@ Los mismos campos con `id`, `createdAt` y `updatedAt`.
 | `PUT /{id}` | editar |
 | `DELETE /{id}` | sacar del contrato |
 
-El borrado es físico.
+El borrado es físico. Con `role: "OWNER"`, la persona tiene que ser dueña de la propiedad del
+contrato (`/api/property_owners`); si no, 400.
 
 ### Request
 
@@ -1086,16 +1146,17 @@ Mismo body para `POST` y `PUT`.
 
 ### Response
 
-Los mismos campos con su `id`.
+Los mismos campos con su `id`, más la persona embebida en `person` (`id`, `name`, `phone`,
+`email`, `dni`). Es el mismo objeto que sale en `parties` dentro del contrato.
 
 ### Códigos
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 404 contrato o persona inexistente |
+| `POST` | 201 | 400 validación · 400 `OWNER` que no es dueño · 404 contrato o persona inexistente |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 404 |
+| `PUT /{id}` | 200 | 400 validación · 400 `OWNER` que no es dueño · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 
 ---
@@ -1136,7 +1197,25 @@ Mismo body para `POST` y `PUT`.
 
 ### Response
 
-Los mismos campos con `id`, `createdAt` y `updatedAt`.
+Los mismos campos con `id`, `createdAt` y `updatedAt`, más la propiedad, la persona y el agente
+embebidos:
+
+```json
+{
+  "id": 12,
+  "propertyId": 7,
+  "property": { "id": 7, "address": "Av. Siempre Viva 742", "city": "Rosario", "county": "Rosario",
+                "province": "Santa Fe", "active": true },
+  "peopleId": 3,
+  "person": { "id": 3, "name": "Juan Pérez", "phone": "3415559876", "email": "juan@mail.com",
+              "dni": "30123456" },
+  "userId": 1,
+  "agent": { "id": 1, "name": "Manuel" },
+  "stage": "NEW"
+}
+```
+
+Como en los contratos, `property` viene aunque la propiedad esté archivada.
 
 ### Códigos
 
@@ -1223,8 +1302,9 @@ El borrado es físico.
 | `message` | string | sí | no vacío |
 | `alertDate` | fecha y hora | sí | `yyyy-MM-ddTHH:mm:ss` |
 
-Se crea en `PENDING`. El response trae además `id`, `crmPropertyId`, `status`, `expired` y
-`createdAt`. `expired` es `true` si está `PENDING` y su fecha ya pasó.
+Se crea en `PENDING`. El response trae además `id`, `crmPropertyId`, `status`, `expired`,
+`createdAt` y `notifiedAt`. `expired` es `true` si está `PENDING` y su fecha ya pasó;
+`notifiedAt` es cuándo salió su mail de recordatorio.
 
 ### Alertas próximas
 
@@ -1256,7 +1336,8 @@ son opcionales.
 | `page`, `size` | `0`, `20` | |
 
 Orden: vencidos primero, el más atrasado arriba; después el resto según `sort`; al final los sin
-aviso. Con `bucket` no salen los sin aviso. Un `bucket` o `sort` desconocido responde 400.
+aviso. Con `bucket` no salen los sin aviso. Un `bucket` o `sort` desconocido responde 400, igual
+que un `page` negativo o un `size` menor a 1.
 
 ```json
 {
@@ -1288,6 +1369,7 @@ Cada 5 minutos (`CRM_ALERT_CHECK_INTERVAL_MS`) se le manda un email al agente de
 - Se avisa una sola vez por alerta. Si un `PUT` le cambia la fecha o el agente, se vuelve a avisar.
 - Si el envío falla, se reintenta en la próxima corrida mientras no haya vencido.
 - Las alertas ya vencidas y las de agentes dados de baja no se avisan.
+- Cada alerta trae `notifiedAt`: cuándo salió su mail. Si todavía no salió, no viene.
 - El texto sale de la plantilla `CRM_ALERT_REMINDER` de la tabla `email_templates`. Se crea sola
   al arrancar si no existe, y después se puede editar en la base.
 

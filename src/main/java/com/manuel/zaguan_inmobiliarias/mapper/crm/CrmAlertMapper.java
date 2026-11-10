@@ -36,6 +36,7 @@ public class CrmAlertMapper {
         response.setExpired(alert.getStatus() == CrmAlertStatus.PENDING
                 && alert.getAlertDate().isBefore(LocalDateTime.now()));
         response.setCreatedAt(alert.getCreatedAt());
+        response.setNotifiedAt(alert.getNotifiedAt());
         return response;
     }
 }
