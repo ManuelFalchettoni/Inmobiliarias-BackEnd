@@ -201,14 +201,17 @@ public class DataSeeder implements CommandLineRunner {
         owner(lote, roberto, null);
 
         // ---------- Contratos ----------
+        //Fechas relativas a hoy, asi el activo sigue vigente y el terminado sigue vencido sin importar cuando se cargue
+        LocalDate thisMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate oficinaStart = thisMonth.minusMonths(20);
         PropertyContract alquilerOficina = contract(oficina, ContractType.RENT, ContractStatus.ACTIVE,
-                Currency.ARS, "600000", LocalDate.of(2025, 3, 1), LocalDate.of(2028, 2, 29));
+                Currency.ARS, "600000", oficinaStart, oficinaStart.plusYears(3).minusDays(1));
         party(alquilerOficina, carlos, ContractRole.OWNER, null);
         party(alquilerOficina, julian, ContractRole.TENANT, null);
         party(alquilerOficina, marta, ContractRole.GUARANTOR, "Garantia propietaria");
 
         PropertyContract alquilerCasa = contract(casa, ContractType.RENT, ContractStatus.FINISHED,
-                Currency.ARS, "300000", LocalDate.of(2022, 1, 1), LocalDate.of(2024, 12, 31));
+                Currency.ARS, "300000", thisMonth.minusYears(5), thisMonth.minusYears(2).minusDays(1));
         party(alquilerCasa, roberto, ContractRole.OWNER, null);
         party(alquilerCasa, valeria, ContractRole.TENANT, null);
 
@@ -364,7 +367,7 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        Integer year = type == PropertyType.LAND ? null : 1940 + random.nextInt(87);
+        Integer year = type == PropertyType.LAND ? null : 1940 + random.nextInt(LocalDate.now().getYear() - 1940 + 1);
         PropertyCondition condition = randomCondition(type, year);
         PropertyOccupancy occupancy = type == PropertyType.LAND
                 ? PropertyOccupancy.VACANT
@@ -397,7 +400,8 @@ public class DataSeeder implements CommandLineRunner {
         if (type == PropertyType.LAND) {
             return PropertyCondition.BRAND_NEW;
         }
-        if (year >= 2024) {
+        //Construidas en los ultimos dos años: nuevas o todavia en obra
+        if (year >= LocalDate.now().getYear() - 1) {
             return chance(50) ? PropertyCondition.UNDER_CONSTRUCTION : PropertyCondition.BRAND_NEW;
         }
         //Cuanto mas vieja, mas chance de necesitar arreglos
