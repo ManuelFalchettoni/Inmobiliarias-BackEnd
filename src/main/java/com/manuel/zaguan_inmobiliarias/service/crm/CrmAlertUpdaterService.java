@@ -31,6 +31,12 @@ public class CrmAlertUpdaterService {
             throw new UserNotFoundException(request.getUserId());
         }
 
+        //Otra fecha u otro agente: el recordatorio se vuelve a mandar
+        if (!alert.getAlertDate().equals(request.getAlertDate())
+                || !alert.getUserId().equals(request.getUserId())) {
+            alert.setNotifiedAt(null);
+        }
+
         crmAlertMapper.updateEntity(request, alert);
         return crmAlertMapper.toResponse(jpaCrmAlertRepository.saveAndFlush(alert));
     }

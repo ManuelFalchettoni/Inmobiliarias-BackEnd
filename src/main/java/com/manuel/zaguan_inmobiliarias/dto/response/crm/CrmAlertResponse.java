@@ -21,4 +21,5 @@ public class CrmAlertResponse {
     //Pendiente y con la fecha pasada. Lo calcula el back para no depender de la hora del navegador
     private Boolean expired;
     private LocalDateTime createdAt;
+    private LocalDateTime notifiedAt;
 }

@@ -2,8 +2,10 @@
 
 Backend de la app de inmobiliarias. Java 21, Spring Boot 4, MySQL, MinIO.
 
-MySQL y MinIO los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo hace
-falta tener Docker Desktop abierto.
+MySQL, MinIO y Mailpit los levanta la app sola al arrancar (`spring-boot-docker-compose`): solo
+hace falta tener Docker Desktop abierto. Mailpit atrapa los mails de desarrollo y los muestra en
+`http://localhost:8025`. Si MySQL y MinIO ya estaban corriendo de antes, Spring no levanta
+servicios nuevos: Mailpit se arranca una vez con `docker compose up -d mailpit`.
 
 ```
 ./mvnw spring-boot:run
@@ -13,8 +15,9 @@ Queda en `http://localhost:8080`.
 
 Variables de entorno, todas con default para local: `DB_HOST`, `DB_PORT`, `DB_NAME`,
 `DB_USER`, `DB_PASSWORD`, `MINIO_URL`, `MINIO_USER`, `MINIO_PASSWORD`, `MINIO_BUCKET`,
-`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `SEED_ENABLED`, `SEED_PROPERTIES`,
-`SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
+`CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRATION`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`,
+`MAIL_PASSWORD`, `MAIL_FROM`, `CRM_ALERT_REMINDER_HOURS`, `CRM_ALERT_CHECK_INTERVAL_MS`,
+`FRONTEND_URL`, `PASSWORD_RESET_EXPIRATION_MINUTES`, `SEED_ENABLED`, `SEED_PROPERTIES`, `SEED_PEOPLE`, `SEED_PHOTOS_PER_PROPERTY`.
 
 - `JWT_SECRET`: mínimo 32 caracteres (256 bits); con menos, el login da 500 al firmar el token.
 - `SEED_ENABLED`: carga datos de prueba al arrancar (`config/DataSeeder`), solo con la base vacía.
@@ -132,6 +135,7 @@ Los pasos 1 a 3 los hace un admin; el 4 y el 5, el usuario de la inmobiliaria.
 5. `GET /api/properties/{id}`: trae fotos y precios embebidos.
 
 Para sacarla del mercado, `PATCH /api/properties/{id}/archive`; vuelve con `PATCH /{id}/restore`.
+Antes hay que terminar sus contratos vigentes y cerrar o descartar sus leads.
 
 ### 3. Seguimiento de un interesado
 
@@ -150,7 +154,7 @@ Para sacarla del mercado, `PATCH /api/properties/{id}/archive`; vuelve con `PATC
 3. Al aceptar, la oferta pasa a `ACCEPTED` y el lead a `CLOSED`.
 4. `POST /api/property_contracts` con tipo, monto, moneda, fechas y documento.
 5. `POST /api/contract_parties` por cada persona: `OWNER`, `TENANT` o `BUYER`, y `GUARANTOR` si
-   es alquiler.
+   es alquiler. Como `OWNER` solo entra un dueño de la propiedad (`/api/property_owners`).
 
 Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLED`.
 
@@ -168,8 +172,8 @@ Si el contrato se cae, `DELETE /api/property_contracts/{id}` lo pasa a `CANCELLE
 
 ## Login y permisos
 
-Todo pide login salvo `POST /api/auth/login`, `POST /api/auth/register` y
-`POST /api/auth/logout`. El login deja el
+Todo pide login salvo lo de `/api/auth` (login, registro, logout y recuperar la contraseña).
+El login deja el
 token en la cookie `token`; el front la manda sola en cada request si llama con
 `credentials: "include"`. Sin cookie o con un token inválido, 401.
 
@@ -316,6 +320,9 @@ Baja lógica: `archive` y `DELETE` ponen `active` en false, la fila queda. `GET 
 `DELETE` solo ven activas; `archive` y `restore` buscan sin ese filtro, así que repetirlos da 200.
 Las archivadas se listan con `GET /api/properties?active=false`.
 
+No se archiva una propiedad con contratos `ACTIVE` ni con leads que no estén `CLOSED` o
+`DISCARDED`: `archive` y `DELETE` responden 409. Si ya estaba archivada no se controla.
+
 Al crear, la inmobiliaria tiene que existir y estar activa. Para `AGENCY` y `AGENT` es siempre
 la suya, mande el `agencyId` que mande.
 
@@ -448,8 +455,8 @@ endpoint de fotos. Los precios vienen igual, en `prices`. Sin fotos o sin precio
 | `GET /search` | 200 | 400 filtro o `sort` inválido |
 | `GET /{id}` | 200 | 404 |
 | `PUT /{id}` | 200 | 400 validación · 400 `agencyId` distinto al actual · 404 |
-| `PATCH /{id}/archive` | 200 | 404 |
-| `DELETE /{id}` | 204 sin body | 404 |
+| `PATCH /{id}/archive` | 200 | 404 · 409 contratos vigentes o leads abiertos |
+| `DELETE /{id}` | 204 sin body | 404 · 409 contratos vigentes o leads abiertos |
 | `PATCH /{id}/restore` | 200 | 404 |
 
 ## Fotos de propiedades
@@ -868,6 +875,26 @@ revelar qué emails están registrados.
 `POST /api/auth/logout`, sin body. Borra la cookie `token`: como es `HttpOnly`, el front no la
 puede borrar y la tiene que pisar el backend. Responde 204 aunque no haya sesión.
 
+## Recuperar la contraseña
+
+Dos pasos, sin sesión:
+
+1. `POST /api/auth/password/forgot` con `{ "email": "ana@mail.com" }`. Responde 204 siempre,
+   exista la cuenta o no. Si el email es de un usuario activo, le manda un mail (plantilla
+   `PASSWORD_RESET`) con un link a `{FRONTEND_URL}/restablecer-contrasena?token=...`. Otro pedido
+   dentro del mismo minuto no manda otro mail.
+2. `POST /api/auth/password/reset` con `{ "token": "...", "password": "nueva1234" }` (8 a 20
+   caracteres). Responde 204.
+
+El link vence a los 60 minutos (`PASSWORD_RESET_EXPIRATION_MINUTES`) y sirve una sola vez; pedir
+otro invalida el anterior. En la base (`password_reset_tokens`) se guarda solo el hash SHA-256 del
+token.
+
+| Endpoint | OK | Errores |
+|---|---|---|
+| `POST /forgot` | 204 | 400 validación |
+| `POST /reset` | 204 | 400 validación · 400 `"The password reset link is invalid or has expired"` |
+
 ## Personas
 
 `/api/people`
@@ -1065,7 +1092,8 @@ Los mismos campos con `id`, `createdAt` y `updatedAt`.
 | `PUT /{id}` | editar |
 | `DELETE /{id}` | sacar del contrato |
 
-El borrado es físico.
+El borrado es físico. Con `role: "OWNER"`, la persona tiene que ser dueña de la propiedad del
+contrato (`/api/property_owners`); si no, 400.
 
 ### Request
 
@@ -1090,10 +1118,10 @@ Los mismos campos con su `id`.
 
 | Endpoint | OK | Errores |
 |---|---|---|
-| `POST` | 201 | 400 validación · 404 contrato o persona inexistente |
+| `POST` | 201 | 400 validación · 400 `OWNER` que no es dueño · 404 contrato o persona inexistente |
 | `GET` listado | 200 | — |
 | `GET /{id}` | 200 | 404 |
-| `PUT /{id}` | 200 | 400 validación · 404 |
+| `PUT /{id}` | 200 | 400 validación · 400 `OWNER` que no es dueño · 404 |
 | `DELETE /{id}` | 204 sin body | 404 |
 
 ---
@@ -1277,6 +1305,18 @@ cada tramo:
 ```json
 { "overdue": 2, "hour": 1, "day": 3, "week": 5, "later": 4, "withoutAlerts": 6 }
 ```
+
+### Recordatorios por email
+
+Cada 5 minutos (`CRM_ALERT_CHECK_INTERVAL_MS`) se le manda un email al agente de cada alerta
+`PENDING` que vence dentro de las próximas 24 horas (`CRM_ALERT_REMINDER_HOURS`).
+
+- Se avisa una sola vez por alerta. Si un `PUT` le cambia la fecha o el agente, se vuelve a avisar.
+- Si el envío falla, se reintenta en la próxima corrida mientras no haya vencido.
+- Las alertas ya vencidas y las de agentes dados de baja no se avisan.
+- Cada alerta trae `notifiedAt`: cuándo salió su mail. Si todavía no salió, no viene.
+- El texto sale de la plantilla `CRM_ALERT_REMINDER` de la tabla `email_templates`. Se crea sola
+  al arrancar si no existe, y después se puede editar en la base.
 
 ### Códigos de ofertas, historial y alertas
 

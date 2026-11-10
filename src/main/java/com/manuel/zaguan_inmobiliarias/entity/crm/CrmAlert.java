@@ -38,6 +38,11 @@ public class CrmAlert {
     @Column(nullable = false, columnDefinition = "varchar(30)")
     private CrmAlertStatus status;
 
+    //Cuando se mando el recordatorio por email. En null: todavia no se aviso.
+    //Evita que cada corrida de CrmAlertReminderService vuelva a mandar el mismo
+    @Column
+    private LocalDateTime notifiedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
