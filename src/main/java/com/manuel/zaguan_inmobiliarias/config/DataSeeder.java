@@ -120,6 +120,8 @@ public class DataSeeder implements CommandLineRunner {
         Agency zaguan = agency("30-71234567-8", "Zaguan Propiedades SRL", "Zaguan Propiedades",
                 "contacto@zaguan.test", "1145678901", "Av. Cabildo 2040, CABA",
                 "https://zaguan.test", "@zaguanprop", AgencyStatus.VERIFY);
+        //Solo Zaguan tiene logo, para probar el front con y sin iconUrl
+        zaguan.setIcon(seedPhotos.storeLogo("zaguan.png"));
         Agency delSur = agency("30-79876543-2", "Del Sur Inmuebles SA", "Del Sur Inmuebles",
                 "info@delsur.test", "2234567890", "Av. Colon 1500, Mar del Plata",
                 null, "@delsurinmuebles", AgencyStatus.VERIFY);

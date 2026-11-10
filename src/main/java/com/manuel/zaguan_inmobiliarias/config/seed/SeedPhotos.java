@@ -70,6 +70,26 @@ public class SeedPhotos {
         }
     }
 
+    //Sube el logo de muestra src/main/resources/seed-logos/<fileName> y devuelve su objectKey.
+    //Null si no esta el archivo o si MinIO no responde: la inmobiliaria queda sin logo
+    public String storeLogo(String fileName) {
+        if (!available) {
+            return null;
+        }
+        try {
+            Resource resource = new PathMatchingResourcePatternResolver().getResource("classpath:seed-logos/" + fileName);
+            String extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+            return photoStorage.store(resource.getContentAsByteArray(), extension, contentTypeOf(extension));
+        } catch (IOException e) {
+            log.warn("DataSeeder: no se pudo leer el logo {} ({})", fileName, e.getMessage());
+            return null;
+        } catch (PhotoStorageException e) {
+            log.warn("DataSeeder: MinIO no responde, el resto de los datos se carga sin fotos ({})", e.getMessage());
+            available = false;
+            return null;
+        }
+    }
+
     //La primera es la portada: fachada para casas y terrenos, ambiente para departamentos,
     //oficina para lo comercial. El resto sale de los ambientes del mismo tipo de propiedad
     private List<SamplePhoto> choose(PropertyType type, int count, Random random) {
