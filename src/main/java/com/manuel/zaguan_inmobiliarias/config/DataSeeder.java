@@ -535,10 +535,22 @@ public class DataSeeder implements CommandLineRunner {
             if (stage == CrmStage.CLOSED) {
                 alert(crmProperty, user, "Pedir documentacion para escritura", LocalDateTime.now().minusDays(1 + random.nextInt(20)), CrmAlertStatus.DONE);
             } else if (chance(75)) {
-                LocalDateTime date = LocalDateTime.now().plusDays(random.nextInt(14) - 4).withHour(9 + random.nextInt(9)).withMinute(0).withSecond(0).withNano(0);
-                alert(crmProperty, user, pick(SeedCatalog.ALERTS), date, CrmAlertStatus.PENDING);
+                alert(crmProperty, user, pick(SeedCatalog.ALERTS), pendingAlertDate(), CrmAlertStatus.PENDING);
             }
         }
+    }
+
+    //Fecha de una alerta pendiente repartida entre los tramos de la agenda (CrmAgendaService):
+    //vencida, proxima hora, proximas 24 hs, esta semana y mas adelante
+    private LocalDateTime pendingAlertDate() {
+        LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
+        return switch (weighted(new String[]{"overdue", "hour", "day", "week", "later"}, 30, 5, 15, 30, 20)) {
+            case "overdue" -> now.minusDays(1 + random.nextInt(10)).withHour(9 + random.nextInt(9)).withMinute(0);
+            case "hour" -> now.plusMinutes(10 + random.nextInt(45));
+            case "day" -> now.plusHours(2 + random.nextInt(21)).withMinute(0);
+            case "week" -> now.plusDays(2 + random.nextInt(5)).withHour(9 + random.nextInt(9)).withMinute(0);
+            default -> now.plusDays(8 + random.nextInt(23)).withHour(9 + random.nextInt(9)).withMinute(0);
+        };
     }
 
     private PropertyPrice priceOf(Property property, OperationType operationType) {
